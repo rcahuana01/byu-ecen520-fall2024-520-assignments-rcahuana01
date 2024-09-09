@@ -152,3 +152,7 @@ The following assignment specific items should be included in your repository:
     1. Provide a short summary of how much HDL review you had to do to complete the assignment. Also, rate your HDL designs skills from 1-10.
     2. Indicate the simulation time of the two different simulations and suggest why the simulation times are different
     3. Add the following statement to your report: "I have read the ECEN 520 assignment submission process and have resolved any questions I have with this process"
+
+<!-- Notes:
+- Need to help people learn how to use the GUI simulator. They just tried using the command line only.
+-->
