@@ -116,7 +116,7 @@ This section provides a brief summary checklist of what you need to do to submit
     * You will not get any credit for the assignment if any of your makefile rules fail.
 2. Make sure all the _essential_ files needed to complete your project are committed into your repository.
     * If any essential files are missing then your make rules will likely fail and you will not get any credit for the assignment.
-3. Make sure no _non-essential_ files are **NOT** committed to your repository
+3. Make sure _non-essential_ files are **NOT** committed to your repository
     * It is possible to inadvertently commit temporary project files.
     * You will lose significant points if you commit large number of non-essential temporary files.
 4. Make sure you have a `.gitignore` file for your assignment directory and that all intermediate files created during the build process are ignored.
@@ -186,7 +186,7 @@ Note that submissions that do not simulate or build (i.e., submissions with synt
 
 **Coding Standard**
 
-All of your submissions should conform to the class [coding standards](./coding_stadard.md).
+All of your submissions should conform to the class [coding standards](./coding_standard.md).
 The coding standards are progressive meaning that additional standards will be added gradually throughout the class.
 Each assignment will indicate which code standard level you will be required to follow.
 
@@ -229,7 +229,7 @@ git clone --bare git@github.com:byu-cpe/ecen520_student.git
 cd ecen520_student.git/
 git push --mirror git@github.com:byu-ecen520-fall2024/520-assignments-<githubusername>.git
 cd ..
-rm -rf ecen323_student.git```
+rm -rf ecen520_student.git```
 ```
 More details on this process can be found at Step 3 of the [ECEN 323 web page](https://byu-cpe.github.io/ecen323/tutorials/git_setup/).
 

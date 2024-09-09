@@ -1,8 +1,8 @@
 #!/usr/bin/python3
 
 '''
-A set of classes for evaluating the code within a git repo.
-Base classes can be created for performing tool-specific evaluation.
+A set of classes for performing a specific test within a git repo.
+Base classes can be created for performing tool-specific tests.
 Several generic test classes are included that could be used in any
 type of repository.
 '''
@@ -14,13 +14,17 @@ from enum import Enum
 from git import Repo
 import datetime
 
+#########################################################3
+# Base repo test classes
+#########################################################3
+
 class result_type(Enum):
     SUCCESS = 1
     WARNING = 2
     ERROR = 3
 
 class repo_test_result():
-    """ Class for indicating the result of a test
+    """ Class for indicating the result of a repo test
     """
 
     def __init__(self, test, result = result_type.SUCCESS, msg = None):
@@ -40,6 +44,8 @@ class repo_test():
         """ Initialize the test module with a repo object """
         self.abort_on_error = abort_on_error
         self.process_output_filename = process_output_filename
+        # List of files that should be deleted after the test is done (i.e., log files)
+        self.files_to_delete = []  
 
     def module_name(self):
         """ returns a string indicating the name of the module. Used for logging. """
@@ -83,6 +89,7 @@ class repo_test():
                 repo_test_suite.print_error("Error opening file for writing:", process_output_filepath)
                 return -1
             repo_test_suite.print("Writing output to:", process_output_filepath)
+            self.files_to_delete.append(process_output_filepath)
         cmd_str = " ".join(proc_cmd)
         message = "Executing the following command in directory:"+str(repo_test_suite.working_path)+":"+str(cmd_str)
         repo_test_suite.print(message)
@@ -106,6 +113,16 @@ class repo_test():
         proc.communicate()
         return proc.returncode
 
+    def cleanup(self):
+        """ Cleanup any files that were created by the test. """
+        for file in self.files_to_delete:
+            if os.path.exists(file):
+                os.remove(file) 
+
+#########################################################3
+# Generic, non-repo test classes
+#########################################################3
+
 class file_exists_test(repo_test):
     ''' Checks to see if files exist in a repo directory
     '''
@@ -116,7 +133,10 @@ class file_exists_test(repo_test):
         self.repo_file_list = repo_file_list
 
     def module_name(self):
-        return "File Check"
+        name_str = "Files Exist: "
+        for repo_file in self.repo_file_list:
+            name_str += f'{repo_file}, '
+        return name_str[:-2] # Remove the last two characters (', ')
 
     def perform_test(self, repo_test_suite):
         return_val = True
@@ -126,7 +146,6 @@ class file_exists_test(repo_test):
                 repo_test_suite.print_error(f'File does not exist: {file_path}')
                 return_val = False
             repo_test_suite.print(f'File exists: {file_path}')
-        #return return_val
         if return_val:
             return self.success_result()
         return self.error_result()
@@ -150,12 +169,13 @@ class make_test(repo_test):
     def perform_test(self, repo_test_suite):
         cmd = ["make", self.make_rule]
         return_val = self.execute_command(repo_test_suite, cmd)
-        # if return_val != 0:
-        #     return False
-        # return True
         if return_val != 0:
             return self.error_result()
         return self.success_result()
+
+#########################################################3
+# Git repo test classes
+#########################################################3
 
 class check_for_untracked_files(repo_test):
     ''' This tests the repo for any untracked files in the repository.
@@ -204,7 +224,7 @@ class check_for_tag(repo_test):
         return self.warning_result()
 
 class check_for_max_repo_files(repo_test):
-    ''' 
+    ''' Check to see if the repository has more than a given number of files.
     '''
     def __init__(self, max_dir_files):
         '''  '''
@@ -220,14 +240,12 @@ class check_for_max_repo_files(repo_test):
         repo_test_suite.print(f"{n_tracked_files} Tracked git files in {repo_test_suite.relative_repo_path}")
         if n_tracked_files > self.max_dir_files:
             repo_test_suite.print_error(f"  Too many tracked files")
-            # return False
             return self.warning_result()
-        # return True
         return self.success_result()
 
 class check_for_ignored_files(repo_test):
     ''' Checks to see if there are any ignored files in the repo directory.
-    The intent is to make sure that these ignore files are remoted through a clean
+    The intent is to make sure that these ignore files are removed through a clean
     operation. Returns true if there are no ignored files in the directory.
     '''
     def __init__(self, check_path = None):
@@ -327,4 +345,56 @@ class list_git_commits(repo_test):
             commit_date = commit.committed_datetime.strftime('%Y-%m-%d %H:%M:%S')
             print(f"{commit_hash} - {commit_date} - {commit_message}")
         # return True
+        return self.success_result()
+
+class check_remote_updates(repo_test):
+    ''' Checks to see if the repository has the latest commites from a remote.
+    '''
+    def __init__(self, remote_name, use_date_of_current_commit = False):
+        '''  '''
+        super().__init__()
+        self.remote_name = remote_name
+        self.use_date_of_current_commit = use_date_of_current_commit
+
+    def module_name(self):
+        return "Check for updates from remote:" + self.remote_name
+
+    def perform_test(self, repo_test_suite):
+        # Get the current branch, commit, and commit date from the local repo
+        current_branch = repo_test_suite.repo.active_branch
+        local_commit = repo_test_suite.repo.commit(current_branch)
+        local_commit_date = datetime.datetime.fromtimestamp(local_commit.committed_date)
+        print(f"current branch:{current_branch}, commit hash {local_commit.hexsha[:7]} commit date {local_commit_date}" )
+        # Get the remote
+        remote = repo_test_suite.repo.remote(name = self.remote_name)
+        if remote is None:
+            repo_test_suite.print_error(f"Remote {self.remote_name} not found")
+            return self.error_result()
+        # Fetch from the remote and get remote commit
+        remote.fetch()
+        # Find the commit from the remote that is the closest to the search limit date
+        # but not past the lsearch limit date. This is done so that checks against old tagged
+        # commits during grading are not penalized for future commits to the remote.
+        if self.use_date_of_current_commit:
+            search_limit_date = local_commit_date
+        else:
+            search_limit_date = datetime.datetime.now()
+        remote_commits = list(repo_test_suite.repo.iter_commits(f"{self.remote_name}/{current_branch}"))
+        latest_remote_commit = None
+        print(f"search limit date {search_limit_date}")
+        print(commit,remote_commit_date)
+        for commit in remote_commits:
+            remote_commit_date = datetime.datetime.fromtimestamp(commit.committed_date)
+            if remote_commit_date <= search_limit_date:
+                if latest_remote_commit is None:
+                    latest_remote_commit = remote_commit_date
+                else:
+                    if remote_commit_date > latest_remote_commit:
+                        latest_remote_commit = remote_commit_date
+        print(f"Latest remote commit date {latest_remote_commit}")
+        # git config --global alias.tm "commit --no-commit --no-ff"
+
+        if latest_remote_commit > local_commit_date:
+            repo_test_suite.print_error("Remote has some commits that are missing")
+
         return self.success_result()

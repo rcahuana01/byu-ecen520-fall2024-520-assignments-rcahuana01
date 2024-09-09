@@ -42,7 +42,8 @@ class repo_test_suite():
 
     '''
 
-    def __init__(self, repo, test_name = None, working_dir = None, print_to_stdout = True, verbose = False, summary_log_filename = None, log_dir = None, ):
+    def __init__(self, repo, test_name = None, working_dir = None, print_to_stdout = True, 
+                 verbose = False, summary_log_filename = None, log_dir = None, ):
         # Reference to the Git repository
         self.repo = repo
         self.repo_root_path = pathlib.Path(repo.git.rev_parse('--show-toplevel'))
@@ -74,7 +75,7 @@ class repo_test_suite():
         self.test_results = {}
 
     def add_test_module(self, test_module):
-        ''' Add a test module. '''
+        ''' Add a test module to the test suite. '''
         self.tests_to_perform.append(test_module)
 
     def print_color(self, color, *msg):
@@ -98,11 +99,19 @@ class repo_test_suite():
     def print_test_status(self, message):
         self.print_color(self.test_color,message)
 
+    def test_cleanup(self):
+        ''' Close the log file '''
+        for test in self.tests_to_perform:
+            test.cleanup()
+        if self.test_log_fp:
+            self.test_log_fp.close()
+
     def run_tests(self):
         ''' Run all the registered tests '''
         self.print_test_start_message()
         self.iterate_through_tests(self.tests_to_perform)
         # Wrap up
+        self.test_cleanup()
         self.print_test_end_message()
 
     def print_test_start_message(self):

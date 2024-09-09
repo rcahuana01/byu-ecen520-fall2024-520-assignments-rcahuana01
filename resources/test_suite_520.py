@@ -7,6 +7,11 @@ import git
 import repo_test
 from repo_test_suite import repo_test_suite
 
+# ToDo:
+# - Provide a way for having the simulation environment return an error when the testbench fails
+# - Check to see if the starter code has been updated (to match the date of the tag)
+# - For uncommitted files, should we only check for the current directory or the entire repo?
+
 class test_suite_520(repo_test_suite):
 
     def __init__(self, repo, assignment_name, min_err_commits = 3, max_repo_files = 20):
@@ -28,6 +33,7 @@ class test_suite_520(repo_test_suite):
         self.add_repo_test(get_err_git_commits(min_err_commits))
         self.add_repo_test(repo_test.check_for_uncommitted_files())
         self.add_repo_test(repo_test.check_for_max_repo_files(max_repo_files))
+        #self.add_repo_test(repo_test.check_remote_updates("startercode"))
         if tag_str is not None:
             self.add_repo_test(repo_test.check_for_tag(tag_str))
         if require_report_file:

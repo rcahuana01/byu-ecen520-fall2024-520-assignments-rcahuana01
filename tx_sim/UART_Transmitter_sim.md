@@ -67,7 +67,7 @@ Create your transmitter with the following ports and parameters (you must name t
 | send | Input | 1 | Control signal to start a transmit operation |
 | din | Input | 8 | 8 data bits to send |
 | busy | Output | 1 | Indicates that the transmitter is in the middle of a transmission |
-| dout | Output | 1 | Transmitter output signal |
+| tx_out | Output | 1 | Transmitter output signal |
 
 | Parameter Name | Type | Default | Purpose |
 | ---- | ---- | ---- | ---- |
@@ -86,8 +86,7 @@ Design your transmitter to operate as follows:
 * The 'busy' signal is asserted whenever you are in the middle of a transmission (i.e., not in an idle state)
   * Ignore the 'send' signal if you are in the middle of a transmission
 * Reset the internal state machines/counters when the 'rst' signal is asserted
-  * Provide two flip-flops between the incoming 'rst' port and the reset you use in your design to synchronize the reset to the global clock
-  * Implement an asynchronous reset in your design
+  * Use asynchronous resets for the synchronous elements of your design
 * Add a synchronizing flip-flop on the output of the TX signal so there are no glitches on your output tx signal
 * You do not need to implement handshaking as described by the 320 lab assignment.
 
@@ -120,8 +119,10 @@ Here is a sample makefile rule that will run the testbench simulation from the c
 ```
 sim_tx: tx.sv
     vlog tx.sv tx_tb.sv rx_model.sv
-    vsim -c work.tx_tb -do "run -all"
+    vsim -c work.tx_tb -do "run -all; quit"
 ```
+**Note** the use of the `quit` command in the `vsim` command.
+This is necessary to exit the simulation after the simulation is complete so you can go on to the next makefile rule.
 
 You will need to verify that your transmitter works correctly with multiple baud rates and clock frequencies.
 Further, you need to verify that your transmitter works with both even and odd parity.
@@ -130,8 +131,8 @@ The following makefile rule demonstrates how to elaborate the simulation model w
 
 ```
 sim_tx_115200_even: tx.sv
-    xvlog -sv tx.sv tx_tb.sv rx_model.sv
-    vsim -c work.tx_tb -gBAUD_RATE=115200 -gPARITY=0 -do "run -all"
+    vlog -sv tx.sv tx_tb.sv rx_model.sv
+    vsim -c work.tx_tb -gBAUD_RATE=115200 -gPARITY=0 -do "run -all; quit"
 ```
 
 After your module passes both testbenches you are ready to submit your assignment.
