@@ -19,7 +19,7 @@ module transceiver(
 
     parameter CLK_FREQUENCY = 100_000_000;
     parameter BAUD_RATE = 19_200;
-    
+
     localparam [1:0] IDLE = 2'b00,
                      SEND = 2'b01,
                      WAIT =2'b10,
@@ -32,28 +32,36 @@ module transceiver(
     always_ff @(posedge clk)
     begin
         if (rst)
-            current_state <= IDLE; // Reset state
+            current_state <= IDLE;
         else
-            current_state <= next_state; // Move to the next state
-    end
-
-    always_ff@(posedge clk)
-    begin
-        if (send) begin
-            busy <= 1;
-            rst <= 1;
-        end
-        else
-            busy <= 0;
+            current_state <= next_state;
     end
     
     always_comb
     begin
-        case (SEND)
-            IDDLE: send <= 1'b1;  // Case for SEND being 1
+        case (IDLE)
+            1b'1: send <= 1'b1;
             send <= din;
             
-            default: send <= 1'b0; // Default case for other values of SEND
+            default: send <= 1'b0;
+        endcase
+        case (SEND)
+            1b'1: send <= 1'b1;  
+            send <= din;
+            
+            default: send <= 1'b0; 
+        endcase
+        case (WAIT)
+            1b'1: send <= 1'b1;  
+            send <= din;
+            
+            default: send <= 1'b0; 
+        endcase
+        case (DONE)
+            1b'1: send <= 1'b1;  
+            send <= din;
+            
+            default: send <= 1'b0; 
         endcase
     end
 
