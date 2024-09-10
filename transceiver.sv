@@ -17,17 +17,24 @@ module transceiver(
     output logic                busy,
     output logic                tx_out);
 
-    param CLK_FREQUENCY = 100000000;
-    param BAUD_DATE = 19200;
-    param PARITY = 1;
+    parameter CLK_FREQUENCY = 100_000_000;
+    parameter BAUD_RATE = 19_200;
     
-    // Button synchronizer
-    always_ff@(posedge clk)
+    localparam [1:0] IDLE = 2'b00,
+                     SEND = 2'b01,
+                     WAIT =2'b10,
+                     DONE = 2'b11;
+
+    // State Variable
+    reg [1:0] current_state, next_state;
+
+    // State Machine Logic
+    always_ff @(posedge clk)
     begin
-        if (!tx)
-            rst <= 1;
+        if (rst)
+            current_state <= IDLE; // Reset state
         else
-            rst <= 0;
+            current_state <= next_state; // Move to the next state
     end
 
     always_ff@(posedge clk)
@@ -40,26 +47,15 @@ module transceiver(
             busy <= 0;
     end
     
+    always_comb
+    begin
+        case (SEND)
+            IDDLE: send <= 1'b1;  // Case for SEND being 1
+            send <= din;
+            
+            default: send <= 1'b0; // Default case for other values of SEND
+        endcase
+    end
 
-    // Transmitter
-    tx tx_inst(
-        .clk    (clk),
-        .Reset  (reset),
-        .Send   (send_character),
-        .Din    (sw),
-        .Sent   (),
-        .Sout   (tx_out)
-    );
-
-    // Seven-Segment Display
-    SevenSegmentControl SSC (
-        .clk(clk),
-        .reset(reset),
-        .dataIn({8'h00, sw}),
-        .digitDisplay(4'h3),
-        .digitPoint(4'h0),
-        .anode(anode),
-        .segment(segment)
-    );
 
 endmodule
