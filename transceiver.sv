@@ -10,7 +10,7 @@
 
 module transceiver (
     input wire logic clk,
-    input wire logic rst,       // Reset
+    input wire logic rst,      
     input wire logic send,
     input wire logic [7:0] din,
     output logic busy,
@@ -19,73 +19,89 @@ module transceiver (
 
     localparam CLK_FREQUENCY = 100_000_000;
     localparam BAUD_RATE = 19_200;
-    // localparam [1:0] IDLE = 2'b00, START = 2'b01, BITS = 2'b10, PAR = 2'b11, STOP = 2'b100, ACK = 2'b101;
+    localparam BAUD_PERIOD = CLK_FREQUENCY / BAUD_RATE;
+
 
     // Define states
     typedef enum logic[2:0] { IDLE, SEND, WAIT, DONE } StateType;
     StateType ns, cs;
 
     // Internal signals
-    logic clrTimer, incBit, clrBit, incTimer, startBit. dataBit, parityBit;
+    logic clrTimer, incTimer, timer[15:0], bitCount[5:0], incBit, clrBit, data[10:0], parityBit;
 
-    // Baud rate timer
-     always_ff @( posedge ) begin :
-        if (rst) begin
-            incBit <= 0;
-            incTimer <= 0;
-        end
-
+    // Bit timer
+     always_ff @(posedge clk) begin
+        if (rst || clrTimer)
+            timer <= 0;
+        else 
+            timer <= timer + 1;
      end
 
     // Bit counter
-    always_comb begin
-        
-    end
+    always_ff @(posedge clk) begin
+       if (rst || clrBit)
+            bitCount <= 0;
+        else if (incBit)
+            bitCount <= bitCount + 1;
+    end 
+
     
-    // State transition and control logic
-    always_comb begin
+    // Data initialization
+    always_ff @(posedge clk) begin 
+        if (rst) 
+            data <= 11'b1;
+        else 
+            data[10] <= 1'b0;
+            data[9:2] <= din;
+            data[1] <= parityBit;
+            data[0] <= 1'b1; //Stop bit
+    end
+
+    // State transition
+    always_comb begin     
         // Assign default values
         ns = cs;
         clrTimer = 1'b0;
         incBit = 1'b0;
         clrBit = 1'b0;
-        startBit = 1'b0;
-        dataBit = 1'b0;
+        incTimer = 1'b0;
         parityBit = 1'b0;
-        Sent = 1'b0;
-
-        // State transitions and control
-        if (rst)
-            ns = IDLE;
-        else begin
-            case (cs)
-                IDLE: begin
-                    if (send) ns = START;
-                    clrTimer = 1'b1;
+        // State transitions and control   
+        case (cs)
+            IDLE: begin
+                if (send) begin
+                ns = SEND;
+                busy = 1'b1;
+                incTimer = 1'b1;
+                incBit = 1'b1;
                 end
-                SEND: begin
-                    if (timerDone) begin
-                        ns = BITS;
-                        clrBit = 1'b1;
-                    end
-                    startBit = 1'b1;
+            end
+            SEND: begin
+                if (timer == BAUD_PERIOD-1) begin
+                    incBit = 1'b1;
+                    if (incBit == 10)
+                    ns = WAIT;
                 end
-                WAIT: begin
-                    if (timerDone) begin
-                        if (bitDone) ns = PAR;
-                        else incBit = 1'b1;
-                    end
-                    dataBit = 1'b1;
-                end
-                DONE: begin
-                    if (~send) ns = IDLE;
-
-                end
-            endcase
+            end
+            WAIT: begin
+                if (timer == BAUD_PERIOD-1) 
+                    clrTimer = 1'b0;
+                    ns = DONE;   
+            end
+            DONE: begin
+               
+            end
+        endcase
         end
-    end
 
-    // Output assignment (based on state)
+    // State register
+    always_ff @(posedge clk)
+        cs <= ns;
+
+    // Parity bit calculation
+    assign parityBit = (PARITY == 1) ? ~(^din) : ^din;
+
+    // Output assignment
     always_comb begin
         case (cs)
             START: tx_out = 1'b0;  // Start bit
@@ -95,8 +111,5 @@ module transceiver (
             default: tx_out = 1'b1; // Default to stop bit
         endcase
     end
-
-    
-
 
 endmodule
