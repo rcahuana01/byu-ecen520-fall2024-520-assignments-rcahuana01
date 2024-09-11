@@ -2,10 +2,16 @@
 
 In this assignment, you will use your create a top-level design that communicate with the ADXL362 accelerometer on the Nexys4 board using the SPI protocol.
 
+## Synthesis of SPI Controller Modules
+
+Before proceeding with the top-level SPI design, it is important to make sure that your SPI controller and adxl362 controller from the previous assignment are properly synthesizable.
+Create a makefile rule named `synth_adxl362_cntrl` that performs "out of context" synthesis of the adxl362 controller module from the preivous assignment (see the [instructions](../rx_sim/UART_Receiver_sim.md#receiver-synthesis) on how to do this).
+Make sure all synthesis warnings and errors are resolved before proceeding with the top-level design.
+If you made any changes to your modules, rerun the testbenches to make sure they operate correctly.
 
 ## SPI Top-Level Design
 
-You will create a top-level circuit that instances your SPI controller and attaches it to the accelerometer on the Nexys4 board. 
+Create a top-level circuit that instances your SPI controller and attaches it to the accelerometer on the Nexys4 board. 
 You will attach the switches, buttons, and seven segment display so you can write registers to the accelerometer and read values of the registers within the accelerometer. 
 Details on how this is to be done are described below.  
 Links to the Nexys4 board and the accelerometer are listed below for your convenience. 
@@ -77,8 +83,9 @@ Once you have created your design and downloaded it to the board, you can make s
 ## Submission and Grading
 
 1. Required Makefile rules:
-    * `sim_top`:
-    * `sim_top_100`:
-    * `gen_bit`:
-    * `gen_bit_100`:
+  * `synth_adxl362_cntrl`
+  * `sim_top`:
+  * `sim_top_100`:
+  * `gen_bit`:
+  * `gen_bit_100`:
 

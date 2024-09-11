@@ -26,14 +26,16 @@ class test_suite_520(repo_test_suite):
         self.run_build_tests = True
         self.run_clean_tests = True
 
-    def add_repo_tests(self, min_err_commits, max_repo_files, tag_str = None, list_git_commits = True, require_report_file = True):
+    def add_repo_tests(self, min_err_commits, max_repo_files, tag_str = None, 
+                       list_git_commits = True, require_report_file = True, check_start_code = False):
         # Tests involved with checking the integrity and requirements of the repository
         if list_git_commits:
             self.add_repo_test(repo_test.list_git_commits())
         self.add_repo_test(get_err_git_commits(min_err_commits))
         self.add_repo_test(repo_test.check_for_uncommitted_files())
         self.add_repo_test(repo_test.check_for_max_repo_files(max_repo_files))
-        #self.add_repo_test(repo_test.check_remote_updates("startercode"))
+        if check_start_code:
+            self.add_repo_test(repo_test.check_remote_updates("startercode"))
         if tag_str is not None:
             self.add_repo_test(repo_test.check_for_tag(tag_str))
         if require_report_file:

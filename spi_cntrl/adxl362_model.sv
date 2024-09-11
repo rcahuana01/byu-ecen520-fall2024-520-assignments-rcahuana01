@@ -39,29 +39,29 @@ module adxl362_model (sclk, mosi, miso, cs);
                 // First byte is the command
                 if (received_value == WRITE_COMMAND) begin
                     current_transaction = WRITE_OP;
-                    $display("[%0tns]  SPI sub unit: Write operation", $time/1000);
+                    $display("[%0tns]  ADXL362: Write operation", $time/1000);
                 end
                 else if (received_value == READ_COMMAND) begin
                     current_transaction = READ_OP;
-                    $display("[%0tns]  SPI sub unit: Read operation", $time/1000);
+                    $display("[%0tns]  ADXL362: Read operation", $time/1000);
                 end
                 else begin
                     current_transaction = UNKNOWN;
-                    $display("[%0tns]  SPI sub unit: Unknown operation", $time/1000);
+                    $display("[%0tns]  ADXL362: Unknown operation", $time/1000);
                 end
             end
             else if (bits_received == 16) begin
                 // Second byte is the address
                 current_address = received_value;
-                $display("[%0tns]  SPI sub unit: Address 0x%h", $time/1000, current_address);
+                $display("[%0tns]  ADXL362: Address 0x%h", $time/1000, current_address);
                 if (current_transaction == READ_OP) begin
                     send_value = current_address; // for now, just send back the address
-                    $display("[%0tns]  SPI sub unit: Sending Value 0x%h", $time/1000, send_value);
+                    $display("[%0tns]  ADXL362: Sending Value 0x%h", $time/1000, send_value);
                 end
             end
             else if (bits_received >= 24 && bits_received % 8 == 0) begin
                 if (current_transaction == WRITE_OP) begin
-                    $display("[%0tns]  SPI sub unit: Received Value 0x%h", $time/1000, received_value);
+                    $display("[%0tns]  ADXL362: Received Value 0x%h", $time/1000, received_value);
                 end
             end
             else
