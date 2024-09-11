@@ -26,14 +26,22 @@ module transceiver (
     StateType ns, cs;
 
     // Internal signals
-    logic send, 
+    logic clrTimer, incBit, clrBit, incTimer, startBit. dataBit, parityBit;
 
     // Baud rate timer
-     always_comb begin
-        
+     always_ff @( posedge ) begin :
+        if (rst) begin
+            incBit <= 0;
+            incTimer <= 0;
+        end
+
      end
 
-
+    // Bit counter
+    always_comb begin
+        
+    end
+    
     // State transition and control logic
     always_comb begin
         // Assign default values
@@ -88,10 +96,7 @@ module transceiver (
         endcase
     end
 
-    // Bit counter
-    always_comb begin
-        
-    end
+    
 
 
 endmodule
