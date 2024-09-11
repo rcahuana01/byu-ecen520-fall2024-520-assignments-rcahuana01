@@ -154,5 +154,6 @@ The following assignment specific items should be included in your repository:
     3. Add the following statement to your report: "I have read the ECEN 520 assignment submission process and have resolved any questions I have with this process"
 
 <!-- Notes:
-- Need to help people learn how to use the GUI simulator. They just tried using the command line only.
+- Need to help people learn how to use the GUI simulator. They just tried using the command line only. (Maybe a tutorial on how to use the GUI simulator?)
+- Need to have a way for the testbench to generate an error when there is a problem so the python file catches the error.
 -->
