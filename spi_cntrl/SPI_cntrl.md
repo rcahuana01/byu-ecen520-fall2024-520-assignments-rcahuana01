@@ -66,7 +66,7 @@ Your controller should generate the `/CS`, `SCLK`, and `MOSI` signals as shown i
 
 ![SPI Transaction](./spi_transaction.jpg)
 
-The reading/writing of a byte will require 17 phases as follows:
+The reading/writing of a byte will require multiple phases as follows:
   1. `/CS` is driven low and valid data (MSB) is driven by the Main on to `MOSI`. If the subunit is sending data, it will drive the MSB of its data.
   2. `CLK` is driven high. The subunit will sample `MOSI` on this low to high transition and the controller will sample the `MISO` signal. 
   3. `CLK` is driven low. Both the controller and the subunit change the valus on the `MOSI` and `MISO` signals to make sure that the setup and hold times are met for the next transition of `CLK`.
@@ -184,6 +184,7 @@ Start your controller module by creating the top-level ports:
 | SPI_MOSI | Output | 1 | MOSI output signal |
 | SPI_CS | Output | 1 | CS output signal |
 | data_received | Output | 8 | Data received on the last transfer |
+
 | Parameter Name | Default Value | Purpose |
 | ---- | ---- | ---- |
 | CLK_FREQUENCY | 100_000_000 | Specify the clock frequency of the board |
@@ -199,7 +200,7 @@ These sequences are as follows:
     * Byte 0: write register (0x0a)
     * Byte 1: 8-bit address (taken from the `address` input)
     * Byte 2: Data to write (taken from `data_to_send`)
-  * Read register (when right button pressed)
+  * Read register (when `write` is de-asserted)
     * Byte 0: read register (0x0b)
     * Byte 1: 8-bit address (taken from the `address` input)
     * Byte 2: Don't care (capture the byte received on this operation)

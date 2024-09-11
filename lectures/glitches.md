@@ -8,7 +8,7 @@ In this lecture, we will discuss how glitches can occur in finite state machines
   * Chapter 10 sections 6-8 from [RTL Hardware Design Using VHDL](http://search.lib.byu.edu/byu/record/sfx.3578786?holding=i9vahb2m4z7qvbf3) book (ignore the VHDL code examples for now). Download the pdf from this textbook as you will use it later in the semester.
     * 10.6: State assignment. This should be review.
     * 10.7: Moore output buffering. This is a new topic. Make sure you read and understand this carefully including the "Look ahead" circuit.
-    * 10.8: These are examples you can browse through but it is VHDL so you can probably ignore it.
+    * 10.8: These are FSM examples you can browse through. Don't worry about the VHDL but review the state machine and its purpose
 
 ## Key Concepts
   * Source of output glitches in FSMs (transitioning between states and OFL logic glitches)
