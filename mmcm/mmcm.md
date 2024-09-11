@@ -10,10 +10,8 @@
 
 # Clocking and Metastability
 
-
 In this assignment you will learn how to use the MMCM to create a deskewed clock, clocks of various frequency, and phase, and to induce metastability.
 You will use the switches, buttons, seven segment display, and LEDs to interact with your clocking circuit.
-You can create this assignment in a _single_ top-level design.
 
 <!--
 Fvco range is 600 MHz to 1600 Mhz
@@ -35,7 +33,39 @@ set_false_path -from [get_clocks clock3] -to [get_clocks clock0]
 set_false_path -from [get_clocks {clock* sclock*}] -to [get_clocks sys_clk_pin]
 -->
 
+##  Top-Level Design
+
+Start your assignment by creating a top-level design that connects to the following pins on the FPGA:
+* 100 MHz clock input
+* Reset button
+* Switches
+
+
+| Port Name | Direction | Width | Function |
+| ---- | ---- | ---- | ----  |
+| CLK100MHZ | Input | 1 | Clock |
+| CPU_RESETN | Input | 1 | Reset (low asserted) |
+| SW | Input | 8 | Switches (8 data bits to send) |
+| BTNC | Input | 1 | Control signal to start a transmit operation |
+| LED | Output | 16 | Board LEDs (used for data and busy) |
+| UART_RXD_OUT | Output | 1 | Transmitter output signal |
+| UART_TXD_IN | Input | 1 | Receiver input signal |
+| LED16_B | Output | 1 | Used for TX busy signal |
+| LED17_R | Output | 1 | Used for RX busy signal |
+| LED17_G | Output | 1 | Used for RX error signal |
+| AN | [7:0] | Output | Anode signals for the seven segment display |
+| CA, CB, CC, CD, CE, CF, CG | [6:0] | Output | Seven segment display cathode signals |
+| DP | Output | 1 | Seven segment display digit point signal |
+
+| Parameter Name | Default Value | Purpose |
+| ---- | ---- | ---- |
+| CLK_FREQUENCY  | 100_000_000 | Specify the clock frequency |
+| SEGMENT_DISPLAY_US  | 1_000 | The amount of time in microseconds to display each digit (1 ms) |
+| DEBOUNCE_DELAY_US | integer | 1_000 | Specifies the minimum debounce delay in micro seconds (1 ms) |
+
+
 ##  Main MMCM
+
 
 The first step in this assignment is to create your "Main" MMCM that is used to deskew the input clock and generate a variety of clocks (note that this part of the design is just one part of the top-level design - you do not need to create a module for this).
 Instance the "MMCME2_BASE" primitive into your design and hook it up as described below. 
@@ -193,13 +223,8 @@ set_false_path -from [ get_cells pulse3_reg ] -to [ get_cells pulse3_clk0_d_reg 
 ## Submission
 
 1. Prepare your repository
-  * Make sure all of the _essential_ files needed to complete your project are committed into your repository
-  * Make sure you have a  `.gitignore` file for your assignment directory and that all intermediate files are ignored.
-  * Make sure you have a `makefile` with all the necessary make rules
     * `sim_top`: performs command line simulation of the top testbench
     * `gen_bit`: Generates a bitstream for your top-level design
-2. Commit and tag your repository
-  * Make sure all of your files are committed and properly tagged (using the proper tag)
 3. Create your assignment [Readme.md](../resources/assignment_mechanics.md#assignment-submission) file
   * Create the template file based on the instructions linked above
   * Add the following items for the assignment-specific section of the readme:

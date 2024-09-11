@@ -31,7 +31,9 @@ These standards are required for **all** assignments.
     * Indentation. Your module should be properly formatted such that the indentation matches the proper scope. 
     * Sometimes editors will insert a mix of tabs/spaces. Make sure that your code is properly indented when viewed within GitHub
 
-## Level 2 
+## Level 2
+
+Implement the standards for Level 1 and the following additional standards:
 
   * Synchronous Blocks (always/process blocks that generate synchronous circuits)
     * Reset clause
@@ -43,13 +45,18 @@ These standards are required for **all** assignments.
     * Use non-blocking assignment statements in synchronous blocks
     * Sensitivity Lists:
       * The only signals in the sensitivity list should be clocks and rests (and no resets for synchronous resets)
-  * Combinational process blocks (VHDL): only place the sensitive signals in the sensitivity list
+ * Combinational process blocks (VHDL): only place the sensitive signals in the sensitivity list
   * Combinational always_comb: Use blocking statements in always_ff
   * Case statements: cover all cases in a case statement
-  * State machines:
-    * Provide a comment at the start of the state machine clearly indicating the code below is a state machine.
-    * Group all blocks associated with a state machine adjancent to each other (i.e., state registers, outputs, input forming logic, etc.). 
-    * Provide a short comment for *every* state where the logic for the state is described
+* State machines:
+  * Provide a comment at the start of the state machine clearly indicating the code below is a state machine.
+  * Group all blocks associated with a state machine adjacent to each other (i.e., state registers, outputs, input forming logic, etc.). 
+  * Provide a short comment for *every* state where the logic for the state is described (i.e., for each case in a case statement)
+ 
+## Level 3 
+
+Implement the standards for Level 2 and the following additional standards:
+
   * Functions and tasks:
     * Provide a comment for every function and task
     

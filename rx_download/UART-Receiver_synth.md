@@ -17,8 +17,6 @@ Notes:
 The purpose of this assignment is to create a top-level UART receiver/transmitter in SystemVerilog and a testbench to validate your receiver.
 You will also create a seven segment display controller for displaying data from your UART on the seven segment display.
 
-Create a new directory in your repository and put all the files for this assignment within this directory.
-
 ## Seven Segment Controller and Testbench
 
 For this assignment and for most future assignments you will need to display values on the seven segment display of the Nexys DDR board.
@@ -92,6 +90,7 @@ Create a top-level design that uses the following top-level ports:
 | AN | [7:0] | Output | Anode signals for the seven segment display |
 | CA, CB, CC, CD, CE, CF, CG | [6:0] | Output | Seven segment display cathode signals |
 | DP | Output | 1 | Seven segment display digit point signal |
+
 | Parameter Name | Default Value | Purpose |
 | ---- | ---- | ---- |
 | CLK_FREQUENCY  | 100_000_000 | Specify the clock frequency |

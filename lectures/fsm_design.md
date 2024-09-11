@@ -14,10 +14,9 @@ We will discuss several styles of FSM coding and discuss their relatively advant
   * Review chapters 21-23 from [Dr. Nelson's](https://www.amazon.com/Designing-Digital-Systems-SystemVerilog-v2-1-ebook/dp/B091BBVG4C/ref=sr_1_1?crid=3TUDSUSI1BURK&keywords=Designing+Digital+Systems+With+SystemVerilog+%28v2.1%29&qid=1662573889&s=digital-text&sprefix=designing+digital+systems+with+systemverilog+v2.1+%2Cdigital-text%2C89&sr=1-1) ECEN 220 textbook (this is not required but will help review how to code a FSM in Verilog)
 
 ## Key Concepts
-  * Four different components of an FSM (IFL, OFL, Current State, next state logic)
+  * Three different components of an FSM (IFL, OFL, Current State)
   * Moore and Mealy state machines
-  * What does the term "segment" mean in terms of RTL design
-  * FSM Encoding approaches
+  * What does the term "component" mean in terms of RTL design
   * The difference between "Moore" and "Mealy" outputs
   * The key components of a FSM: State register, next state logic, Moore output logic, Mealy output logic
   * The different styles of FSM design
@@ -25,8 +24,6 @@ We will discuss several styles of FSM coding and discuss their relatively advant
     * Mapping of FSM components to different segments (pros and cons of different styles)
     * Pros and cons of various FSM segment coding style
   * Implications of defining FSM outputs in a registered HDL block
-  * Moore output buffering and inability to implement Mealy output buffering
-  * FSM Output glitches
 
 
 ## Resources

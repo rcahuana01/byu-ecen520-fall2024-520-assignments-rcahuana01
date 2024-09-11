@@ -116,7 +116,7 @@ This section provides a brief summary checklist of what you need to do to submit
     * You will not get any credit for the assignment if any of your makefile rules fail.
 2. Make sure all the _essential_ files needed to complete your project are committed into your repository.
     * If any essential files are missing then your make rules will likely fail and you will not get any credit for the assignment.
-3. Make sure no _non-essential_ files are **NOT** committed to your repository
+3. Make sure _non-essential_ files are **NOT** committed to your repository
     * It is possible to inadvertently commit temporary project files.
     * You will lose significant points if you commit large number of non-essential temporary files.
 4. Make sure you have a `.gitignore` file for your assignment directory and that all intermediate files created during the build process are ignored.

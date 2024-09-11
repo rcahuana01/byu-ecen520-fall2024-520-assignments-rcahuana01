@@ -1,20 +1,6 @@
 # SPI
  
-<!--
--- SPI Controller Part 1 (controller, use model, create testbench, synthesize to find synthesis errors)
 
-- Come up with some "discussion" or exploration exercise as part of the readme.md
-- It is hard to follow their testbenches. Need to provide more constraints so that I can follow and see that what was recieved is what was sent
-  (prehaps have them provide such a statement in the testbench output)
-- Perhaps I provide a detailed module test bench and they create the top-level testbench
-  (trade off between learning testenches and testing their circuits properly)
-Studnets confused on specification. More detailed steps?
-20+ hours!
-  - Have them display busy on one of the tri-color LEDs (like uart)
-  - Have them describe the state machine encoding from the synthesis report
-  - Have them put synchronizers on the reset signal
-  * Provide ability to continuously update the registers so you can see it change when tilting the board  
--->
 In this assignment, you will create a [SPI](https://en.wikipedia.org/wiki/Serial_Peripheral_Interface) controller for communicating with a SPI device.
 
 The SPI protocol is used extensively in embedded systems as a way to control external devices using a simple serial protocol. 
@@ -66,7 +52,7 @@ Your controller should generate the `/CS`, `SCLK`, and `MOSI` signals as shown i
 
 ![SPI Transaction](./spi_transaction.jpg)
 
-The reading/writing of a byte will require 17 phases as follows:
+The reading/writing of a byte will require multiple phases as follows:
   1. `/CS` is driven low and valid data (MSB) is driven by the Main on to `MOSI`. If the subunit is sending data, it will drive the MSB of its data.
   2. `CLK` is driven high. The subunit will sample `MOSI` on this low to high transition and the controller will sample the `MISO` signal. 
   3. `CLK` is driven low. Both the controller and the subunit change the valus on the `MOSI` and `MISO` signals to make sure that the setup and hold times are met for the next transition of `CLK`.
@@ -184,6 +170,7 @@ Start your controller module by creating the top-level ports:
 | SPI_MOSI | Output | 1 | MOSI output signal |
 | SPI_CS | Output | 1 | CS output signal |
 | data_received | Output | 8 | Data received on the last transfer |
+
 | Parameter Name | Default Value | Purpose |
 | ---- | ---- | ---- |
 | CLK_FREQUENCY | 100_000_000 | Specify the clock frequency of the board |
@@ -199,7 +186,7 @@ These sequences are as follows:
     * Byte 0: write register (0x0a)
     * Byte 1: 8-bit address (taken from the `address` input)
     * Byte 2: Data to write (taken from `data_to_send`)
-  * Read register (when right button pressed)
+  * Read register (when `write` is de-asserted)
     * Byte 0: read register (0x0b)
     * Byte 1: 8-bit address (taken from the `address` input)
     * Byte 2: Don't care (capture the byte received on this operation)
@@ -207,7 +194,7 @@ These sequences are as follows:
 ## ADXL362 Testbench
 
 Create a testbench of your controller that tests the operation of your AXDL362L controller.
-This testbench should be designed as follows:
+This testbench should be designed as follows:+
 * Make the top-level testbench parameterizable with the two top-level parameters.
 * Create a free-running clock
 * Instance your top-level design
@@ -226,12 +213,13 @@ This testbench should be designed as follows:
 Make sure your design successfully passes this testbench.
 Add the makefile rules named `sim_adxl362` and `sim_adxl362_100` that will perform this simulation from the command line (the `sim_adxl362_100` rule should be used to set the `SCLK_FREQUENCY` parameter to 100_000).
 
+<!--
 ## Preliminary Synthesis
 
 Although we will not be downloading this design in this assignment, it is important to perform a preliminary synthesis step on these modules to identify any synthesis problems.
-Create a makefile rule named `synth_adxl362_cntrl` that performs "out of context" synthesis on this module (see the [instrucitons](../rx_sim/UART_Receiver_sim.md#receiver-synthesis) on how to do this).
+Create a makefile rule named `synth_adxl362_cntrl` that performs "out of context" synthesis on this module (see the [instructions](../rx_sim/UART_Receiver_sim.md#receiver-synthesis) on how to do this).
 Make sure all synthesis warnings and errors are resolved before submitting your assignment.
-
+-->
                                       
 **Resources:**
   * [Nexys DDR user guide](https://digilent.com/reference/_media/reference/programmable-logic/nexys-4-ddr/nexys4ddr_rm.pdf)
@@ -244,6 +232,19 @@ Make sure all synthesis warnings and errors are resolved before submitting your 
 1. Required Makefile rules:
     * `sim_spi_cntrl`
     * `sim_spi_cntrl_100`
-    * `synth_spi_cntrl`
     * `sim_adxl362`
+<!--
+    * `synth_spi_cntrl`
     * `synth_adxl362_cntrl`
+-->
+
+
+<!--
+-- SPI Controller Part 1 (controller, use model, create testbench, synthesize to find synthesis errors)
+
+- Come up with some "discussion" or exploration exercise as part of the readme.md
+- It is hard to follow their testbenches. Need to provide more constraints so that I can follow and see that what was recieved is what was sent
+  (prehaps have them provide such a statement in the testbench output)
+- Perhaps I provide a detailed module test bench and they create the top-level testbench
+  (trade off between learning testenches and testing their circuits properly)
+-->

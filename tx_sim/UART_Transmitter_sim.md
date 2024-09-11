@@ -86,8 +86,7 @@ Design your transmitter to operate as follows:
 * The 'busy' signal is asserted whenever you are in the middle of a transmission (i.e., not in an idle state)
   * Ignore the 'send' signal if you are in the middle of a transmission
 * Reset the internal state machines/counters when the 'rst' signal is asserted
-  * Provide two flip-flops between the incoming 'rst' port and the reset you use in your design to synchronize the reset to the global clock
-  * Implement an asynchronous reset in your design
+  * Use asynchronous resets for the synchronous elements of your design
 * Add a synchronizing flip-flop on the output of the TX signal so there are no glitches on your output tx signal
 * You do not need to implement handshaking as described by the 320 lab assignment.
 
