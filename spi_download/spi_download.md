@@ -103,8 +103,8 @@ Once you have created your design and downloaded it to the board, you can make s
   * `synth_adxl362_cntrl`
   * `sim_top`:
   * `sim_top_100`:
-  * `gen_bit`: generates `spi_adx362l.bit`
-  * `gen_bit_100`: geneates `spi_adx362l_100.bit`
+  * `gen_bit`: generates `spi_adxl362.bit`
+  * `gen_bit_100`: geneates `spi_adxl362_100.bit`
 1. You need to have at least 3 "Error" commits in your repository
 2. Assignment specific Questions:
     1. Provide a table summarizing the resources your design uses from the implementation utilization report.

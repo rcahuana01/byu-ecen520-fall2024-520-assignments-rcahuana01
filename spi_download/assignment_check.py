@@ -19,7 +19,7 @@ def main():
     tester.add_make_test("sim_top_100")
     tester.add_make_test("gen_bit")
     tester.add_make_test("gen_bit_100")
-    tester.add_build_test(repo_test.file_exists_test(["spi_adx362l.bit", "spi_adx362l_100.bit",]))
+    tester.add_build_test(repo_test.file_exists_test(["spi_adxl362.bit", "spi_adxl362_100.bit",]))
     tester.run_tests()
 
 if __name__ == "__main__":
