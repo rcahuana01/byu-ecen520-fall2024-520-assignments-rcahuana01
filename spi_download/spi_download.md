@@ -82,7 +82,6 @@ At this point you are ready to implement your design, generate a bitfile and dow
 Create a new makefile rule named `gen_bit` that will generate a bitfile named `spi_adx362l.bit` for your top-level design with the default top-level parameters.
 Create a new makefile rule named `gen_bit_100` that will generate a bitfile named `spi_adx362l_100.bit` with a 100_000 SCLK frequency.
 
-
 Once you have created your design and downloaded it to the board, you can make sure it works by trying the following:
 
   * Read the DEVICEID register (0x0). Should get 0xad
