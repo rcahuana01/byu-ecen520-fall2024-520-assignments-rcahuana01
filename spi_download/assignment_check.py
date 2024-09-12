@@ -9,6 +9,7 @@ resources_path = pathlib.Path(__file__).resolve().parent.parent  / 'resources'
 sys.path.append( str(resources_path) )
 
 import test_suite_520
+import repo_test
 
 def main():
 
@@ -18,6 +19,7 @@ def main():
     tester.add_make_test("sim_top_100")
     tester.add_make_test("gen_bit")
     tester.add_make_test("gen_bit_100")
+    tester.add_build_test(repo_test.file_exists_test(["spi_adx362l.bit", "spi_adx362l_100.bit",]))
     tester.run_tests()
 
 if __name__ == "__main__":
