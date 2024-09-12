@@ -65,7 +65,7 @@ Create a top-level module named `tx_top` with the following ports and parameters
 | CLK_FREQUENCY  | 100_000_000 | Specify the clock frequency |
 | BAUD_RATE | integer | 19_200 | Baud rate of the design |
 | PARITY | integer | 1 | Parity type (0 = Even, 1 = Odd) |
-| DEBOUNCE_DELAY_US | integer | 10_000 | Specifies the minimum debounce delay in micro seconds (default 10 ms) |
+| DEBOUNCE_TIME_US | integer | 10_000 | Specifies the minimum debounce delay in micro seconds (default 10 ms) |
 
 Create your top-level design as follows:
   * Instance your debouncer module and hook up the `BTNC` button to the input of the debouncer. In addition, create a "one-shot" circuit on the output of the debouncer. The purpose of the one-shot circuit is to generate a single pulse when the button is pressed and to ignore any additional presses until the pulse has completed. If you do not add a one-shot circuit then the button press will be interpreted as multiple presses and multiple characters will be transmitted over the UART. The output of the debouncer plus one-shot circuits will go into the `send` input of your transmitter module.
