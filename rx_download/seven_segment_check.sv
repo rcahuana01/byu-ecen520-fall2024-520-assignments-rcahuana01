@@ -3,7 +3,7 @@
 //
 // This simulation model is used to check the behavior of the seven segment display
 //////////////////////////////////////////////////////////////////////////////////
-`timescale 1ns / 1ps
+//`timescale 1ns / 1ps
 
 module seven_segment_check(clk, rst, segments, dp, anode,
     new_value, output_display_val);
