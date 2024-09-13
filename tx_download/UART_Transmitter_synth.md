@@ -3,7 +3,7 @@ For this assignment you will create a top-level design for your UART transmitter
 
 **Assignment reminders**
 
-* As with the previous assignment, you must place your assignment code within a specific assignment directory as described in the [assignments overview](../Readme.md) page.
+* As with the previous assignment, you must place your assignment code within a specific assignment directory as described in the [assignments overview](../README.md) page.
 Make sure your add this directory to your repository and place all assignment specific code in this directory.
 * You will also need to tag your repository when you are ready to submit.
 * You are required to make frequent commits when you have design failures as described [here](../resources/assignment_mechanics.md#github-commits)
