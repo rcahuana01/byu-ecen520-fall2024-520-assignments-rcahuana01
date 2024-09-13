@@ -147,6 +147,7 @@ screen /dev/ttyUSB2 115200,cs8,parenb,-parodd,-cstopb
 ## Common Problems
 
 * Incorrectly set the terminal settings. In particularly, not setting "parity = odd". If you leave parity to none then you may get incorrect results.
+* `PuTTY: unable to load font "server:fixed"`. Go into 'fonts', click 'Change', and select the font such as 'Ubuntu Mono'.
 
 ## Assignment Submission
 
