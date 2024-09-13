@@ -21,12 +21,12 @@ module tx (
     // Parameters
     parameter CLK_FREQUENCY = 100_000_000;
     parameter BAUD_RATE = 19_200;
-    parameter PARITY = 1;
+    parameter PARITY = 1;  
 
     localparam BAUD_PERIOD = CLK_FREQUENCY / BAUD_RATE;
     localparam DATA_RANGE = 10;
     localparam TIMER_RANGE = 15;
-    localparam BIT_RANGE = 5; 
+    localparam BIT_RANGE = 3;  
     localparam DATA_BITS = 8;
 
     // State definitions
@@ -36,26 +36,26 @@ module tx (
     // Internal signals
     logic clrTimer, timerDone;
     logic clrBit, incBit, bitDone;
-    logic startBit, dataBit, parityBit, stopBit, bitNum; 
-
-    logic [TIMER_RANGE:0] timer;
-    logic [BIT_RANGE:0] bitCount;
+    logic [BIT_RANGE:0] bitNum; 
+    logic [TIMER_RANGE:0]timer;
     logic tx_out_int;  // Internal signal for tx_out
 
     // Bit timer
-    assign timerDone = (timer == BAUD_PERIOD) ? 1 : 0;
+    assign timerDone = (timer >= BAUD_PERIOD);
 
-    always_ff @(posedge clk) begin
-        if (rst || clrTimer || timerDone)
+    always_ff @(posedge clk or posedge rst) begin
+        if (rst || clrTimer) 
             timer <= 0;
+        else if (timerDone)
+            timer <= 0;  // Reset timer on done
         else
             timer <= timer + 1;
     end
 
     // Bit counter
-    assign bitDone = (bitNum == DATA_BITS-1) ? 1 : 0;
+    assign bitDone = (bitNum >= DATA_BITS-1);
 
-    always_ff @(posedge clk) begin
+    always_ff @(posedge clk or posedge rst) begin
         if (rst || clrBit)
             bitNum <= 0;
         else if (incBit)
@@ -68,26 +68,24 @@ module tx (
         clrTimer = 1'b0;
         incBit = 1'b0;
         clrBit = 1'b0;
-        startBit = 1'b0;
-        dataBit = 1'b0;
-        parityBit = 1'b0;
-        stopBit = 0;
 
         if (rst) begin
             ns = IDLE;
+            tx_out_int = 1'b1; // Default state for idle line
         end else begin
             case (cs)
                 IDLE: begin
                     if (send) 
                         ns = START;
                     clrTimer = 1'b1;
+                    tx_out_int = 1'b1;
                 end
                 START: begin
                     if (timerDone) begin
                         ns = BITS;
                         clrBit = 1'b1;
                     end
-                    startBit = 1'b1;
+                    tx_out_int = 1'b0;
                 end
                 BITS: begin
                     if (timerDone) begin
@@ -96,46 +94,35 @@ module tx (
                         else 
                             incBit = 1'b1;
                     end
-                    dataBit = 1'b1;
+                    tx_out_int = din[bitNum];
                 end
                 PAR: begin
                     if (timerDone) 
                         ns = STOP;
-                    parityBit = 1'b1;
+                    tx_out_int = !PARITY ? ^din : ~(^din);
                 end
                 STOP: begin
-                    if (timerDone) begin
+                    tx_out_int = 1'b1; 
+                    if (timerDone)
                         ns = IDLE;
-                        stopBit = 1;
-                    end
                 end
             endcase
         end
     end
 
     // State register
-    always_ff @(posedge clk) begin
-        cs <= ns;
+    always_ff @(posedge clk or posedge rst) begin
+        if (rst)
+            cs <= IDLE;
+        else
+            cs <= ns;
     end
       
     // Assign busy state
     assign busy = (cs != IDLE);
-    
-    // Datapath
-    always_ff @(posedge clk)
-        if (startBit)
-            tx_out_int <= 0;
-        else if (dataBit)
-            tx_out_int <= din[bitNum];
-        else if (parityBit)
-            tx_out_int <= PARITY ? ^din : ~(^din);
-        else if (stopBit)
-            tx_out_int <= 1;
-        else
-            tx_out_int <= 1;  
-    
+     
     // Output assignment
     always_ff @(posedge clk or posedge rst)
-        tx_out = rst ? 1 :tx_out_int;
+        tx_out <= rst ? 1'b1 : tx_out_int;
 
 endmodule
