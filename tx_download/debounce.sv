@@ -12,13 +12,13 @@
 
 
 module debounce(
-    input wire logic clk,
-    input wire logic rst,
-    input wire logic async_in,
-    output logic debounce_out
+    input wire logic clk,       //clock
+    input wire logic rst,       //synchronous reset
+    input wire logic async_in,  //asynchronous input signal to be debounced
+    output logic debounce_out   //debounced output signal
     );
     //Parameters
-    parameter integer DEBOUNCE_CLKS = 1_000;
+    parameter integer DEBOUNCE_CLKS = 1_000;    //number of clocks for debounce delay
 
     localparam counterBits = ($clog2(DEBOUNCE_CLKS));
     //Internal signals
@@ -34,11 +34,11 @@ module debounce(
     always_ff@(posedge clk)
         if (rst || clrTimer) 
             counter <= 0;
-        else if (counterBits < DEBOUNCE_CLKS-1)
+        else if (counterBits < (DEBOUNCE_CLKS-1))
             counter <= counter + 1;
 
     // Timer done signal
-    assign timerDone = (counter == DEBOUNCE_CLKS-1);
+    assign timerDone = (counter == (DEBOUNCE_CLKS-1));
 
     // Synchronizer on the input async_in
     always_ff@(posedge clk) begin

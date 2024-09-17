@@ -4,8 +4,8 @@ Name: Rodrigo Cahuana
 Hours Spent: 10
 
 ## Summarize any major challenges you had completing this assignment
-* Challenge 1. 
-* Challenge 2. 
+* Challenge 1. Calculating the debounce clocks took me while to understand the math
+* Challenge 2. Debugging the mutiple signals and levels took a while and it had to be very focus on where the signal changes
 
 ## Provide suggestions for improving this assignment (optional)
   * Suggestion 1
