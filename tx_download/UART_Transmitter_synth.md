@@ -168,11 +168,13 @@ The following assignment specific items should be included in your repository:
     1. Determine the "Worst Negative Slack" (or WNS). This is found in the timing report and indicates how much timing you slack you have with the current clocking (we will discuss this later in the semester).
     1. Indicate how many times you had to synthesize and download your bitstream before your circuit worked.
 
+Sample Resource Utilization Table:
+
 | Resource | Utilization |
 | ---- | ---- |
-| BUFG |  |
+| BUFG   |  |
 | CARRY4 |  |
-| LUTx |  |
-| FDRE |  |
-| IBUF |  |
-| OBUF |  |
+| LUTx   |  |
+| FDRE   |  |
+| IBUF   |  |
+| OBUF   |  |
