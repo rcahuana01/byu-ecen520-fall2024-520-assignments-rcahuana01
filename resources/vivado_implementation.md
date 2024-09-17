@@ -1,24 +1,26 @@
-# Vivado Implementation Flow
-
-Although the Vivado GUI can be used to help you manage projects, perform simulation, and implement your design, you will need to run the Vivado tools in command line mode.
-This page provides instructions and examples for running the implementation tools in command line mode.
-Instructions for using these tools in the GUI mode are provided on the ECEN 320 class web pages.
+Although the Vivado GUI can be used to help you manage projects, perform simulation, and implement your design, you will need to run the Vivado tools in command line mode for assignments in this class.
+This page provides instructions and examples for running the implementation tools in vivado for both interactive [tcl mode](#vivado-tcl-command-line) and as a [batch script](#build-script).
 More details on the Vivado tcl implementation tools can be found [here](../resources/vivado_command_line.md#synthesis-and-implementation).
 
-## Design Synthesis
+<!-- Instructions for using these tools in the GUI mode are provided on the ECEN 320 class web pages. -->
 
-The first step in the implementation process is to synthesize your design with the Xilinx Vivado synthesis tool.
-Although you are welcome to run the synthesis tool in the GUI mode, you will need to run the tool in command line mode for submission of this assignment.
-You are encouraged to use the command line mode during development to make sure you are familiar with the process.
+# Vivado TCL Command Line
 
-Start by running vivado in interactive mode as follows:
+To learn how to run the Vivado TCL tools it is best to run them in the interactive TCL mode so you can see their output and become comfortable with the commands. 
+Later you will put all of these commands into a .tcl script that you can run as a batch script as described [below](#build-script).
+
+Enter the Vivado tcl interpreter running vivado in interactive mode as follows:
 ```
 vivado -mode tcl
 ```
-You will have access to the Vivado tools in batch mode allowing you to execute individual tcl commands to perform the synthesis and implementation steps.
-The discussion below will describe these commands for interactive use but you will eventually run these as a .tcl synthesis script.
-You will need to execute several commands to complete the synthesis process:
-1. Load the HDL files<br>
+
+You will then enter the various commands to complete the implementation as described below.
+
+## Load Files
+
+Before beginning the implementation process, you will need to load your HDL files and constraints files into the Vivado environment.
+
+1. Loading HDL files<br>
 The first step involves compiling your HDL files into a representation that can be synthesized.
 Although your files have been previously compiled for simulation in QuestaSim, they must be compiled again within the Vivado tools.
 You can load the files using the [`read_verilog`](../resources/vivado_command_line.md#read_verilog) command with the `-sv` option.
@@ -38,9 +40,11 @@ The following command demonstrates how to load the .xdc file:
 read_xdc top.xdc
 ```
 
-3. Run the synthesis command
 
-The final step for synthesis is to run perform the actual synthesis using the [`synth_design`](../resources/vivado_command_line.md#synth_design) command.
+## Design Synthesis
+
+Once your files are properly loaded into the Vivado environment, you can begin the synthesis process.
+Synthesis is performed using the [`synth_design`](../resources/vivado_command_line.md#synth_design) command.
 This command requires at least two options: the top-level module name and the part number of the FPGA you are targeting.
 The following example demonstrates how to run the synthesis command for a top-level module named `top` and the part we are using on the NexysDDR board:
 ```synth_design -top top -part xc7a100tcsg324-1
@@ -67,11 +71,6 @@ Synthesize your design and create a bit file [see the tutorials for synthesis](h
 [implementation](https://byu-cpe.github.io/ecen320/tutorials/lab_03/08_implementation/), and
 [bitgen](https://byu-cpe.github.io/ecen320/tutorials/lab_03/09_bitgen/).
 -->
-
-Once you have figured out the commands needed to complete this process, put these commands in a `.tcl` script and run the script in batch mode as follows:
-```
-vivado -mode batch -source tx_synth.tcl -log tx_synth.log
-```
 
 ## Implementation (Placement and Routing)
 
@@ -126,7 +125,8 @@ write_bitstream -force tx.bit
 
 # Build Script
 
-It is tedious to type all of these implementation commands in by hand every time you want to implement.
+It is tedious to type all of these implementation commands in by hand every time you want to implement your design.
+Further, you need to provide a way to perform this process as part of a makefile without any interaction.
 You can create a `.tcl` script that contains all of these commands and run this script to implement your design.
 For this assignment, create a build `.tcl` script that contains all of the commands needed to synthesize and implement your design.
 You can run your implementation script as a single command from the command line as follows:

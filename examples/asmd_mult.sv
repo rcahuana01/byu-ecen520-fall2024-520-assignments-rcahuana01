@@ -1,3 +1,5 @@
+// Example SV ASMD multiplier with FSM
+
 module tx (clk,rst,start,a_in,b_in,ready,r);
     input clk,rst,start;
     input [7:0] a_in,b_in;
@@ -78,5 +80,5 @@ module tx (clk,rst,start,a_in,b_in,ready,r);
     end
     assign count_0 = (n_next == 0);
     assign r = r_reg;
-    
+
 endmodule
