@@ -30,7 +30,7 @@ module tx_top(
     // Internal signals
     logic debounce;   //One shoot signal
     logic debounce_out, debounce_out1, debounce_out2;
-    logic SW_sync[7:0];
+    logic [7:0]SW_sync;
     logic rst1, rst2; //Internal synchronizar flip flop signals
     logic tx_busy, tx_out_int;
 
@@ -52,7 +52,7 @@ module tx_top(
 
     //Synchronizer
     always_ff@(posedge CLK100MHZ)
-        SW_sync <= SW[7:0];
+        SW_sync <= SW;
 
     // Assign the switches to the leds (Debug help)
     assign LED = SW_sync;
@@ -68,6 +68,7 @@ module tx_top(
 
     // Assign the transmitter signal
     assign UART_RXD_OUT = tx_out_int;
+endmodule
 
 
 
