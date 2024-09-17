@@ -13,7 +13,7 @@ You are encouraged to use the command line mode during development to make sure 
 
 Start by running vivado in interactive mode as follows:
 ```
-vivado -mode batch
+vivado -mode tcl
 ```
 You will have access to the Vivado tools in batch mode allowing you to execute individual tcl commands to perform the synthesis and implementation steps.
 The discussion below will describe these commands for interactive use but you will eventually run these as a .tcl synthesis script.
@@ -67,6 +67,11 @@ Synthesize your design and create a bit file [see the tutorials for synthesis](h
 [implementation](https://byu-cpe.github.io/ecen320/tutorials/lab_03/08_implementation/), and
 [bitgen](https://byu-cpe.github.io/ecen320/tutorials/lab_03/09_bitgen/).
 -->
+
+Once you have figured out the commands needed to complete this process, put these commands in a `.tcl` script and run the script in batch mode as follows:
+```
+vivado -mode batch -source tx_synth.tcl -log tx_synth.log
+```
 
 ## Implementation (Placement and Routing)
 
