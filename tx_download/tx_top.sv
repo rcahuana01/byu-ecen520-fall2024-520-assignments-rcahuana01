@@ -1,5 +1,4 @@
 `timescale 1ns / 1ps
-import tx_sim/tx.sv
 /***************************************************************************
 *
 * Module: tx_top.sv
@@ -37,20 +36,22 @@ module tx_top(
 
 
     //Instance of debouncer module
-    debouncer D1(.clk(CLK100MHZ), .rst(rst2), .async_in(BTNC), .debounce_out(debounce_out));
+    debounce #(.DEBOUNCE_CLKS(CLK_FREQUENCY * DEBOUNCE_TIME_US)) debouncer (.clk(CLK100MHZ), .rst(rst2), 
+    .async_in(BTNC), .debounce_out(debounce_out));
 
     // Instance of the transmitter module
-    tx T1(.clk(CLK100MHZ), .rst(rst2), .send(one_press), .din(SW_sync), .busy(tx_busy), .tx_out(tx_out_int));
+    tx #(.CLK_FREQUENCY(CLK_FREQUENCY), .BAUD_RATE(BAUD_RATE), .PARITY(PARITY)) transmitter(.clk(CLK100MHZ),
+     .rst(rst2), .send(one_press), .din(SW_sync), .busy(tx_busy), .tx_out(tx_out_int));
 
     //One shoot detector
-    always_ff@(posedge clk) begin
+    always_ff@(posedge CLK100MHZ) begin
         debounce_out1 <= debounce_out;
         debounce_out2 <= debounce_out1;
     end
     assign one_press = (debounce_out1 && debounce_out2);
 
     //Synchronizer
-    always_ff@(posedge clk)
+    always_ff@(posedge CLK100MHZ)
         SW_sync <= SW[7:0];
 
     // Assign the switches to the leds (Debug help)
@@ -60,7 +61,7 @@ module tx_top(
     assign LED16_B = tx_busy;
 
     // Global reset synchronizer
-    always_ff@(posedge clk)begin
+    always_ff@(posedge CLK100MHZ)begin
         rst1 <= CPU_RESETN;
         rst2 <= rst1;
     end  

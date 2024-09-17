@@ -32,10 +32,13 @@ module debounce(
    
     // Debounce counter
     always_ff@(posedge clk)
-        if (rst) 
+        if (rst || clrTimer) 
             counter <= 0;
-        else if (counterBits > DEBOUNCE_CLKS)
+        else if (counterBits < DEBOUNCE_CLKS-1)
             counter <= counter + 1;
+
+    // Timer done signal
+    assign timerDone = (counter == DEBOUNCE_CLKS-1);
 
     // Synchronizer on the input async_in
     always_ff@(posedge clk) begin
