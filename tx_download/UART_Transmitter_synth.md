@@ -3,7 +3,7 @@ For this assignment you will create a top-level design for your UART transmitter
 
 **Assignment reminders**
 
-* As with the previous assignment, you must place your assignment code within a specific assignment directory as described in the [assignments overview](../Readme.md) page.
+* As with the previous assignment, you must place your assignment code within a specific assignment directory as described in the [assignments overview](../README.md) page.
 Make sure your add this directory to your repository and place all assignment specific code in this directory.
 * You will also need to tag your repository when you are ready to submit.
 * You are required to make frequent commits when you have design failures as described [here](../resources/assignment_mechanics.md#github-commits)
@@ -65,7 +65,7 @@ Create a top-level module named `tx_top` with the following ports and parameters
 | CLK_FREQUENCY  | 100_000_000 | Specify the clock frequency |
 | BAUD_RATE | integer | 19_200 | Baud rate of the design |
 | PARITY | integer | 1 | Parity type (0 = Even, 1 = Odd) |
-| DEBOUNCE_DELAY_US | integer | 10_000 | Specifies the minimum debounce delay in micro seconds (default 10 ms) |
+| DEBOUNCE_TIME_US | integer | 10_000 | Specifies the minimum debounce delay in micro seconds (default 10 ms) |
 
 Create your top-level design as follows:
   * Instance your debouncer module and hook up the `BTNC` button to the input of the debouncer. In addition, create a "one-shot" circuit on the output of the debouncer. The purpose of the one-shot circuit is to generate a single pulse when the button is pressed and to ignore any additional presses until the pulse has completed. If you do not add a one-shot circuit then the button press will be interpreted as multiple presses and multiple characters will be transmitted over the UART. The output of the debouncer plus one-shot circuits will go into the `send` input of your transmitter module.
@@ -134,6 +134,8 @@ gen_tx_bit:
 ## Design Download
 
 After successfully synthesizing your design and generating a bitfile, download your design to a Nexys4 DDR board and demonstrate it working correctly. 
+Instructions for downloading your design can be found [here](../resources/download.md).
+
 Use the "Putty" tool to send characters from your board to the computer. 
 There is a tutorial on [Putty](https://byu-cpe.github.io/ecen320/tutorials/other/01_putty_setup/) that can help you run this tool.
 After generating a bitstream, download your bitstream and make sure your transmitter bitstream works with a terminal emulator.
@@ -147,6 +149,7 @@ screen /dev/ttyUSB2 115200,cs8,parenb,-parodd,-cstopb
 ## Common Problems
 
 * Incorrectly set the terminal settings. In particularly, not setting "parity = odd". If you leave parity to none then you may get incorrect results.
+* `PuTTY: unable to load font "server:fixed"`. Go into 'fonts', click 'Change', and select a font such as 'Ubuntu Mono'.
 
 ## Assignment Submission
 

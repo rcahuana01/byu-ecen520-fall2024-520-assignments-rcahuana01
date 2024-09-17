@@ -14,15 +14,15 @@ This repository contains the lecture schedule (including links to lecture summar
 | **Week 2** | |
 | 9/9/2024 | [Behavioral SystemVerilog](./lectures/system_verilog_sequential.md) |
 | 9/11/2024 | [FSM Design](./lectures/fsm_design.md) |
-| 9/13/2024 | [FSM Output Glitches and State Encoding](./lectures/glitches.md) |
+| 9/13/2024 | [~~FSM Output Glitches and State Encoding~~](./lectures/glitches.md) |
 | **Week 3** | |
-| 9/16/2024 | [RTL Design using ASM Diagrams](./lectures/rtl_asmd.md) |
-| 9/18/2024 | [SystemVerilog Testbenches](./lectures/testbenches.md) |
-| 9/20/2024 | [Functions, Tasks, and Threads](./lectures/functions_tasks.md) |
+| 9/16/2024 | [FSM Output Glitches and State Encoding](./lectures/glitches.md) |
+| 9/18/2024 | [RTL Design using ASM Diagrams](./lectures/rtl_asmd.md) |
+| 9/20/2024 | [SystemVerilog Testbenches](./lectures/testbenches.md) |
 | **Week 4** | |
-| 9/23/2024 | [SystemVerilog Types](./lectures/systemverilog_types.md) |
-| 9/25/2024 | [Synthesis Tools, Options, and Logs]() |
-| 9/27/2024 | * |
+| 9/23/2024 | [Functions, Tasks, and Threads](./lectures/functions_tasks.md) |
+| 9/25/2024 | [SystemVerilog Types](./lectures/systemverilog_types.md) |
+| 9/27/2024 | [Synthesis Tools, Options, and Logs]() **?** |
 | **Week 5** |  |
 | 9/30/2024 | [Memories]() |
 | 10/2/2024 | [SPI Controller](./lectures/spi.md)  |

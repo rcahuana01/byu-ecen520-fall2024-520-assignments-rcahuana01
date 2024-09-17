@@ -47,7 +47,7 @@ module tx_top_tb ();
         .CPU_RESETN(rst_n),
         .SW(sw),
         .BTNC(btnc_bouncy),
-        .LED(led_i),
+        .LED(led),
         .UART_RXD_OUT(tx_out),
         .LED16_B(tx_busy)
     );
