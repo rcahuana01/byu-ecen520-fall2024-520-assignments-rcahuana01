@@ -134,6 +134,8 @@ gen_tx_bit:
 ## Design Download
 
 After successfully synthesizing your design and generating a bitfile, download your design to a Nexys4 DDR board and demonstrate it working correctly. 
+Instructions for downloading your design can be found [here](../resources/download.md).
+
 Use the "Putty" tool to send characters from your board to the computer. 
 There is a tutorial on [Putty](https://byu-cpe.github.io/ecen320/tutorials/other/01_putty_setup/) that can help you run this tool.
 After generating a bitstream, download your bitstream and make sure your transmitter bitstream works with a terminal emulator.
