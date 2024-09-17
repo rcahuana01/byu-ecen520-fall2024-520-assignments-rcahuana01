@@ -1,5 +1,5 @@
-sim_debouncer: debouncer.sv
-	vlog -sv debouncer.sv debouncer_tb.sv
+sim_debounce: debounce.sv
+	vlog -sv debounce.sv debounce_tb.sv
 	vsim -c work.tx_tb -do "run -all; quit"
 sim_tx_top: tx_top.sv
 	vlog -sv tx_top.sv tx_top_tb.sv

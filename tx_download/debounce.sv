@@ -1,7 +1,7 @@
 `timescale 1ns / 1ps
 /***************************************************************************
 *
-* Module: debouncer.sv
+* Module: debounce.sv
 * Author: Rodrigo Cahuana
 * Class: ECEN 520
 * Date: 9/15/2024
@@ -11,7 +11,7 @@
 ****************************************************************************/
 
 
-module debouncer(
+module debounce(
     input wire logic clk,
     input wire logic rst,
     input wire logic async_in,
@@ -32,10 +32,10 @@ module debouncer(
    
     // Debounce counter
     always_ff@(posedge clk)
-        if () 
-            bitNum <= 0;
-        else if (counterBits == ) 
-            bitNum <= bitNum + 1;
+        if (rst) 
+            counter <= 0;
+        else if (counterBits > DEBOUNCE_CLKS)
+            counter <= counter + 1;
 
     // Synchronizer on the input async_in
     always_ff@(posedge clk) begin
@@ -48,7 +48,6 @@ module debouncer(
             async_in2 <= async_in1;
         end
     end
-    assign timerDone = (counterBits < DEBOUNCE_CLKS) ? 1 : 0;
 
     // Debouncer state machine
     always_comb
