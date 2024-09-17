@@ -1,0 +1,31 @@
+#-----------------------------------------------------------
+# Vivado v2024.1 (64-bit)
+# SW Build 5076996 on Wed May 22 18:36:09 MDT 2024
+# IP Build 5075265 on Wed May 22 21:45:21 MDT 2024
+# SharedData Build 5076995 on Wed May 22 18:29:18 MDT 2024
+# Start of session at: Tue Sep 17 17:23:51 2024
+# Process ID: 2292373
+# Current directory: /auto/fsf/rcahuana/ecen520/tx_download
+# Command line: vivado -mode tcl
+# Log file: /auto/fsf/rcahuana/ecen520/tx_download/vivado.log
+# Journal file: /auto/fsf/rcahuana/ecen520/tx_download/vivado.jou
+# Running On        :DIGITAL-11
+# Platform          :Ubuntu
+# Operating System  :Ubuntu 22.04.4 LTS
+# Processor Detail  :Intel(R) Core(TM) i5-14500
+# CPU Frequency     :1801.105 MHz
+# CPU Physical cores:14
+# CPU Logical cores :20
+# Host memory       :16414 MB
+# Swap memory       :2147 MB
+# Total Virtual     :18562 MB
+# Available Virtual :10968 MB
+#-----------------------------------------------------------
+read_verilog -sv tx.sv
+read_verilog -sv tx_top.sv
+read_verilog -sv tx_top.sv
+read_verilog -sv tx.sv
+read_verilog sv tx_top.sv tx_top_tb.sv ../tx_sim/tx.sv gen_bounce.sv debounce.sv ../tx_sim/rx_model.sv
+ls
+-sv tx_top.sv tx_top_tb.sv ../tx_sim/tx.sv gen_bounce.sv debounce.sv ../tx_sim/rx_model.sv
+read_verilog -sv tx_top.sv tx_top_tb.sv ../tx_sim/tx.sv gen_bounce.sv debounce.sv ../tx_sim/rx_model.sv
