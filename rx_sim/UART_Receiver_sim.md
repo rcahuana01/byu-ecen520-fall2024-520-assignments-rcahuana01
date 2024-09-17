@@ -155,3 +155,7 @@ The following assignment specific items should be included in your repository:
     1. Provide a table listing the state and the encoding that the synthesis tool used for your receiver state machine.
     1. Provide a table summarizing of the "estimated" resources your design will use. This will show up in the synthesis log file. This will include cells such as CARRY4, LUT1, LUT2, LUT3, LUT4, LUT5, LUT6, FDRE, etc.
 
+<!--
+Future Changes:
+* ask them to manually change the FSM encoding type when thhey synthesize to see the impact.
+-->
