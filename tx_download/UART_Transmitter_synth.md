@@ -167,4 +167,6 @@ The following assignment specific items should be included in your repository:
     1. Indicate how many times you had to synthesize and download your bitstream before your circuit worked.
 
 <!--
+Future Changes:
+- Need to explain in more detail the need to carefully review the syntehsis logs. Perhaps provide a few examples of what to look for in the logs.
 -->
