@@ -39,7 +39,7 @@ module spi_subunit (sclk, mosi, miso, cs, send_value, received_value, new_value)
         active <= 1'b1;
         bits_received <= 0;
         data_out <= send_value;
-        $display("[%0tns]  SPI subunit starting transfer of 0x%h", $time/1000,
+        $display("[%0t]  SPI subunit starting transfer of 0x%h", $time,
             send_value);
     end
 
@@ -48,7 +48,7 @@ module spi_subunit (sclk, mosi, miso, cs, send_value, received_value, new_value)
         // Shift data out (and rotate data back in)
         data_out <= {data_out[6:0],data_out[7]};
         if (bits_received == 8) begin
-            $display("[%0tns]  SPI subunit received byte 0x%h (#%0d)", $time/1000,
+            $display("[%0t]  SPI subunit received byte 0x%h (#%0d)", $time,
                 received_value, transfer_count);
             // Increment transfer count
             transfer_count <= transfer_count + 1;
