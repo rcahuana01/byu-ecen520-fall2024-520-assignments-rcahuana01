@@ -1,0 +1,13 @@
+sim_debouncer: tx.sv
+	vlog -sv debouncer.sv debouncer_tb.sv
+	vsim -c work.tx_tb -do "run -all; quit"
+sim_tx_top: tx.sv
+	vlog -sv tx_top.sv tx_top_tb.sv
+	vsim -c work.tx_tb -gBAUD_RATE=115200 -gPARITY=0 -do "run -all; quit"
+sim_tx_bit: tx.sv
+sim_tx_bit_115200_even: tx.sv
+
+clean:
+	rm -rf transcript ./work/*
+	rm -f *.mpf *.mti *.log *.pb *.mti *.vstf *wlft* *.wlf .nfs* tmp *.bak
+
