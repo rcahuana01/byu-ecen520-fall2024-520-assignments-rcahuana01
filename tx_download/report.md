@@ -4,8 +4,8 @@ Name: Rodrigo Cahuana
 Hours Spent: 10
 
 ## Summarize any major challenges you had completing this assignment
-* Challenge 1. It took a lot of time to remember the proper syntax for SystemVerilog
-* Challenge 2. Designing the circuit and understanding baud period and baud rate also was confusing to me.
+* Challenge 1. 
+* Challenge 2. 
 
 ## Provide suggestions for improving this assignment (optional)
   * Suggestion 1
