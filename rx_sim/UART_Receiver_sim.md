@@ -1,51 +1,13 @@
 
-<!--
-Notes:
--- Any _new_ coding standards to add? It would be nice to add something for this assignment
-
-
--->
-
 # UART Receiver and Testbench
 
 The purpose of this assignment is to create a UART receiver module and verify that it operates correctly with a custom testbench.
-<!--
-You will also be creating a UART transmitter simulation model as part of the assignment verification.
--->
 
-
-<!--
-## Assignment Instructions
-
-Create a new directory in your repository as described above and put all the files for this assignment within this directory.
-
-### Create a UART transmitter simulation model
-
-Create a Verilog simulation model that simulates the operation of a transmitter.
-Your transmitter should be parameterizable in terms of baud rate, parity, and clock frequency.
-You should design your transmitter model such that: 
-  * Print a message when starting a transmission (and indicate the value sent and parity mode)
-  * Print a message when you are done with a transmission
-
-| Parameter Name | Default Value | Purpose |
-| ---- | ---- | ---- |
-| CLK_FREQUECY | 100_000_000 | Specify the clock frequency |
-| BAUD_RATE  | 19_200 | Specify the transmit baud rate |
-| PARITY | 1 | Specify the parity bit (0 = even, 1 = odd) |
-
-Design your transmitter model as a simple, non-synthesizable model using the testbench principles discussed in class (you may want to refer to the [rx_model.sv](../uart_transmitter/rx_model.sv) used in the previous assignment).
-
-**TODO**: Add a reset?
--->
 
 ## UART Receiver Module
 
 The primary goal of this assignment is to design a UART receiver module that can receive data from a UART transmitter.
 Create a UART receiver module that actively monitors the input "data in" signal receives a single byte of data and a parity bit.
-<!-- 
-Note that all other modules or testbenches you create for this assignment can use any Verilog or SystemVerilog constructs.
-The intent of this requirement is to give you practice using old style `reg` and `wire` data types.
--->
 There is a ECEN 320 lab description for the [UART Receiver](https://byu-cpe.github.io/ecen320/labs/lab-11/) but the requirements for this receiver may be slightly different.
 
 Create your receiver with the following ports and parameters
@@ -154,4 +116,9 @@ The following assignment specific items should be included in your repository:
 2. Assignment specific Questions:
     1. Provide a table listing the state and the encoding that the synthesis tool used for your receiver state machine.
     1. Provide a table summarizing of the "estimated" resources your design will use. This will show up in the synthesis log file. This will include cells such as CARRY4, LUT1, LUT2, LUT3, LUT4, LUT5, LUT6, FDRE, etc.
+
+<!--
+Notes:
+-- Any _new_ coding standards to add? It would be nice to add something for this assignment
+-->
 
