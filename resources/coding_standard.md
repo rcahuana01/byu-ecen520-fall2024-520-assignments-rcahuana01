@@ -36,12 +36,12 @@ These standards are required for **all** assignments.
 Implement the standards for Level 1 and the following additional standards:
 
   * Synchronous Blocks (always/process blocks that generate synchronous circuits)
-    * Reset clause
+    * Reset clause: by defaull, all synchronous blocks should have a reset clause. If a reset is not needed, provide a comment indicating why a reset is not needed.
       * The reset clause must be the first clause in the block.
       * All other logic should be in the 'else' portion of the first, initial reset clause. This 'else' clause should not have any logic in it (i.e., reset logic in first clause, all other logic in else clause)
-      * There should be only one reset clause in the block (if a reset is used). Do not have multiple reset clauses.
+      * There should be only one reset clause in the block (if a reset is used). 
       * All signals that use a reset in a synchronous block must use the same style of reset (i.e., all use synchronous or all use asynchronous - no mixing of the two in the same block)
-    * Synchronous always blocks should be limited to related signals. Do not create one big synchronous block with all synchronous signals of the module (unless it is a small module).
+    * Synchronous always blocks should be limited to related signals. Do not create one big synchronous block with all synchronous signals of the module.
     * Use non-blocking assignment statements in synchronous blocks
     * Sensitivity Lists:
       * The only signals in the sensitivity list should be clocks and rests (and no resets for synchronous resets)

@@ -382,7 +382,6 @@ class check_remote_updates(repo_test):
         remote_commits = list(repo_test_suite.repo.iter_commits(f"{self.remote_name}/{current_branch}"))
         latest_remote_commit = None
         print(f"search limit date {search_limit_date}")
-        print(commit,remote_commit_date)
         for commit in remote_commits:
             remote_commit_date = datetime.datetime.fromtimestamp(commit.committed_date)
             if remote_commit_date <= search_limit_date:
@@ -395,6 +394,7 @@ class check_remote_updates(repo_test):
         # git config --global alias.tm "commit --no-commit --no-ff"
 
         if latest_remote_commit > local_commit_date:
-            repo_test_suite.print_error("Remote has some commits that are missing")
+            repo_test_suite.print_error(f"Git Remote \'{self.remote_name}\' has some newer commits that are not integarated into the local repository")
+            return self.warning_result()
 
         return self.success_result()

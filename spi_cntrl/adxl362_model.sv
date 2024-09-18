@@ -39,29 +39,40 @@ module adxl362_model (sclk, mosi, miso, cs);
                 // First byte is the command
                 if (received_value == WRITE_COMMAND) begin
                     current_transaction = WRITE_OP;
-                    $display("[%0tns]  SPI sub unit: Write operation", $time/1000);
+                    $display("[%0t]  ADXL362: Write operation", $time);
                 end
                 else if (received_value == READ_COMMAND) begin
                     current_transaction = READ_OP;
-                    $display("[%0tns]  SPI sub unit: Read operation", $time/1000);
+                    $display("[%0t]  ADXL362: Read operation", $time);
                 end
                 else begin
                     current_transaction = UNKNOWN;
-                    $display("[%0tns]  SPI sub unit: Unknown operation", $time/1000);
+                    $display("[%0t]  ADXL362: Unknown operation", $time);
                 end
             end
             else if (bits_received == 16) begin
                 // Second byte is the address
                 current_address = received_value;
-                $display("[%0tns]  SPI sub unit: Address 0x%h", $time/1000, current_address);
+                $display("[%0t]  ADXL362: Address 0x%h", $time, current_address);
                 if (current_transaction == READ_OP) begin
+                    case(current_address)
+                        8'h00: send_value = 8'hAD; // Device ID register
+                        8'h01: send_value = 8'h1D; // Device ID 0X1D register
+                        8'h02: send_value = 8'hF2; // PART ID register
+                        8'h03: send_value = 8'h01; // Silicon revision register
+                        8'h08: send_value = $urandom_range(0,255); // X axis MSB data
+                        8'h09: send_value = $urandom_range(0,255); // Y axis MSB data
+                        8'h0a: send_value = $urandom_range(0,255); // Z axis MSB data
+                        8'h0b: send_value = 8'h40; // Status register
+                        default: send_value = 8'hff;
+                    endcase
                     send_value = current_address; // for now, just send back the address
-                    $display("[%0tns]  SPI sub unit: Sending Value 0x%h", $time/1000, send_value);
+                    $display("[%0t]  ADXL362: Sending Value 0x%h", $time, send_value);
                 end
             end
             else if (bits_received >= 24 && bits_received % 8 == 0) begin
                 if (current_transaction == WRITE_OP) begin
-                    $display("[%0tns]  SPI sub unit: Received Value 0x%h", $time/1000, received_value);
+                    $display("[%0t]  ADXL362: Received Value 0x%h", $time, received_value);
                 end
             end
             else

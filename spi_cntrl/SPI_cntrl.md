@@ -1,20 +1,6 @@
 # SPI
  
-<!--
--- SPI Controller Part 1 (controller, use model, create testbench, synthesize to find synthesis errors)
 
-- Come up with some "discussion" or exploration exercise as part of the readme.md
-- It is hard to follow their testbenches. Need to provide more constraints so that I can follow and see that what was recieved is what was sent
-  (prehaps have them provide such a statement in the testbench output)
-- Perhaps I provide a detailed module test bench and they create the top-level testbench
-  (trade off between learning testenches and testing their circuits properly)
-Studnets confused on specification. More detailed steps?
-20+ hours!
-  - Have them display busy on one of the tri-color LEDs (like uart)
-  - Have them describe the state machine encoding from the synthesis report
-  - Have them put synchronizers on the reset signal
-  * Provide ability to continuously update the registers so you can see it change when tilting the board  
--->
 In this assignment, you will create a [SPI](https://en.wikipedia.org/wiki/Serial_Peripheral_Interface) controller for communicating with a SPI device.
 
 The SPI protocol is used extensively in embedded systems as a way to control external devices using a simple serial protocol. 
@@ -29,7 +15,7 @@ This allows devices to communicate without agreeing ahead of time on the baud ra
 Many technical protocols including SPI were originally defined using the terms "master" and "slave" to represent the relationship between different devices in the protocol.
 "Master" devices are usually in control of an operation or communication protocol and "slave" devices are designed to respond to the master.
 There is a growing effort to replace this master/slave terminology due to its reference to human slavery
-(see [here](https://www.allaboutcircuits.com/news/how-master-slave-terminology-reexamined-in-electrical-engineering/),[here](https://www.sparkfun.com/spi_signal_names), and [here](https://en.wikipedia.org/wiki/Master/slave_(technology))).
+(see [here](https://www.allaboutcircuits.com/news/how-master-slave-terminology-reexamined-in-electrical-engineering/), [here](https://www.sparkfun.com/spi_signal_names), and [here](https://en.wikipedia.org/wiki/Master/slave_(technology))).
 Several proposed alternatives have been made for these terms in the context of SPI.
 For the purposes of this assignment, the term "Main" will be used for the term "Master" and the term "Subnode" will be used for the term "Slave" as described by the [Analog Devices](https://www.analog.com/en/analog-dialogue/articles/introduction-to-spi-interface.html) SPI overview (since we will be talking to an Analog Devices device).
 While these terms are not perfect, they retain the "M" letter and the "S" letter from the original terms and thus are consistent with the pin names of the SPI protocol.
@@ -208,7 +194,7 @@ These sequences are as follows:
 ## ADXL362 Testbench
 
 Create a testbench of your controller that tests the operation of your AXDL362L controller.
-This testbench should be designed as follows:
+This testbench should be designed as follows:+
 * Make the top-level testbench parameterizable with the two top-level parameters.
 * Create a free-running clock
 * Instance your top-level design
@@ -227,12 +213,13 @@ This testbench should be designed as follows:
 Make sure your design successfully passes this testbench.
 Add the makefile rules named `sim_adxl362` and `sim_adxl362_100` that will perform this simulation from the command line (the `sim_adxl362_100` rule should be used to set the `SCLK_FREQUENCY` parameter to 100_000).
 
+<!--
 ## Preliminary Synthesis
 
 Although we will not be downloading this design in this assignment, it is important to perform a preliminary synthesis step on these modules to identify any synthesis problems.
-Create a makefile rule named `synth_adxl362_cntrl` that performs "out of context" synthesis on this module (see the [instrucitons](../rx_sim/UART_Receiver_sim.md#receiver-synthesis) on how to do this).
+Create a makefile rule named `synth_adxl362_cntrl` that performs "out of context" synthesis on this module (see the [instructions](../rx_sim/UART_Receiver_sim.md#receiver-synthesis) on how to do this).
 Make sure all synthesis warnings and errors are resolved before submitting your assignment.
-
+-->
                                       
 **Resources:**
   * [Nexys DDR user guide](https://digilent.com/reference/_media/reference/programmable-logic/nexys-4-ddr/nexys4ddr_rm.pdf)
@@ -245,6 +232,22 @@ Make sure all synthesis warnings and errors are resolved before submitting your 
 1. Required Makefile rules:
     * `sim_spi_cntrl`
     * `sim_spi_cntrl_100`
-    * `synth_spi_cntrl`
     * `sim_adxl362`
+1. You need to have at least 5 "Error" commits in your repository
+2. No assignment specific questions for this assignment
+
+<!--
+    * `synth_spi_cntrl`
     * `synth_adxl362_cntrl`
+-->
+
+
+<!--
+-- SPI Controller Part 1 (controller, use model, create testbench, synthesize to find synthesis errors)
+
+- Come up with some "discussion" or exploration exercise as part of the readme.md
+- It is hard to follow their testbenches. Need to provide more constraints so that I can follow and see that what was recieved is what was sent
+  (prehaps have them provide such a statement in the testbench output)
+- Perhaps I provide a detailed module test bench and they create the top-level testbench
+  (trade off between learning testenches and testing their circuits properly)
+-->
