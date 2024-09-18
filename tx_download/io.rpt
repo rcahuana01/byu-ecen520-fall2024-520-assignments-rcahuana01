@@ -1,7 +1,7 @@
 Copyright 1986-2022 Xilinx, Inc. All Rights Reserved. Copyright 2022-2024 Advanced Micro Devices, Inc. All Rights Reserved.
 ----------------------------------------------------------------------------------------------------------------------------------------------------------
 | Tool Version              : Vivado v.2024.1 (lin64) Build 5076996 Wed May 22 18:36:09 MDT 2024
-| Date                      : Wed Sep 18 12:50:46 2024
+| Date                      : Wed Sep 18 12:58:22 2024
 | Host                      : DIGITAL-10 running 64-bit Ubuntu 22.04.4 LTS
 | Command                   : report_io -file io.rpt
 | Design                    : tx_top
