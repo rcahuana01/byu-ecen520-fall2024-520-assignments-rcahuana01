@@ -89,14 +89,17 @@ module adxl362_model (sclk, mosi, miso, cs);
                     endcase
                     $display("[%0t]  ADXL362: Sending Value 0x%h", $time, send_value);
                 end
-            end
-            else if (bits_received >= 24 && bits_received % 8 == 0) begin
-                if (current_transaction == WRITE_OP) begin
+            end else if (bits_received >= 24 && bits_received % 8 == 0 && 
+                        current_transaction == WRITE_OP) begin
                     $display("[%0t]  ADXL362: Received Value 0x%h", $time, received_value);
-                end
             end
-            else
-                send_value <= {send_value[6:0],1'b0};
+        end
+    end
+
+    // Send data out (on negative edge)
+    always@(negedge sclk) begin
+        if (bits_received >= 17 && current_transaction == READ_OP && active) begin
+            send_value = {send_value[6:0], send_value[7]};
         end
     end
 
