@@ -1,4 +1,4 @@
-`timescale 1ns / 1ps
+//`timescale 1ns / 1ps
 //////////////////////////////////////////////////////////////////////////////////
 // TX testbench
 //////////////////////////////////////////////////////////////////////////////////
@@ -63,7 +63,7 @@ module tx_tb ();
 
         // Initiate transfer on negative clock edge
         @(negedge clk)
-        $display("[%0tns] Transmitting 0x%h", $time/1000.0, char_to_send);
+        $display("[%0t] Transmitting 0x%h", $time, char_to_send);
 
         // set inputs
         tb_send = 1;
@@ -97,7 +97,7 @@ module tx_tb ();
         #100ns
 
         //Test Reset
-        $display("[%0tns] Testing Reset", $time/1000.0);
+        $display("[%0t] Testing Reset", $time);
         rst = 1;
         #80ns;
         // Un reset on negative edge
@@ -107,7 +107,7 @@ module tx_tb ();
         // Make sure tx is high
         @(negedge clk)
         if (tb_tx_out != 1'b1) begin
-            $display("[%0tns] Warning: TX out not high after reset", $time/1000.0);
+            $display("[%0t] Warning: TX out not high after reset", $time);
             errors = errors + 1;
         end
 
@@ -122,7 +122,7 @@ module tx_tb ();
             wait (tx_busy == 1'b0);
             // check to see that character received is the one that was sent
             if (rx_data != char_to_send) begin
-                $display("\[%0tns] WARNING: Received 0x%h instead of 0x%h", $time/1000,rx_data,char_to_send);
+                $display("\[%0t] WARNING: Received 0x%h instead of 0x%h", $time/1000,rx_data,char_to_send);
                 errors = errors + 1;
             end
             // Delay a random amount of time
@@ -137,7 +137,7 @@ module tx_tb ();
         repeat(BAUD_CLOCKS * 4)
             @(negedge clk);
         // Issue reset
-        $display("[%0tns] Testing reset of TX in middle of transaction", $time/1000.0);
+        $display("[%0t] Testing reset of TX in middle of transaction", $time);
         rst = 1;
         #20ns;
         // Un reset on negative edge
@@ -147,11 +147,11 @@ module tx_tb ();
         repeat(2)
             @(negedge clk);
         if (tb_tx_out != 1'b1) begin
-            $display("[%0tns] Warning: TX out not high after reset", $time/1000.0);
+            $display("[%0t] Warning: TX out not high after reset", $time);
             errors = errors + 1;
         end
         if (tx_busy != 1'b0) begin
-            $display("[%0tns] Warning: busy is high after reset", $time/1000.0);
+            $display("[%0t] Warning: busy is high after reset", $time);
             errors = errors + 1;
         end
         // Wait 4 baud periods
@@ -160,7 +160,7 @@ module tx_tb ();
 
         /*
         // Try to issue a new transaciton before the last one ends
-        //$display("[%0tns] Testing issue of a new transaction before last one ends", $time/1000.0);
+        //$display("[%0t] Testing issue of a new transaction before last one ends", $time);
         char_to_send = 8'h5a;
         initiate_tx(char_to_send);
         // Wait 4 baud periods
@@ -171,12 +171,12 @@ module tx_tb ();
         wait (tx_busy == 1'b0);
         // check to see that character received is the one that was sent
         if (r_char != char_to_send)
-            $display("\[%0tns] WARNING: Received 0x%h instead of 0x%h", $time/1000,r_char,char_to_send);
+            $display("\[%0t] WARNING: Received 0x%h instead of 0x%h", $time/1000,r_char,char_to_send);
         */
         if (errors == 0 && rx_model_err == 0)
-            $display("[%0tns] Test Passed", $time/1000.0);
+            $display("[%0t] Test Passed", $time);
         else
-            $error("[%0tns] Test Failed with %0d errors", $time/1000.0, errors);
+            $error("[%0t] Test Failed with %0d errors", $time, errors);
         $stop;
     end
 
