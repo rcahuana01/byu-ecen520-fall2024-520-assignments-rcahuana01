@@ -97,6 +97,10 @@ A few of these will be listed below.
  * `-verbose`: This option enables verbose operation. It is usually a good idea to carefully review the output of your synthesis tool and enable verbosity so you can see any potential issues with your design.
  * `-part`: This option specifies the FPGA part that will be used during synthesis. For this class, we will use the `xc7a100tcsg324-1` part on the Nexys DDR board.
  * `-generic`: This option is used to change the parameters of the top-level module that is being synthesized. The value is a string with a parameter name, followed by '=', and then the value. For example, `-generic {BAUD_RATE=115200}`. Multiple `-generic` options can be used to set multiple parameters.
+ * 
+ * `-debug_log`: Print detailed logging messages (gives more information on the synthesis process). Note that to capture the log file you need to provide Vivado with the `-log` option when invoking Vivado from the command line.
+ * `-quiet`: Ignore command errors
+ * `-verbose`: Suspend message limits during command execution
 
 #### Setting Parameters for Synthesis
 
