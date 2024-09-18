@@ -15,16 +15,6 @@ Hours Spent: 10
 Assignment specific Questions:
 -The synthesis log will summarize any state machines that it created. Provide a table listing the state and the encoding that the synthesis tool used for your transmitter state machine.
 
-INFO: [Synth 8-802] inferred FSM for state register 'cs_reg' in module 'tx'
----------------------------------------------------------------------------------------------------
-                   State |                     New Encoding |                Previous Encoding 
----------------------------------------------------------------------------------------------------
-                      s0 |                               00 |                               00
-                      s1 |                               01 |                               01
-                      s2 |                               10 |                               10
-                      s3 |                               11 |                               11
----------------------------------------------------------------------------------------------------
-INFO: [Synth 8-3354] encoded FSM with state register 'cs_reg' using encoding 'sequential' in module 'debounce'
 ---------------------------------------------------------------------------------------------------
                    State |                     New Encoding |                Previous Encoding 
 ---------------------------------------------------------------------------------------------------
@@ -61,5 +51,5 @@ Debounce delay = 10ms
 -Determine the "Worst Negative Slack" (or WNS). This is found in the timing report and indicates how much timing you slack you have with the current clocking (we will discuss this later in the semester).
 0.389ns 
 -Indicate how many times you had to synthesize and download your bitstream before your circuit worked.
-
+4 times
 "I have read the ECEN 520 assignment submission process and have resolved any questions I have with this process"
