@@ -1,4 +1,4 @@
-sim_debounce: debounce.sv
+sim_debouncer: debounce.sv
 	vlog -sv debounce.sv debounce_tb.sv
 	vsim -c work.debounce_tb -do "run -all; quit"
 
