@@ -134,6 +134,8 @@ gen_tx_bit:
 ## Design Download
 
 After successfully synthesizing your design and generating a bitfile, download your design to a Nexys4 DDR board and demonstrate it working correctly. 
+Instructions for downloading your design can be found [here](../resources/download.md).
+
 Use the "Putty" tool to send characters from your board to the computer. 
 There is a tutorial on [Putty](https://byu-cpe.github.io/ecen320/tutorials/other/01_putty_setup/) that can help you run this tool.
 After generating a bitstream, download your bitstream and make sure your transmitter bitstream works with a terminal emulator.
@@ -165,6 +167,18 @@ The following assignment specific items should be included in your repository:
     1. Provide a table summarizing the resources your design uses. Use the template table below. You can get this information from the implementation utilization report.
     1. Determine the "Worst Negative Slack" (or WNS). This is found in the timing report and indicates how much timing you slack you have with the current clocking (we will discuss this later in the semester).
     1. Indicate how many times you had to synthesize and download your bitstream before your circuit worked.
+
+Sample Resource Utilization Table:
+
+| Resource | Utilization |
+| ---- | ---- |
+| BUFG   |  |
+| CARRY4 |  |
+| LUTx   |  |
+| FDRE   |  |
+| IBUF   |  |
+| OBUF   |  |
+
 
 <!--
 Future Changes:

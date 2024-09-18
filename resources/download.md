@@ -3,12 +3,22 @@
 To test your synthesized and implemented designs you will need a way to download the bitstream to your FPGA board.
 This page summarizes several different ways for downloading your bitstreams to your board.
 
-
 ## OpenOCD
 
 There is an open source tool named [OpenOCD](https://openocd.org/) that can be used to download bitstreams to your board on Linux and Mac computers.
 OpenOCD has been installed on the computers in the digital lab and embedded systems lab.
 
+### OpenOCD Python Script
+
+A python download script, [`openocd.py`](../resources/openocd.py), has been created to simplify the process of downloading your bitstream to your board.
+This script is available in the resources folder of the course repository.
+```
+python3 ../resources/openocd.py tx_top.bit
+```
+
+### OpenOCD Manual Invocation
+
+You can run the OpenOCD tool manually by following the instructions below.
 To program your bitfile using OpenOCD you need to create a download script to instruct OpenOCD what type of device you are connecting to.
 The following file is a sample OpenOCD script you can use to targe the Nexys4 DDR boards.
 Note that at the end of the file you need to specify the bitfile you are targeting.
@@ -35,12 +45,12 @@ puts [drscan xc7.tap 32 0]
 puts "Programming FPGA..."
 # Note that the name of the bitfile must be specified in the line below
 pld load 0 tx_top.bit
-exit```
+exit
+```
 
 To run this script with OpenOCD, execute the following command:
 
 `openocd -f 7series.txt`
-
 
 Instructions for downloading using OpenOCD can be found [here](https://github.com/byu-cpe/BYU-Computing-Tutorials/wiki/Program-7-Series-FPGA-from-a-Mac-or-Linux-Without-Xilinx).
 

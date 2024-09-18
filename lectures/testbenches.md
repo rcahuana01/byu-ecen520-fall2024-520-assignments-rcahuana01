@@ -6,6 +6,7 @@ In this lecture we will discuss the purpose of testbenches and the general struc
 **Reading**
   * Chapter 1 of [System Verilog for Verification](https://search.lib.byu.edu/byu/record/cram.101.978-0-387-76530-3.1?holding=150kxz8ppcvbzc2x). Download this pdf from the library as we will use it later in the semester.
   * [Stephen Edwards Verilog Slides (48-56)](http://www.cs.columbia.edu/~sedwards/classes/2005/languages-summer/verilog.pdf)
+  <!-- * Chapter 27 from Bren'ts new book -->
 
 **Key Concepts**
   * Difference between tcl scripts and Verilog behavioral testbenches
