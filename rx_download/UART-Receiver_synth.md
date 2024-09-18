@@ -1,16 +1,4 @@
 
-<!--
-Notes:
-- Warnings:
-  - Teach them how to set the tools to ignore warnings and how to get rid of warnings
-  - Tell them that they should not have *any* warnings during synthesis
--- Any _new_ coding standards to add? It would be nice to add something for this assignment
-
-- Future:
-  - Make sure that the data displayed on the LEDs doesn't change/flicker (i.e., latch the data)
-  - Note that many studens struggled debugging their receiver and the transmitter model at the same time. It wasn't clear which one has the problem.
-     - Suggestion: create a top-level testbench that just hooks up my receiver model to their transmitter model and is used to validate their transmitter model. This way, they can have a known good transmitter model to test their receiver.
--->
 
 # UART Receiver
 
@@ -200,3 +188,16 @@ The following assignment specific items should be included in your repository:
        * Find the first net in the `Max Delay Paths` section and indicate the source and destination of this maximum path.
     1. Indicate how many times you had to synthesize and download your bitstream before your circuit worked.
 
+
+<!--
+Notes:
+- Warnings:
+  - Teach them how to set the tools to ignore warnings and how to get rid of warnings
+  - Tell them that they should not have *any* warnings during synthesis
+-- Any _new_ coding standards to add? It would be nice to add something for this assignment
+
+- Future:
+  - Make sure that the data displayed on the LEDs doesn't change/flicker (i.e., latch the data)
+  - Note that many studens struggled debugging their receiver and the transmitter model at the same time. It wasn't clear which one has the problem.
+     - Suggestion: create a top-level testbench that just hooks up my receiver model to their transmitter model and is used to validate their transmitter model. This way, they can have a known good transmitter model to test their receiver.
+-->
