@@ -152,14 +152,14 @@ module seven_segment_check(clk, rst, segments, dp, anode,
         // See if we are transitioning from invalid annode to valid anode
         if (!(^anode === 1'bX) && (^anode_d === 1'bX)) begin
             // Starting a new display cycle
-            $display("[%0tns] Valid Annode values", $time/1000);
+            $display("[%0t] Valid Annode values", $time);
             anode_count <= 0;
             annode_collect <= 8'h00;
         end
         // See if we are transitioning from one valid anode to another valid anode
         else if(anode != anode_d) begin
             if (anode_count > MIN_SEGMENT_CLOCKS + 2 || anode_count < MIN_SEGMENT_CLOCKS - 2 ) begin
-                $display("[%0tns] Warning: Invalid number of segment clocks: %0d expecting %0d %h %h", $time/1000,
+                $display("[%0t] Warning: Invalid number of segment clocks: %0d expecting %0d %h %h", $time,
                     anode_count, MIN_SEGMENT_CLOCKS,anode,anode_d);
             end
             last_anode_count <= anode_count; // Save the last anode count for reportings
@@ -168,7 +168,7 @@ module seven_segment_check(clk, rst, segments, dp, anode,
             if ((annode_collect | new_digit) == 8'hff) begin
                 new_value <= 1;
                 annode_collect <= 0;
-                $display("[%0tns] New value:",$time/1000);
+                $display("[%0t] New value:",$time);
                 print_segments();
                 $display("Anode assert clocks %0d:",last_anode_count+1);
             end
