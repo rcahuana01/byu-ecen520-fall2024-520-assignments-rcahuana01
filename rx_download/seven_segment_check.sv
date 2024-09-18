@@ -76,6 +76,9 @@ module seven_segment_check(clk, rst, segments, dp, anode,
 
     // Print the current value of the segments
     function automatic void print_segments();
+        // two dimensional array. First dimension indicates which digit is being displayed
+        //   second dimension correspnds to the segment. The value stored is the ascii value
+        //   to print for the corresponding segment in text.
         byte segment_chars[8][7];
         byte digit_point[8];
         const byte SPACE = 8'h20;
@@ -89,32 +92,48 @@ module seven_segment_check(clk, rst, segments, dp, anode,
         begin
             // Iterate over each digit to convert the segment values to its corresponding character
             for (int i = 0; i < 8; i = i + 1) begin
-                //$display("Digit %0d %7b", i, display_segments[i]);
-                // Horizontal characters are segments 6,3,0
-                if (display_segments[i][0]==0) segment_chars[i][0] = UNDERSCORE;
-                else segment_chars[i][0] = SPACE;
-                if (display_segments[i][3]==0) segment_chars[i][3] = UNDERSCORE;
-                else segment_chars[i][3] = SPACE;
-                if (display_segments[i][6]==0) segment_chars[i][6] = UNDERSCORE;
-                else segment_chars[i][6] = SPACE;
-                // Vertical characters are segments 1,2,4,5
-                if (display_segments[i][1]==0) segment_chars[i][1] = BAR;
-                else segment_chars[i][1] = SPACE;
-                if (display_segments[i][2]==0) segment_chars[i][2] = BAR;
-                else segment_chars[i][2] = SPACE;
-                if (display_segments[i][4]==0) segment_chars[i][4] = BAR;
-                else segment_chars[i][4] = SPACE;
-                if (display_segments[i][5]==0) segment_chars[i][5] = BAR;
-                else segment_chars[i][5] = SPACE;
-                // for (int j = 0; j < 7; j = j + 1)
-                //     $display(" segment %0d=%c", j, segment_chars[i][j]);
+                // Segment 0 (A): underscore
+                if (display_segments[i][0]==0)
+                    segment_chars[i][0] = UNDERSCORE;
+                else
+                    segment_chars[i][0] = SPACE;
+                // Segment 1 (B): Horizontal Bar
+                if (display_segments[i][1]==0)
+                    segment_chars[i][1] = BAR;
+                else
+                    segment_chars[i][1] = SPACE;
+                // Segment 2 (C): Horizontal Bar
+                if (display_segments[i][2]==0)
+                    segment_chars[i][2] = BAR;
+                else
+                    segment_chars[i][2] = SPACE;
+                // Segment 3 (D): underscore
+                if (display_segments[i][3]==0)
+                    segment_chars[i][3] = UNDERSCORE;
+                else
+                    segment_chars[i][3] = SPACE;
+                // Segment 4 (E): Horizontal Bar
+                if (display_segments[i][4]==0)
+                    segment_chars[i][4] = BAR;
+                else
+                    segment_chars[i][4] = SPACE;
+                // Segment 5 (F): Horizontal Bar
+                if (display_segments[i][5]==0)
+                    segment_chars[i][5] = BAR;
+                else
+                    segment_chars[i][5] = SPACE;
+                // Segment 6 (G): Horizontal Bar
+                if (display_segments[i][6]==0)
+                    segment_chars[i][6] = UNDERSCORE;
+                else
+                    segment_chars[i][6] = SPACE;
                 // Determine the digit point
-                if (display_dp[i] == 1) 
+                if (display_dp[i] == 0)  // dp is low asserted
                     digit_point[i] = DOT;
                 else 
                     digit_point[i] = SPACE;
             end
-            // Print the segments
+            // Print the 8 segments in text format
             // Line 1 (top line) : S6SSS (underscores)
             // Line 2            : 105SS
             // Line 4            : 234DS
@@ -168,12 +187,11 @@ module seven_segment_check(clk, rst, segments, dp, anode,
             if ((annode_collect | new_digit) == 8'hff) begin
                 new_value <= 1;
                 annode_collect <= 0;
-                $display("[%0t] New value:",$time);
+                $display("[%0t] New value:0x%0h",$time,output_display_val);
                 print_segments();
                 $display("Anode assert clocks %0d:",last_anode_count+1);
             end
         end
-
     end
 
 
