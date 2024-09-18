@@ -184,4 +184,6 @@ Sample Resource Utilization Table:
 Future Changes:
 - Need to explain in more detail the need to carefully review the syntehsis logs. Perhaps provide a few examples of what to look for in the logs.
 - Rename this file to better match the assignment name
+- Several students had problems with the debouncer parameters. They would do a multiplication that resulted in a large number that didn't fit in 32 bits and then when dividing they would have an invalid number. Provide additional instructions or more exmaples on how to create this parameter without the overflow issue.
+  - Related to this, we need to have a testbench for the debouncer at the larger time scale so that we can catch this in simulation.
 -->
