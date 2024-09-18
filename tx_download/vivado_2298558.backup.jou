@@ -3,8 +3,8 @@
 # SW Build 5076996 on Wed May 22 18:36:09 MDT 2024
 # IP Build 5075265 on Wed May 22 21:45:21 MDT 2024
 # SharedData Build 5076995 on Wed May 22 18:29:18 MDT 2024
-# Start of session at: Tue Sep 17 17:47:45 2024
-# Process ID: 2298936
+# Start of session at: Tue Sep 17 17:46:37 2024
+# Process ID: 2298558
 # Current directory: /auto/fsf/rcahuana/ecen520/tx_download
 # Command line: vivado -mode batch -source tx_synth.tcl -log tx_synth.log
 # Log file: /auto/fsf/rcahuana/ecen520/tx_download/tx_synth.log
@@ -13,12 +13,12 @@
 # Platform          :Ubuntu
 # Operating System  :Ubuntu 22.04.4 LTS
 # Processor Detail  :Intel(R) Core(TM) i5-14500
-# CPU Frequency     :3392.416 MHz
+# CPU Frequency     :2044.857 MHz
 # CPU Physical cores:14
 # CPU Logical cores :20
 # Host memory       :16414 MB
 # Swap memory       :2147 MB
 # Total Virtual     :18562 MB
-# Available Virtual :9289 MB
+# Available Virtual :9247 MB
 #-----------------------------------------------------------
 source tx_synth.tcl
