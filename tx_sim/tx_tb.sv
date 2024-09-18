@@ -54,8 +54,8 @@ module tx_tb ();
     //////////////////////////////////////////////////////////////////////////////////
     always
     begin
-        clk <=1; #5ns;
-        clk <=0; #5ns;
+        #5ns clk <=1;
+        #5ns clk <=0;
     end
 
     // Task for initiating a transfer
