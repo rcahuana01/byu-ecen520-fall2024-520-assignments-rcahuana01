@@ -169,4 +169,5 @@ The following assignment specific items should be included in your repository:
 <!--
 Future Changes:
 - Need to explain in more detail the need to carefully review the syntehsis logs. Perhaps provide a few examples of what to look for in the logs.
+- Rename this file to better match the assignment name
 -->
