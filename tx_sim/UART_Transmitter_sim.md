@@ -157,4 +157,6 @@ The following assignment specific items should be included in your repository:
 - Need to help people learn how to use the GUI simulator. They just tried using the command line only. (Maybe a tutorial on how to use the GUI simulator?)
 - Need to have a way for the testbench to generate an error when there is a problem so the python file catches the error.
 - Modify the testbench to include a function (compute parity) so the students have an example of how to use a function (when they do this for the receiver testbench)
+- Clean up testbench so that it serves as a good example for the students to use for the receiver testbench
+  - Put all the internal signals together and label rather than splitting them up by the parameters.
 -->
