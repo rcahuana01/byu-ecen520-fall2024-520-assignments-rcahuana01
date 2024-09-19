@@ -11,10 +11,6 @@ If you made any changes to your modules to resolve synthesis errors, rerun the t
 
 ## SPI Top-Level Design
 
-
-module adxl362_top(
-                ACL_MISO, ACL_SCLK, ACL_CSN, ACL_MOSI);
-
 Create a top-level design that uses the following top-level ports:
 
 | Port Name | Direction | Width | Function |
