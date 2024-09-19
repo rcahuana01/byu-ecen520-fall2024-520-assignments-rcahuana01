@@ -25,6 +25,8 @@ Include the following ports and parameters in your module:
 | segments | Output | 7 | The seven segment drivers (see table below) |
 | dp_out | Output | 1 | The output digit point driver signal |
 | an_out | Output | 8 | Anode signal for each segment |
+
+| Parameter Name | Default Value | Purpose |
 | ---- | ---- | ---- |
 | CLK_FREQUECY | 100_000_000 | The clock frequency |
 | SEGMENT_DISPLAY_US  | 10_000 | The amount of time to display each digit  |

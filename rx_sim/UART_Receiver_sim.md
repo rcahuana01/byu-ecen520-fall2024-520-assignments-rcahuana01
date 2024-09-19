@@ -20,6 +20,7 @@ Create your receiver with the following ports and parameters
 | busy | Output | 1 | Indicates that the transmitter is in the middle of a transmit |
 | data_strobe | Output | 1 | Indicates that a new data value has been received |
 | rx_error | Output | 1 | Indicates that there was an error when receiving |
+
 | Parameter Name | Default Value | Purpose |
 | ---- | ---- | ---- |
 | CLK_FREQUENCY | 100_000_000 | Specify the clock frequency |

@@ -135,17 +135,6 @@ Design your testbench to do the following:
 Create a makefile rule named `sim_spi_cntrl` that will run your testbench with the default parameters.
 In addition, create a makefile named `sim_spi_cntrl_100` that runs the same testbench but using 100_000 as the `SCLK_FREQUENCY` parameter.
 
-<!--
-Use Verilog 2001/SystemVerilog:
-* Improved module instantiation with ports
-* Use an `interface` in your testbench
-* Use a `Queue` in your testbench
-* Use at least one of both types of SystemVerilog Assertions
-  * Immediate Assertion
-  * Concurrent Assertion
-
--->
-
 ## ADXL362 Controller
 
 You will create another module that instances your SPI controller and controls the accelerometer on the Nexys4 board. 
@@ -226,25 +215,17 @@ Make sure all synthesis warnings and errors are resolved before submitting your 
   * [ADXL362 Product Page](https://www.analog.com/en/products/adxl362.html)
   * [ADXL362 Data Sheet](https://www.analog.com/media/en/technical-documentation/data-sheets/ADXL362.pdf)
 
-
 ## Submission and Grading
 
 1. Required Makefile rules:
     * `sim_spi_cntrl`
     * `sim_spi_cntrl_100`
     * `sim_adxl362`
-1. You need to have at least 5 "Error" commits in your repository
+1. You need to have at least 4 "Error" commits in your repository
 2. No assignment specific questions for this assignment
 
-<!--
-    * `synth_spi_cntrl`
-    * `synth_adxl362_cntrl`
--->
-
 
 <!--
--- SPI Controller Part 1 (controller, use model, create testbench, synthesize to find synthesis errors)
-
 - Come up with some "discussion" or exploration exercise as part of the readme.md
 - It is hard to follow their testbenches. Need to provide more constraints so that I can follow and see that what was recieved is what was sent
   (prehaps have them provide such a statement in the testbench output)
