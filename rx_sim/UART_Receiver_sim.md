@@ -120,4 +120,5 @@ The following assignment specific items should be included in your repository:
 Future Changes:
 * ask them to manually change the FSM encoding type when thhey synthesize to see the impact.
 * Any _new_ coding standards to add? It would be nice to add something for this assignment
+* Have them create a function in the testbench
 -->
