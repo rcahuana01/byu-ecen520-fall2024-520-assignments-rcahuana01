@@ -1,19 +1,16 @@
-//`timescale 1ns / 1ps
 //////////////////////////////////////////////////////////////////////////////////
 // TX testbench
 //////////////////////////////////////////////////////////////////////////////////
 
 module tx_tb ();
 
-    logic clk, rst, tb_send, tb_tx_out, tx_busy;
-    logic [7:0] tb_din;
-
     parameter NUMBER_OF_CHARS = 20;
     parameter BAUD_RATE = 19_200;
-    parameter CLOCK_PERIOD = 100_000_000;
+    parameter CLOCK_FREQUENCY = 100_000_000;
+    localparam BAUD_CLOCKS = CLOCK_FREQUENCY / BAUD_RATE;
 
-    localparam BAUD_CLOCKS = CLOCK_PERIOD / BAUD_RATE;
-
+    logic clk, rst, tb_send, tb_tx_out, tx_busy;
+    logic [7:0] tb_din;
     logic [7:0] char_to_send = 0;
     logic [7:0] rx_data;
     logic odd_parity_calc = 1'b0;
@@ -27,7 +24,8 @@ module tx_tb ();
     // Instantiate Desgin Under Test (DUT)
     //////////////////////////////////////////////////////////////////////////////////
 
-    tx tx(
+    tx #(.CLK_FREQUENCY(CLK_FREQUENCY),.BAUD_RATE(BAUD_RATE),.PARITY(PARITY))
+    tx(
         .clk(clk),
         .rst(rst),
         .send(tb_send),
@@ -40,7 +38,8 @@ module tx_tb ();
     // Instantiate RX simulation model
     //////////////////////////////////////////////////////////////////////////////////
 
-    rx_model rx_model(
+    rx_model #(.CLK_FREQUENCY(CLK_FREQUENCY),.BAUD_RATE(BAUD_RATE),.PARITY(PARITY))
+    rx_model(
         .clk(clk),
         .rst(rst),
         .rx_in(tb_tx_out),
@@ -158,21 +157,6 @@ module tx_tb ();
         repeat(BAUD_CLOCKS * 4)
             @(negedge clk);
 
-        /*
-        // Try to issue a new transaciton before the last one ends
-        //$display("[%0t] Testing issue of a new transaction before last one ends", $time);
-        char_to_send = 8'h5a;
-        initiate_tx(char_to_send);
-        // Wait 4 baud periods
-        delay_baud(4);
-        // Initiate a new transaction with a different value (should be ignoreds)
-        initiate_tx(char_to_send >> 1);
-        // Wait until transmission is over
-        wait (tx_busy == 1'b0);
-        // check to see that character received is the one that was sent
-        if (r_char != char_to_send)
-            $display("\[%0t] WARNING: Received 0x%h instead of 0x%h", $time/1000,r_char,char_to_send);
-        */
         if (errors == 0 && rx_model_err == 0)
             $display("[%0t] Test Passed", $time);
         else
