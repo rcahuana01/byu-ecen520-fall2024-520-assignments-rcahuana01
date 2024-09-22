@@ -24,7 +24,7 @@ This repository contains the lecture schedule (including links to lecture summar
 | 9/25/2024 | [SystemVerilog Types](./lectures/systemverilog_types.md) |
 | 9/27/2024 | [Synthesis Tools, Options, and Logs]() **?** |
 | **Week 5** |  |
-| 9/30/2024 | [Memories]() |
+| 9/30/2024 | [Memories](./lectures/memories.md) |
 | 10/2/2024 | [SPI Controller](./lectures/spi.md)  |
 | 10/4/2024 | **Exam #1** |
 | **Week 6** | |
