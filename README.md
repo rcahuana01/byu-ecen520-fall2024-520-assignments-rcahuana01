@@ -22,7 +22,7 @@ This repository contains the lecture schedule (including links to lecture summar
 | **Week 4** | |
 | 9/23/2024 | [Functions, Tasks, and Threads](./lectures/functions_tasks.md) |
 | 9/25/2024 | [SystemVerilog Types](./lectures/systemverilog_types.md) |
-| 9/27/2024 | [Synthesis Tools, Options, and Logs]() **?** |
+| 9/27/2024 | [Verification with UVM]() |
 | **Week 5** |  |
 | 9/30/2024 | [Memories](./lectures/memories.md) |
 | 10/2/2024 | [SPI Controller](./lectures/spi.md)  |
