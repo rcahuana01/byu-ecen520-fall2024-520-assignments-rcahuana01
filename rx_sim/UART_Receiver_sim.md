@@ -41,7 +41,7 @@ Design your receiver such that:
     If you get a reset and the input din is a '0' then you should go to some sort of "Startup" type state that just sits there and waits until din goes high. Once din goes high you can go into an idle state to wait for din to go to 0 again. The reason for this is that you do not want to just immediately start receiveing a character upon reset. You want to start up in a known state.
 -->
 
-Note that you must follow the [Level 2](../resources/coding_standard#level_2) coding standards for your Verilog files.
+Note that you must follow the [Level 2](../resources/coding_standard.md#level-2) coding standards for your Verilog files.
 
 ## Receiver Testbench
 

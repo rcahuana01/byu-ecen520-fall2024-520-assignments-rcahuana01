@@ -47,7 +47,12 @@ Create a top-level circuit that includes the following:
 * The 16 LEDs should follow the value of the switches to allow the user can easily verify that the address/data is properly set.
 * The left button (BTNL) should be used to initiate a write to the accelerometer (where the address and data to write are specfied by the switches)
 * The right button (BTNR) should be used to initiate a read from the accelerometer
-* Instance your seven segment display controller and hook it up so that the last byte received from a register read is displayed on the _lower two digits_ of the seven segment display. The previously received bytes should be shifted up to the other seven segment display so you can still see them (with 8 digits you should be able to display the last four register read values).
+* Instance your seven segment display controller and hook it up so that the last byte received from a register read is displayed on the _right two digits_ of the seven segment display.
+* Read the X, Y, and Z accelerator values periodically and continuously write the values to the seven segment display (one value per digit)
+  * The X-Axis (register 0x08) should be displayed on the digits 2 and 3 (where digit 0 is the rightmost digit)
+  * The Y-Axis (register 0x09) should be displayed on the digits 4 and 5
+  * The Z-Axis (register 0x0A) should be displayed on the digits 6 and 7
+  * Add a parameter `DISPLAY_RATE` that indicates how many times a second these values should be updated. The default should be set to 2 (i.e., 2 times a second).
 
 ## SPI Top-Level Testbench
 
@@ -56,7 +61,7 @@ This testbench should be designed as follows:
 * Make the top-level testbench parameterizable with the top-level parameters
 * Create a free-running clock
 * Instance your top-level design
-* Instance the [ADXL362 simulation](./adxl362_model.sv) model
+* Instance the [ADXL362 simulation](../spi_cntrl/adxl362_model.sv) model
   * attach the SPI signals from the top-level design to the SPI signals of the simulation
 * Perform the following sequence of events for your testbench:
   * Execute the simulation for a few clock cycles without setting any of the inputs
@@ -81,7 +86,7 @@ Create a new makefile rule named `gen_bit_100` that will generate a bitfile name
 Once you have created your design and downloaded it to the board.
 Test the board by running the commands listed below on the switches and buttons.
 Note that the part may not be in the state as described below as the state may have been modified by a previous student.
-
+Make sure the board is working properly by doing the following:
   * Read the DEVICEID register (0x0). You should get 0xad
   * Read the PARTID (0x02). You should get 0xF2
   * Read the REVID (0x03). You should get 0x02
