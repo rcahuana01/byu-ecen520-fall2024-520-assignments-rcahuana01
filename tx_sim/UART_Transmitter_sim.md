@@ -159,4 +159,5 @@ The following assignment specific items should be included in your repository:
 - Modify the testbench to include a function (compute parity) so the students have an example of how to use a function (when they do this for the receiver testbench)
 - Clean up testbench so that it serves as a good example for the students to use for the receiver testbench
   - Put all the internal signals together and label rather than splitting them up by the parameters.
+  - Use an "error count" variable and incremenet the error when erorrs occur. Use this in a print statement at the end of the testbench. (demonstrate error counting)
 -->
