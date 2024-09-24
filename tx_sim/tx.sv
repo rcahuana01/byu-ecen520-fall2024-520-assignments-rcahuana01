@@ -68,6 +68,7 @@ module tx (
         clrTimer = 1'b0;
         incBit = 1'b0;
         clrBit = 1'b0;
+        tx_out_int = 1'b1;
 
         if (rst) begin
             ns = IDLE;
