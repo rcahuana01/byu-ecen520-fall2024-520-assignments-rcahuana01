@@ -1,45 +1,13 @@
-<!--
-- Make sure they put their images _inline_ (rather than links) so I don't have to click to grade. One separate image for each counter and an annotation of text.
-- The build makefiles had hard coded paths for the glbl.v file. Need to modify the instructions so that the make will work on any computer (have them copy it to their repo?)
-- Have them figure out the TCL commands for printing the simulation files to an image
-- Need to ahve the testbench print more out with more interesting notes/comments
-- Have them create a 48-bit counter instead of 32-bit counter and display the top 32 bits (so we don't get roll over so fast)
-- Force them to get metastability? If so, how to force it? (more guidelines). See Baker's
-- Force them to use generate statements? It is a good place to learn to use them.
--->
 
 # Clocking and Metastability
 
-In this assignment you will learn how to use the MMCM to create a deskewed clock, clocks of various frequency, and phase, and to induce metastability.
+In this assignment you will learn how to use the MMCM primitive to create a deskewed clock, clocks of various frequency, and phase, and to induce metastability.
 You will use the switches, buttons, seven segment display, and LEDs to interact with your clocking circuit.
-
-<!--
-Fvco range is 600 MHz to 1600 Mhz
-
-Fvco = Fin X M / D
-
-Fin = 100 MHz thus M/D must be between 6 and 16
-DIVCLK_DIVIDE = D
-
-for 100 MHz, D=2, M=12
-
-- Give the students help on the "stretcher" circut. Use 'always_latch'? or instance latch primitive.
-- Why can't you have a bufg on the input clock? (or ibufg?) It seems you have to hook up the signal directly.
-
-Dallin:
-set_false_path -from [get_clocks sclock0] -to [get_clocks clock4]
-set_false_path -from [get_clocks clock4] -to [get_clocks clock0]
-set_false_path -from [get_clocks clock3] -to [get_clocks clock0]
-set_false_path -from [get_clocks {clock* sclock*}] -to [get_clocks sys_clk_pin]
--->
 
 ##  Top-Level Design
 
-Start your assignment by creating a top-level design that connects to the following pins on the FPGA:
-* 100 MHz clock input
-* Reset button
-* Switches
-
+This assignment will involve a single top-level design.
+Create your top-level design with the following ports and parameters.
 
 | Port Name | Direction | Width | Function |
 | ---- | ---- | ---- | ----  |
@@ -64,10 +32,16 @@ Start your assignment by creating a top-level design that connects to the follow
 | DEBOUNCE_DELAY_US | integer | 1_000 | Specifies the minimum debounce delay in micro seconds (1 ms) |
 
 
+Start your assignment by creating a top-level design that connects to the following pins on the FPGA:
+* 100 MHz clock input
+* Reset button
+* Switches
+
+
+
 ##  Main MMCM
 
-
-The first step in this assignment is to create your "Main" MMCM that is used to deskew the input clock and generate a variety of clocks (note that this part of the design is just one part of the top-level design - you do not need to create a module for this).
+The first step in this assignment is to create your "Main" MMCM that is used to deskew the input clock and generate a variety of clocks.
 Instance the "MMCME2_BASE" primitive into your design and hook it up as described below. 
 You can learn more about primitives that can be instantiated at the following [library guide](https://docs.xilinx.com/v/u/2012.2-English/ug953-vivado-7series-libraries). 
 Note that you can look at the text for the module definition of this primitive in the following file: `<Xilinx>/Vivado/<version>/data/verilog/src/unisim_comp.v`
@@ -233,3 +207,33 @@ set_false_path -from [ get_cells pulse3_reg ] -to [ get_cells pulse3_clk0_d_reg 
     3. **Timing**: Determine the "Worst Negative Slack" (or WNS). This is found in the timing report and indicates how much timing you slack you have with the current clocking.
     4. **Waveforms**:  Create one or more waveforms with markers to demonstrate each of your 7 clocks operating correctly. Take a screenshot of the waveform. Make sure you demonstrate correct frequency (by measuring period), phase offset, and duty cycle.
 
+
+<!--
+- Make sure they put their images _inline_ (rather than links) so I don't have to click to grade. One separate image for each counter and an annotation of text.
+- The build makefiles had hard coded paths for the glbl.v file. Need to modify the instructions so that the make will work on any computer (have them copy it to their repo?)
+- Have them figure out the TCL commands for printing the simulation files to an image
+- Need to ahve the testbench print more out with more interesting notes/comments
+- Have them create a 48-bit counter instead of 32-bit counter and display the top 32 bits (so we don't get roll over so fast)
+- Force them to get metastability? If so, how to force it? (more guidelines). See Baker's
+- Force them to use generate statements? It is a good place to learn to use them.
+-->
+
+<!--
+Fvco range is 600 MHz to 1600 Mhz
+
+Fvco = Fin X M / D
+
+Fin = 100 MHz thus M/D must be between 6 and 16
+DIVCLK_DIVIDE = D
+
+for 100 MHz, D=2, M=12
+
+- Give the students help on the "stretcher" circut. Use 'always_latch'? or instance latch primitive.
+- Why can't you have a bufg on the input clock? (or ibufg?) It seems you have to hook up the signal directly.
+
+Dallin:
+set_false_path -from [get_clocks sclock0] -to [get_clocks clock4]
+set_false_path -from [get_clocks clock4] -to [get_clocks clock0]
+set_false_path -from [get_clocks clock3] -to [get_clocks clock0]
+set_false_path -from [get_clocks {clock* sclock*}] -to [get_clocks sys_clk_pin]
+-->
