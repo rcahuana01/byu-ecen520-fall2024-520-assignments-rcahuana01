@@ -4,23 +4,19 @@
 //////////////////////////////////////////////////////////////////////////////////
 
 module rx_tb ();
-
-    logic clk, rst, tb_send, tb_tx_out, tx_busy;
-    logic [7:0] tb_din;
-
+    // Parameters
     parameter NUMBER_OF_CHARS = 10;
     parameter BAUD_RATE = 19_200;
     parameter CLOCK_PERIOD = 100_000_000;
+    parameter CLOCK_PERIOD = 10;
 
-    localparam BAUD_CLOCKS = CLOCK_PERIOD / BAUD_RATE;
-
+    // Internal signals
+    logic clk, rst, tb_send, tx_busy;
+    logic [7:0] tb_din;
     logic [7:0] char_to_send = 0;
     logic [7:0] rx_data;
-    logic odd_parity_calc = 1'b0;
-    logic rx_busy;
-
-    typedef enum { UNINIT, IDLE, BUSY } receive_state_type;
-    receive_state_type r_state = UNINIT;
+    logic odd_parity_calc = 0;
+    logic rx_busy, data_strobe;
 
     //////////////////////////////////////////////////////////////////////////////////
     // Instantiate Desgin Under Test (DUT)
@@ -52,10 +48,9 @@ module rx_tb ();
     //////////////////////////////////////////////////////////////////////////////////
     // Clock Generator
     //////////////////////////////////////////////////////////////////////////////////
-    always
-    begin
-        clk <=1; #5ns;
-        clk <=0; #5ns;
+    initial begin
+        clk = 0;
+        forever #(CLOCK_PERIOD/2) clk = ~clk;
     end
 
     // Task for initiating a transfer

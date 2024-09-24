@@ -27,7 +27,8 @@ module rx(
     logic halftimerDone, incorrectParity, checkMiddle, stopBit, stopBit, startBit, checkMiddle; 
     logic [7:0] temp_dout;
     logic [31:0] timer;
-    typedef enum logic [2:0] {IDLE, START, DATA, PAR, END} state_t;
+
+    typedef enum logic [2:0] {IDLE, START, DATA, STOP} state_t;
     state_t cs, ns;
     // Bit timer
     assign timerDone = (timer >= BAUD_PERIOD);
@@ -48,21 +49,21 @@ module rx(
         else if (incBit)
             bitNum <= bitNum + 1;
     end
-    assign checkMiddle = (halftimerDone && (BAUD_PERIOD/2)) ? 1 : 0;
+    assign checkMiddle = halftimerDone ? 1 : 0;
     assign incorrectParity = calculateParity ? ~^dout : ^dout; 
     assign parityBit = incorrectParity ? 1 : 0;
     
     // State machine
     always_comb begin
-         ns = cs;
-        clrTimer = 1'b0;
-        incBit = 1'b0;
-        clrBit = 1'b0;
-        data_strobe = 1'b0;
-        rx_error = 1'b0;
-        busy = 1'b1;
-        calculateParity = 1'b0;
-        stopBit = 1'b0;
+        ns = cs;
+        clrTimer = 0;
+        incBit = 0;
+        clrBit = 0;
+        data_strobe = 0;
+        rx_error = 0;
+        busy = 1;
+        calculateParity = 0;
+        stopBit = 0;
         if (rst)
             ns = IDLE;
         else begin
@@ -71,6 +72,7 @@ module rx(
                     if (din) begin
                         ns = START;
                         clrTimer = 1'b1;
+                    end
                 end
                 START: begin
                     if (halftimerDone) begin
@@ -78,20 +80,18 @@ module rx(
                         calculateParity = 1;
                     end
                 end
-                PAR: begin
-                    if (timerDone) begin
-                        clrBit = 1;
-                        ns = DATA;
+                  ns = DATA;
                 end
                 DATA: begin
                     data_strobe = 1;
-                    if (timerDone)
+                    if (timerDone) begin
                         if (bitDone)
-                            ns = END
+                            ns = STOP;
                         else 
                             incBit = 1;
+                    end
                 end
-                END: begin
+                STOP: begin
                     if (timerDone) 
                         ns = IDLE;
                 end
@@ -106,7 +106,7 @@ module rx(
 
     always_ff@(posedge clk)
         if (startBit)
-            din <= {din[7:0],0}
+            din <= {din[7:0],0};
         else if (stopBit)
             din <= 0;
 
