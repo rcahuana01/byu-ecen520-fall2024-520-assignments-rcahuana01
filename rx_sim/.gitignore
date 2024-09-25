@@ -1,4 +1,4 @@
 transcript ./work/* *.Xil
 *.mpf *.mti *.log *.pb *.vstf *wlft* *.wlf .nfs* tmp *.bak rx_log.log
 *.jou *.rpt *.txt *.dcp
-*.Xil 
+*.Xil *.backup.log  *.txt *.rpt 
