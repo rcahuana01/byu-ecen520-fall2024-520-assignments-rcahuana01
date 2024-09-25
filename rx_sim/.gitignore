@@ -1,22 +1,18 @@
 transcript ./work/* *.Xil
-*.mpf *.mti *.log *.pb *.vstf *wlft* *.wlf .nfs* tmp *.bak rx_log.log
-*.jou *.rpt *.txt *.dcp
-*.Xil *.backup.log  *.txt *.rpt rx_implement.log
-rx_sim/checkpoint_impl.dcp 
-  rx_sim/clockInfo.txt 
-  rx_sim/drc_routed.rpt 
-  rx_sim/io.rpt 
-  rx_sim/timing_summary_routed.rpt 
-  rx_sim/utilization_impl.rpt 
-  rx_sim/vivado.jou 
-  rx_sim/.Xil/
-rx_sim/checkpoint_impl.dcp
-rx_sim/*.rpt
-rx_sim/*.txt
-rx_sim/checkpoint_impl.dcp 
-  rx_sim/clockInfo.txt 
-  rx_sim/drc_routed.rpt 
-  rx_sim/io.rpt 
-  rx_sim/timing_summary_routed.rpt 
-  rx_sim/utilization_impl.rpt 
-  rx_sim/vivado.jou 
+*.mpf 
+*.mti 
+*.log 
+*.pb 
+*.vstf 
+*wlft* *
+.wlf 
+.nfs* 
+*.bak
+*.jou 
+*.rpt 
+*.txt
+*.dcp
+*.Xil
+*.backup.log 
+*.txt 
+*.rpt 
