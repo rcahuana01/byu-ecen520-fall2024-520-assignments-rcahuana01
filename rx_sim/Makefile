@@ -10,6 +10,7 @@ synth_rx: rx.sv
 	read_verilog -sv rx.sv
 	synth_design -top rx -mode out_of_context -log synth.log
 
+
 clean:
 	rm -rf transcript ./work/*
 	rm -f *.mpf *.mti *.log *.pb *.vstf *wlft* *.wlf .nfs* tmp *.bak

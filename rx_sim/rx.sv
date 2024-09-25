@@ -25,7 +25,7 @@ module rx(
     logic sampling_done;
     logic start_bit_detected;
     logic parity_check;
-    typedef enum logic [2:0] {IDLE, START, DATA, PARITY, STOP} state_t;
+    typedef enum logic [2:0] {IDLE, START, DATA, PAR, STOP} state_t;
     state_t current_state, next_state;
 
     // Receive busy condition
@@ -67,12 +67,12 @@ module rx(
                     if (bit_counter < DATA_BITS - 1) begin
                         bit_counter = bit_counter + 1; 
                     end else begin
-                        next_state = PARITY; 
+                        next_state = PAR; 
                         bit_counter = 0; 
                     end
                 end
             end
-            PARITY: begin
+            PAR: begin
                 if (timer >= BAUD_PERIOD) begin
                     timer = 0;
                     if (din != parity_check) begin
