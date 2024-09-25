@@ -9,3 +9,7 @@ rx_sim/checkpoint_impl.dcp
   rx_sim/timing_summary_routed.rpt 
   rx_sim/utilization_impl.rpt 
   rx_sim/vivado.jou 
+  rx_sim/.Xil/
+rx_sim/checkpoint_impl.dcp
+rx_sim/*.rpt
+rx_sim/*.txt
