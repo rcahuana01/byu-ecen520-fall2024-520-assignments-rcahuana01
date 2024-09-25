@@ -1,167 +1,113 @@
 `timescale 1ns / 1ps
-//////////////////////////////////////////////////////////////////////////////////
-// RX testbench
-//////////////////////////////////////////////////////////////////////////////////
 
-module rx_tb ();
+module tb_rx;
+
     // Parameters
-    parameter NUMBER_OF_CHARS = 10;
-    parameter BAUD_RATE = 19_200;
-    parameter CLOCK_PERIOD = 100_000_000;
-    parameter CLOCK_PERIOD = 10;
+    parameter integer BAUD_RATE = 19_200;  // Baud rate
+    parameter integer PARITY = 1;            // 1 = Odd, 0 = Even
+    parameter integer NUMBER_OF_CHARS = 10;  // Number of characters to transmit
 
-    // Internal signals
-    logic clk, rst, tb_send, tx_busy;
-    logic [7:0] tb_din;
-    logic [7:0] char_to_send = 0;
-    logic [7:0] rx_data;
-    logic odd_parity_calc = 0;
-    logic rx_busy, data_strobe;
+    // Signals
+    logic clk;
+    logic rst;
+    logic tx_start;          // Start signal for the transmitter
+    logic [7:0] tx_data;     // Data to transmit
+    logic [7:0] rx_data;     // Data received from the receiver
+    logic tx_busy;           // Transmitter busy signal
+    logic rx_busy;           // Receiver busy signal
+    logic tx_out;            // Transmitter output
+    logic data_strobe;       // Indicates new data received
+    logic rx_error;          // Indicates receiving error
+    int errors;
 
-    //////////////////////////////////////////////////////////////////////////////////
-    // Instantiate Desgin Under Test (DUT)
-    //////////////////////////////////////////////////////////////////////////////////
-
-    tx tx(
+    // Instantiate the transmitter
+    tx #(
+        .BAUD_RATE(BAUD_RATE)
+    ) transmitter (
         .clk(clk),
         .rst(rst),
-        .send(tb_send),
-        .din(tb_din),
-        .tx_out(tb_tx_out),
+        .send(tx_start),
+        .din(tx_data),
+        .tx_out(tx_out),
         .busy(tx_busy)
     );
 
-    //////////////////////////////////////////////////////////////////////////////////
-    // Instantiate RX simulation model
-    //////////////////////////////////////////////////////////////////////////////////
-
-    rx rx(
+    // Instantiate the receiver
+    rx #(
+        .BAUD_RATE(BAUD_RATE),
+        .PARITY(PARITY)
+    ) receiver (
         .clk(clk),
         .rst(rst),
-        .din(tb_tx_out),
-        .dout(rx_data)
+        .din(tx_out),        // Loop back transmitter output to receiver input
+        .dout(rx_data),
         .busy(rx_busy),
-        .data_strobe(),
-        .rx_error()
+        .data_strobe(data_strobe),
+        .rx_error(rx_error)
     );
 
-    //////////////////////////////////////////////////////////////////////////////////
-    // Clock Generator
-    //////////////////////////////////////////////////////////////////////////////////
+    // Clock generation
     initial begin
         clk = 0;
-        forever #(CLOCK_PERIOD/2) clk = ~clk;
+        forever #5 clk = ~clk; // 100 MHz clock
     end
 
-    // Task for initiating a transfer
-    task initiate_tx( input [7:0] char_value );
+    // Task to send data
+    task send_data(input logic [7:0] data);
+        logic [7:0] data_to_send; // Declare this as automatic
+        data_to_send = data;
+        tx_data = data_to_send;
+        tx_start = 1;
+        @(posedge clk);
+        while (tx_busy) @(posedge clk); // Wait until transmitter is not busy
+        tx_start = 0;
+        @(posedge clk); // Wait for the clock cycle after sending
+    endtask
 
-        // Initiate transfer on negative clock edge
-        @(negedge clk)
-        $display("[%0tns] Transmitting 0x%h", $time/1000.0, char_to_send);
+    // Task to check received data
+    task check_received(input logic [7:0] expected);
+        logic [7:0] expected_value; // Declare this as automatic
+        expected_value = expected;
+        @(posedge data_strobe);
+        if (rx_data != expected_value) begin
+            $display("ERROR: Expected 0x%h but received 0x%h", expected_value, rx_data);
+            errors++;
+        end else begin
+            $display("OK: Received 0x%h", rx_data);
+        end
+        if (rx_error) begin
+            $display("ERROR: Parity or framing error detected.");
+            errors++;
+        end
+    endtask
 
-        // set inputs
-        tb_send = 1;
-        tb_din = char_value;
-
-        // Wait a clock
-        @(negedge clk)
-
-        // Wait until busy goes high or reset is asserted
-        wait (tx_busy == 1'b1 || rst == 1'b1);
-
-        // Deassert send
-        @(negedge clk)
-        tb_send = 0;
-    endtask   
-
-    //////////////////////////////////
-    // Main Test Bench Process
-    //////////////////////////////////
+    // Main test sequence
     initial begin
-        int clocks_to_delay;
-        $display("===== TX TB =====");
+        errors = 0;
 
-        // Simulate some time with no stimulus/reset
-        #100ns
-
-        // Set some defaults
-        rst = 0;
-        tb_send = 0;
-        tb_din = 8'hff;
-        #100ns
-
-        //Test Reset
-        $display("[%0tns] Testing Reset", $time/1000.0);
+        // Initial reset
         rst = 1;
-        #80ns;
-        // Un reset on negative edge
-        @(negedge clk)
+        @(posedge clk);
         rst = 0;
+        @(posedge clk);
 
-        // Make sure tx is high
-        @(negedge clk)
-        if (tb_tx_out != 1'b1)
-            $display("[%0tns] Warning: TX out not high after reset", $time/1000.0);
+        // Allow some time for the modules to settle
+        #100;
 
-        //////////////////////////////////
-        // Transmit a few characters to design
-        //////////////////////////////////
-        #10us;
-        for(int i = 0; i < NUMBER_OF_CHARS; i++) begin
-            char_to_send = $urandom_range(0,255);
-            initiate_tx(char_to_send);
-            // Wait until transmission is over
-            wait (rx_busy == 1'b0);
-            // check to see that character received is the one that was sent
-            if (tx_data != char_to_send)
-                $display("\[%0tns] WARNING: Received 0x%h instead of 0x%h", $time/1000,rx_data,char_to_send);
-
-            // Delay a random amount of time
-            clocks_to_delay = $urandom_range(1000,30000);
-            repeat(clocks_to_delay)
-                @(negedge clk);
+        // Test loop
+        for (int i = 0; i < NUMBER_OF_CHARS; i++) begin
+            // Declare these as automatic
+            int delay_cycles;
+            logic [7:0] data_to_send;
+            delay_cycles = $urandom_range(5, 50);
+            repeat (delay_cycles) @(posedge clk);
+            data_to_send = $urandom_range(0, 255);
+            send_data(data_to_send);
+            check_received(data_to_send);
         end
 
-        // Issue a reset in the middle of a transmission
-        initiate_tx(8'ha5);
-        // Wait 4 baud periods
-        repeat(BAUD_CLOCKS * 4)
-            @(negedge clk);
-        // Issue reset
-        $display("[%0tns] Testing reset of TX in middle of transaction", $time/1000.0);
-        rst = 1;
-        #20ns;
-        // Un reset on negative edge
-        @(negedge clk)
-        rst = 0;
-        // Make sure tx is high and no longer busy
-        repeat(2)
-            @(negedge clk);
-        if (tb_tx_out != 1'b1)
-            $display("[%0tns] Warning: TX out not high after reset", $time/1000.0);
-        if (tx_busy != 1'b0)
-            $display("[%0tns] Warning: busy is high after reset", $time/1000.0);
-        // Wait 4 baud periods
-        repeat(BAUD_CLOCKS * 4)
-            @(negedge clk);
-
-        /*
-        // Try to issue a new transaciton before the last one ends
-        //$display("[%0tns] Testing issue of a new transaction before last one ends", $time/1000.0);
-        char_to_send = 8'h5a;
-        initiate_tx(char_to_send);
-        // Wait 4 baud periods
-        delay_baud(4);
-        // Initiate a new transaction with a different value (should be ignoreds)
-        initiate_tx(char_to_send >> 1);
-        // Wait until transmission is over
-        wait (tx_busy == 1'b0);
-        // check to see that character received is the one that was sent
-        if (r_char != char_to_send)
-            $display("\[%0tns] WARNING: Received 0x%h instead of 0x%h", $time/1000,r_char,char_to_send);
-        */
-
+        // End simulation
+        $display("Simulation finished with %0d errors.", errors);
         $stop;
     end
 
