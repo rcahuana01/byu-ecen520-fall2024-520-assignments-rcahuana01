@@ -1,118 +1,115 @@
 `timescale 1ns / 1ps
 //////////////////////////////////////////////////////////////////////////////////
-// RX Testbench
+//  
+//  Module name: rx_tb.sv
+//  Name: Rodrigo Cahuana
+//  Class: ECEN 520
+//  Date: 09/24/2024
+//  Description: Testbench for UART Receiver module. 
+//
 //////////////////////////////////////////////////////////////////////////////////
 
-module tb_receiver;
+module rx_tb; 
+    // Parameters
+    parameter integer CLK_FREQUENCY = 100_000_000; 
+    parameter integer BAUD_RATE = 19_200;          // Default baud rate 
+    parameter integer PARITY = 1;                   // Default parity (1=odd) 
+    parameter integer NUMBER_OF_CHARS = 10;         // Number of characters to transmit 
 
-    // Testbench parameters
-    parameter integer BAUD_RATE = 19_200;       // Baud rate for transmitter and receiver
-    parameter integer PARITY = 1;                // 1 = Odd parity, 0 = Even parity
-    parameter integer NUMBER_OF_CHARS = 10;      // Number of characters to transmit
+    // Testbench Parameters 
+    localparam integer NUM_CYCLES_BEFORE_START = 10; // Cycles before starting test
+    localparam integer NUM_CYCLES_RESET = 5;          // Cycles for reset
 
-    // Signals
-    logic clk;
-    logic rst;
-    logic tx_start;            // Start signal for the transmitter
-    logic [7:0] tx_data;       // Data to transmit
-    logic [7:0] rx_data;       // Data received from the receiver
-    logic tx_busy;             // Transmitter busy signal
-    logic rx_busy;             // Receiver busy signal
-    logic tx_out;              // Transmitter output (to receiver input)
-    logic data_strobe;         // Indicates new data received
-    logic rx_error;            // Indicates receiving error
-    int errors;
+    // Clock and Reset logic 
+    logic clk;                                      
+    logic rst;                                       
 
-    // Instantiate the transmitter
+    // UART Connections 
+    logic [7:0] tx_data;                            // Data to transmit 
+    logic tx_start;                                  // Start transmission signal 
+    logic tx_busy;                                   // Transmitter busy signal 
+    logic din;                                       // Transmitter output connected to Receiver input 
+    logic [7:0] rx_data;                            // Received data 
+    logic rx_busy, rx_data_strobe, rx_error;       // Receiver signals 
+
+    // Instantiate the UART Transmitter 
     tx #(
-        .BAUD_RATE(BAUD_RATE)
+        .CLK_FREQUENCY(CLK_FREQUENCY), 
+        .BAUD_RATE(BAUD_RATE), 
+        .PARITY(PARITY) 
     ) transmitter (
-        .clk(clk),
-        .rst(rst),
-        .send(tx_start),
-        .din(tx_data),
-        .tx_out(tx_out),
-        .busy(tx_busy)
-    );
+        .clk(clk), 
+        .rst(rst), 
+        .send(tx_start), 
+        .din(tx_data), 
+        .busy(tx_busy), 
+        .tx_out(din) // Connect transmitter output to receiver input 
+    ); 
 
-    // Instantiate the receiver
+    // Instantiate the UART Receiver 
     rx #(
-        .BAUD_RATE(BAUD_RATE),
-        .PARITY(PARITY)
+        .CLK_FREQUENCY(CLK_FREQUENCY), 
+        .BAUD_RATE(BAUD_RATE), 
+        .PARITY(PARITY) 
     ) receiver (
-        .clk(clk),
-        .rst(rst),
-        .din(tx_out),        // Loop back transmitter output to receiver input
-        .dout(rx_data),
-        .busy(rx_busy),
-        .data_strobe(data_strobe),
-        .rx_error(rx_error)
-    );
+        .clk(clk), 
+        .rst(rst), 
+        .din(din), 
+        .dout(rx_data), 
+        .busy(rx_busy), 
+        .data_strobe(rx_data_strobe), 
+        .rx_error(rx_error) 
+    ); 
 
-    // Clock generation
-    initial begin
-        clk = 0;
-        forever #5 clk = ~clk; // 100 MHz clock
-    end
+    // Clock generation 
+    always begin 
+        clk = 1; #5; 
+        clk = 0; #5; 
+    end 
 
-    // Task for initiating a transfer
-    task send_data(input logic [7:0] char_value);
-        @(negedge clk);  // Wait for a negative clock edge
-        $display("[%0tns] Transmitting 0x%h", $time/1000.0, char_value);
+    // Task to send and verify data 
+    task automatic send_and_verify(input logic [7:0] value_to_send); 
+        begin 
+            tx_data = value_to_send; 
+            tx_start = 1; 
+            @(posedge clk); 
+            tx_start = 0; 
+            wait(tx_busy); // Wait for transmission to start 
+            wait(!tx_busy); // Wait for transmission to end 
 
-        // Set inputs
-        tx_data = char_value;
-        tx_start = 1;
+            // Check received data against sent data
+            if (rx_data == value_to_send && !rx_error) 
+                $display("Time [%0tns]: Transmit OK - Value %h", $time/1000.0, value_to_send); 
+            else 
+                $display("Time [%0tns]: ERROR - Received Value %h, Expected %h, rx_error=%b", 
+                    $time/1000.0, rx_data, value_to_send, rx_error); 
+        end 
+    endtask 
 
-        // Wait for next clock cycle
-        @(negedge clk);
+    // Initial block 
+    initial begin 
+        $display("Starting UART RX Testbench"); 
 
-        // Wait until busy goes high or reset is asserted
-        wait (tx_busy == 1'b1 || rst == 1'b1);
+        // Initialize 
+        clk = 0; 
+        rst = 1; // Assert reset 
+        tx_start = 0; 
+        tx_data = 8'hXX; // Dummy value
 
-        // Deassert send
-        @(negedge clk);
-        tx_start = 0;
+        repeat(NUM_CYCLES_BEFORE_START) @(posedge clk); 
+        rst = 0; // Deassert reset 
+        repeat(NUM_CYCLES_RESET) @(posedge clk); 
 
-        // Wait for data to be received
-        @(posedge data_strobe);
-        if (rx_data == char_value) begin
-            $display("OK: Sent 0x%h, Received 0x%h", char_value, rx_data);
-        end else begin
-            $display("ERROR: Sent 0x%h, Received 0x%h", char_value, rx_data);
-            errors++;
-        end
-    endtask
+        // Main test sequence 
+        $display("Starting test sequence"); 
 
-    //////////////////////////////////
-    // Main Test Bench Process
-    //////////////////////////////////
-    initial begin
-        // Declare local variables here
-        int delay_cycles; // Declare delay_cycles as automatic
-        logic [7:0] data_to_send; // Declare data_to_send as automatic
+        for (int i = 0; i < NUMBER_OF_CHARS; i++) begin 
+            send_and_verify($random % 256); // Send a random 8-bit value 
+            repeat($urandom_range(1, 10)) @(posedge clk); // Random delay 
+        end 
 
-        errors = 0;
-
-        // Initial reset
-        rst = 1;
-        #20; // Hold reset for a while
-        rst = 0;
-
-        // Allow some time for the modules to settle
-        #100;
-
-        // Main test loop
-        for (int i = 0; i < NUMBER_OF_CHARS; i++) begin
-            delay_cycles = $urandom_range(5, 50); // Wait a random number of clock cycles
-            repeat (delay_cycles) @(posedge clk);
-            data_to_send = $urandom_range(0, 255); // Generate random 8-bit data
-            send_data(data_to_send);
-        end
-
-        // End simulation
-        $display("Simulation finished with %0d errors.", errors);
-        $stop;
-    end
-
+        // End the simulation 
+        $display("Test sequence complete. Stopping simulation."); 
+        $stop; 
+    end 
 endmodule

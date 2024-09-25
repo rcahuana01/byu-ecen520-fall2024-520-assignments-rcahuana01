@@ -1,16 +1,14 @@
 sim_rx: rx.sv rx_tb.sv ../tx_sim/tx.sv
 	vlog -sv rx.sv rx_tb.sv ../tx_sim/tx.sv
-	vsim -c work.tb_rx -do "run -all; quit"
+	vsim -c work.rx_tb -do "run -all; quit"
 
 sim_rx_115200_even: rx.sv rx_tb.sv ../tx_sim/tx.sv
 	vlog -sv rx.sv rx_tb.sv ../tx_sim/tx.sv
-	vsim -c work.tb_rx -gBAUD_RATE=115200 -gPARITY=0 -do "run -all; quit"
+	vsim -c work.rx_tb -gBAUD_RATE=115200 -gPARITY=0 -do "run -all; quit"
 
-synth_rx: rx.sv
-	read_verilog -sv rx.sv
-	synth_design -top rx -mode out_of_context -log synth.log
-
+synth_rx:
+	vivado -mode batch -source rx_synth.tcl -log rx_implement.log
 
 clean:
-	rm -rf transcript ./work/*
-	rm -f *.mpf *.mti *.log *.pb *.vstf *wlft* *.wlf .nfs* tmp *.bak
+	rm -f transcript ./work/* *.Xil 
+	rm -f *.mpf *.mti *.log *.pb *.vstf *wlft* *.wlf .nfs* tmp *.bak *.jou *.rpt *.txt *.dcp
