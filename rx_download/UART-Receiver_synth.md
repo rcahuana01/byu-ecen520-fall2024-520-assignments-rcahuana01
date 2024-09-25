@@ -1,16 +1,4 @@
 
-<!--
-Notes:
-- Warnings:
-  - Teach them how to set the tools to ignore warnings and how to get rid of warnings
-  - Tell them that they should not have *any* warnings during synthesis
--- Any _new_ coding standards to add? It would be nice to add something for this assignment
-
-- Future:
-  - Make sure that the data displayed on the LEDs doesn't change/flicker (i.e., latch the data)
-  - Note that many studens struggled debugging their receiver and the transmitter model at the same time. It wasn't clear which one has the problem.
-     - Suggestion: create a top-level testbench that just hooks up my receiver model to their transmitter model and is used to validate their transmitter model. This way, they can have a known good transmitter model to test their receiver.
--->
 
 # UART Receiver
 
@@ -37,9 +25,11 @@ Include the following ports and parameters in your module:
 | segments | Output | 7 | The seven segment drivers (see table below) |
 | dp_out | Output | 1 | The output digit point driver signal |
 | an_out | Output | 8 | Anode signal for each segment |
+
+| Parameter Name | Default Value | Purpose |
 | ---- | ---- | ---- |
 | CLK_FREQUECY | 100_000_000 | The clock frequency |
-| SEGMENT_DISPLAY_US  | 10_000 | The amount of time to display each digit  |
+| MIN_SEGMENT_DISPLAY_US  | 10_000 | The amount of time to display each digit  |
  
 The anode signals should be driven in a round-robin fashion so that each digit is displayed for a short amount of time.
 These signals are low asserted. 
@@ -96,8 +86,8 @@ Create a top-level design that uses the following top-level ports:
 | CLK_FREQUENCY  | 100_000_000 | Specify the clock frequency |
 | BAUD_RATE | 19_200 | Specify the receiver baud rate |
 | PARITY | 1 | Specify the parity bit (0 = even, 1 = odd) |
-| SEGMENT_DISPLAY_US  | 1_000 | The amount of time in microseconds to display each digit (1 ms) |
-| DEBOUNCE_DELAY_US | integer | 1_000 | Specifies the minimum debounce delay in micro seconds (1 ms) |
+| MIN_SEGMENT_DISPLAY_US  | 1_000 | The amount of time in microseconds to display each digit (1 ms) |
+| DEBOUNCE_TIME_US | integer | 1_000 | Specifies the minimum debounce delay in micro seconds (1 ms) |
 
 Design your top-level circuit as follows:
 * Attach the `CPU_RESETN` signal to two flip-flops to synchronize it to the clock. Use this synchronized signal for the reset in your design (note that the input reset polarity is negative asserted)
@@ -200,3 +190,16 @@ The following assignment specific items should be included in your repository:
        * Find the first net in the `Max Delay Paths` section and indicate the source and destination of this maximum path.
     1. Indicate how many times you had to synthesize and download your bitstream before your circuit worked.
 
+
+<!--
+Notes:
+- Warnings:
+  - Teach them how to set the tools to ignore warnings and how to get rid of warnings
+  - Tell them that they should not have *any* warnings during synthesis
+-- Any _new_ coding standards to add? It would be nice to add something for this assignment
+
+- Future:
+  - Make sure that the data displayed on the LEDs doesn't change/flicker (i.e., latch the data)
+  - Note that many studens struggled debugging their receiver and the transmitter model at the same time. It wasn't clear which one has the problem.
+     - Suggestion: create a top-level testbench that just hooks up my receiver model to their transmitter model and is used to validate their transmitter model. This way, they can have a known good transmitter model to test their receiver.
+-->

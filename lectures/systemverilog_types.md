@@ -2,8 +2,6 @@
 
 In this lecture we will review the different types available in SystemVerilog and how to use them in RTL design.
 
-<!-- see slides in verilog2001.pptx slides -->
-
 * 4 state types
   * wire, reg, logic
   * integer
@@ -18,4 +16,4 @@ In this lecture we will review the different types available in SystemVerilog an
 * time
 
 **Reading**
-  * Spears, Chapter 2 
+  * [SystemVerilog for verification](https://lib.byu.edu/search/byu/record/cat.3659047.item.31197227929699?holding=9mng3ggqdhk9ykw0), Chapter 2. This textbook is available as an ebook online through the BYU library.
