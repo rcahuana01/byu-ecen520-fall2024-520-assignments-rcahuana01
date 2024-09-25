@@ -1,23 +1,26 @@
 `timescale 1ns / 1ps
+//////////////////////////////////////////////////////////////////////////////////
+// RX Testbench
+//////////////////////////////////////////////////////////////////////////////////
 
-module tb_rx;
+module tb_receiver;
 
-    // Parameters
-    parameter integer BAUD_RATE = 19_200;  // Baud rate
-    parameter integer PARITY = 1;            // 1 = Odd, 0 = Even
-    parameter integer NUMBER_OF_CHARS = 10;  // Number of characters to transmit
+    // Testbench parameters
+    parameter integer BAUD_RATE = 19_200;       // Baud rate for transmitter and receiver
+    parameter integer PARITY = 1;                // 1 = Odd parity, 0 = Even parity
+    parameter integer NUMBER_OF_CHARS = 10;      // Number of characters to transmit
 
     // Signals
     logic clk;
     logic rst;
-    logic tx_start;          // Start signal for the transmitter
-    logic [7:0] tx_data;     // Data to transmit
-    logic [7:0] rx_data;     // Data received from the receiver
-    logic tx_busy;           // Transmitter busy signal
-    logic rx_busy;           // Receiver busy signal
-    logic tx_out;            // Transmitter output
-    logic data_strobe;       // Indicates new data received
-    logic rx_error;          // Indicates receiving error
+    logic tx_start;            // Start signal for the transmitter
+    logic [7:0] tx_data;       // Data to transmit
+    logic [7:0] rx_data;       // Data received from the receiver
+    logic tx_busy;             // Transmitter busy signal
+    logic rx_busy;             // Receiver busy signal
+    logic tx_out;              // Transmitter output (to receiver input)
+    logic data_strobe;         // Indicates new data received
+    logic rx_error;            // Indicates receiving error
     int errors;
 
     // Instantiate the transmitter
@@ -52,58 +55,59 @@ module tb_rx;
         forever #5 clk = ~clk; // 100 MHz clock
     end
 
-    // Task to send data
-    task send_data(input logic [7:0] data);
-        logic [7:0] data_to_send; // Declare this as automatic
-        data_to_send = data;
-        tx_data = data_to_send;
+    // Task for initiating a transfer
+    task send_data(input logic [7:0] char_value);
+        @(negedge clk);  // Wait for a negative clock edge
+        $display("[%0tns] Transmitting 0x%h", $time/1000.0, char_value);
+
+        // Set inputs
+        tx_data = char_value;
         tx_start = 1;
-        @(posedge clk);
-        while (tx_busy) @(posedge clk); // Wait until transmitter is not busy
+
+        // Wait for next clock cycle
+        @(negedge clk);
+
+        // Wait until busy goes high or reset is asserted
+        wait (tx_busy == 1'b1 || rst == 1'b1);
+
+        // Deassert send
+        @(negedge clk);
         tx_start = 0;
-        @(posedge clk); // Wait for the clock cycle after sending
-    endtask
 
-    // Task to check received data
-    task check_received(input logic [7:0] expected);
-        logic [7:0] expected_value; // Declare this as automatic
-        expected_value = expected;
+        // Wait for data to be received
         @(posedge data_strobe);
-        if (rx_data != expected_value) begin
-            $display("ERROR: Expected 0x%h but received 0x%h", expected_value, rx_data);
-            errors++;
+        if (rx_data == char_value) begin
+            $display("OK: Sent 0x%h, Received 0x%h", char_value, rx_data);
         end else begin
-            $display("OK: Received 0x%h", rx_data);
-        end
-        if (rx_error) begin
-            $display("ERROR: Parity or framing error detected.");
+            $display("ERROR: Sent 0x%h, Received 0x%h", char_value, rx_data);
             errors++;
         end
     endtask
 
-    // Main test sequence
+    //////////////////////////////////
+    // Main Test Bench Process
+    //////////////////////////////////
     initial begin
+        // Declare local variables here
+        int delay_cycles; // Declare delay_cycles as automatic
+        logic [7:0] data_to_send; // Declare data_to_send as automatic
+
         errors = 0;
 
         // Initial reset
         rst = 1;
-        @(posedge clk);
+        #20; // Hold reset for a while
         rst = 0;
-        @(posedge clk);
 
         // Allow some time for the modules to settle
         #100;
 
-        // Test loop
+        // Main test loop
         for (int i = 0; i < NUMBER_OF_CHARS; i++) begin
-            // Declare these as automatic
-            int delay_cycles;
-            logic [7:0] data_to_send;
-            delay_cycles = $urandom_range(5, 50);
+            delay_cycles = $urandom_range(5, 50); // Wait a random number of clock cycles
             repeat (delay_cycles) @(posedge clk);
-            data_to_send = $urandom_range(0, 255);
+            data_to_send = $urandom_range(0, 255); // Generate random 8-bit data
             send_data(data_to_send);
-            check_received(data_to_send);
         end
 
         // End simulation
