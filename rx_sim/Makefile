@@ -10,6 +10,6 @@ synth_rx:
 	vivado -mode batch -source rx_synth.tcl -log rx_implement.log
 
 clean:
-	rm -rf transcript ./work/* 
+	rm -f transcript ./work/* 
 	rm -f *.mpf *.mti *.log *.pb *.vstf *wlft* *.wlf .nfs* tmp *.bak *.jou *.rpt *.txt *.dcp
-	rm -f *.Xil *.jou *.backup.log *.dcp *.txt *.rpt rx_implement.log
+	rm -f *.Xil *.jou *.backup.log *.dcp *.txt *.rpt 

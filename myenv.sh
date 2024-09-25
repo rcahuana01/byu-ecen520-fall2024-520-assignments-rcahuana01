@@ -1,1 +1,1 @@
-source /tools/Xilinx/Vivado/2019.2/settings64.sh
+source /tools/Xilinx/Vivado/2024.1/settings64.sh
