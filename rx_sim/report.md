@@ -4,7 +4,7 @@ Name: Rodrigo Cahuana
 Hours Spent: 10
 
 ## Summarize any major challenges you had completing this assignment
-* Challenge 1. 
+* Challenge 1. Understanding testbench syntax and the different functions
 * Challenge 2. Understanding the receiver testbench 
 
 ## Provide suggestions for improving this assignment (optional)

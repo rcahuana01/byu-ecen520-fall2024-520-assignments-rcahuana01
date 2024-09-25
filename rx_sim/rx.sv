@@ -22,9 +22,8 @@ module rx(
     logic [7:0] r_char;
     logic [3:0] bit_counter;
     logic [31:0] timer;
-    logic sampling_done;
     logic start_bit_detected;
-    logic parity_check;
+    logic parity_check, timerCount;
     typedef enum logic [2:0] {IDLE, START, DATA, PAR, STOP} state_t;
     state_t current_state, next_state;
 
@@ -97,14 +96,14 @@ module rx(
     end
 
     // Check parity
-    assign parity_check = ^r_char ^ 1'b1; // Adjust this based on your parity logic
+    assign parity_check = ^r_char ^ 1'b1; 
 
     // Timer logic
     always_ff @(posedge clk or posedge rst) begin
         if (rst) begin
-            timer <= 0;
+            timerCount <= 0;
         end else if (current_state != IDLE) begin
-            timer <= timer + 1; 
+            timerCount <= timerCount + 1; 
         end
     end
 
