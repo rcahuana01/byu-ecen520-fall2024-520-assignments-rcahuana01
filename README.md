@@ -22,21 +22,21 @@ This repository contains the lecture schedule (including links to lecture summar
 | **Week 4** | |
 | 9/23/2024 | [Functions, Tasks, and Threads](./lectures/functions_tasks.md) |
 | 9/25/2024 | [SystemVerilog Types](./lectures/systemverilog_types.md) |
-| 9/27/2024 | [Verification with UVM]() |
+| 9/27/2024 | [Verification with UVM](./lectures/uvm.md) |
 | **Week 5** |  |
-| 9/30/2024 | [Memories](./lectures/memories.md) |
+| 9/30/2024 | [SystemVerilog Types continued - no quiz](./lectures/systemverilog_types.md) |
 | 10/2/2024 | [SPI Controller](./lectures/spi.md)  |
 | 10/4/2024 | **Exam #1** |
 | **Week 6** | |
-| 10/7/2024 | [Timing overview and review]() |
-| 10/9/2024 | [Clock jitter, duty cycle, clock skew]() |
-| 10/11/2024 | [Clock Skew Analylsis]() |
+| 10/7/2024 | [Memories](./lectures/memories.md)  |
+| 10/9/2024 | [Timing overview and review]() |
+| 10/11/2024 | [Clock jitter, duty cycle, clock skew]() |
 | **Week 7** | |
-| 10/14/2024 | [Xilinx Clock Skew Timing reports]() |
-| 10/16/2024 | [Xilinx Clock Resources (MMCM)]() |
-| 10/18/2024 | [Reset timing and strategies]() |
+| 10/14/2024 | [Clock Skew Analylsis]() |
+| 10/16/2024 | [Xilinx Clock Skew Timing reports]() |
+| 10/18/2024 | [Xilinx Clock Resources (MMCM)]() |
 | **Week 8** | |
-| 10/21/2024 |  |
+| 10/21/2024 | [Reset timing and strategies]() |
 | 10/23/2024 | [Poor Sequential Design Practice]() |
 | 10/25/2024 | [Metastability & Syncrhonizer design]() |
 | **Week 9** | |
@@ -77,7 +77,7 @@ Review the [assignment mechanics](./resources/assignment_mechanics.md) page to l
 | 1 | [UART Transmitter-Simulation](./tx_sim/UART_Transmitter_sim.md) | `tx_sim` |
 | 2 | [UART Transmitter-Synthesis and Download](./tx_download/UART_Transmitter_synth.md) | `tx_download` |
 | 3 | [UART Receiver Simulation](./rx_sim/UART_Receiver_sim.md) | `rx_sim` |
-| 4 | [UART Synthesis and Download](./rx_download/UART_Receiver_synth.md) | `rx_download` |
+| 4 | [UART Synthesis and Download](./rx_download/UART-Receiver_synth.md) | `rx_download` |
 | 5 | [SPI Controller-Simulation](./spi_cntrl/SPI_cntrl.md) | `spi_cntrl` |
 | 6 | [SPI Controller-Download](./spi_download/spi_download.md) | `spi_download` |
 
