@@ -106,6 +106,7 @@ The following assignment specific items should be included in your repository:
 
 <!--
 Future Changes:
+* The synthesis tool couldn't extract a FSM from some students. Need to figure out what is going on. Perhaps make a requirement that it has to find it?
 * ask them to manually change the FSM encoding type when thhey synthesize to see the impact.
 * Any _new_ coding standards to add? It would be nice to add something for this assignment
 * Have them create a function in the testbench
