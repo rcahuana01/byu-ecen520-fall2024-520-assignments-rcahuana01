@@ -29,10 +29,10 @@ This repository contains the lecture schedule (including links to lecture summar
 | 10/4/2024 | **Exam #1** |
 | **Week 6** | |
 | 10/7/2024 | [Memories](./lectures/memories.md)  |
-| 10/9/2024 | [Timing overview and review]() |
-| 10/11/2024 | [Clock jitter, duty cycle, clock skew]() |
+| 10/9/2024 | [Timing overview and review](./lectures/timing_overview.md) |
+| 10/11/2024 | [Clock jitter, duty cycle, clock skew](./lectures/clock_skew.md) |
 | **Week 7** | |
-| 10/14/2024 | [Clock Skew Analylsis]() |
+| 10/14/2024 | [Clock Skew Analysis]() |
 | 10/16/2024 | [Xilinx Clock Skew Timing reports]() |
 | 10/18/2024 | [Xilinx Clock Resources (MMCM)]() |
 | **Week 8** | |
