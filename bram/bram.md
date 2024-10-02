@@ -1,17 +1,3 @@
-<!--
-
-Need to be more clear on Putty settings. 
-- Parity? (enforce it!)
-- Default baud rate?
-They use glbl.v file for simulation. Need to include in their repository.
-Don't hard code any paths in makefile! (perhaps have an environment variable that is set so I can reuse their makefiles)
-- Have them simulate the full fight song
-
-Futgure: if they hit enter, make sure both CR/LF are sent back
-- buffer empties when right pressed.
-- start fight song with new line (make it more clear how to setup putty and what to send at the end of the line)
-- Have the fight song spit out the text as fast as possible (no delays).
--->
 # BRAM
 
 In this assignment you will practice using BRAMs and interfacing them to your UART. 
@@ -21,6 +7,19 @@ Two different BRAMs will be used in this assignment.
 ## Synchronous FIFO
 
 Create a module that implements a simple synchronous FIFO for 8-bit bytes (this will be used with the UART).
+The ports of this module should be as follows:
+
+| Port Name | Direction | Width | Function |
+| ---- | ---- | ---- | ----  |
+| clk | Input | 1 | Clock |
+| rst | Input | 1 | Synchronous Reset |
+| we | Input | 1 | Write enable |
+| re | Input | 1 | Read enable |
+| din | Input | 8 | Data In |
+| dout | Output | 8 | Data Out |
+| full | Output | 1 | Indicates FIFO is full |
+| empty | Output | 1 | Indicates FIFO is empty |
+
 Your FIFO should be created by as follows:
 * Instance a RAMB36E1 primitive into your design using an 8-bit data bus
 * Create a "write address" counter that indicates which address to write to. Every time a byte is written to the FIFO (i.e., when 'we' is asserted), the write address should increment by one. The address should roll over if you reach the limit
@@ -29,93 +28,53 @@ Your FIFO should be created by as follows:
 * Create an 'empty' signal that is asserted when the read address is equal to the write address.
 * Create a 'full' signal that is asserted when the write address is one less than the read address.
 
-Your design 
+Create a simple testbench that demonstrates writing a few bytes, reading/writing a few bytes, and the full/empty signals working.
+Create a makefile rule named `sim_bram_fifo` that runs this simulation from the command line.
+
+## Fight Song RAM
+
+Create a second module that implements a "ROM" that stores a set of ASCII characters that can be read out one at a time.
+This module will be used to store a message sent over the UART.
+The ports of this module should be as follows:
+
 | Port Name | Direction | Width | Function |
 | ---- | ---- | ---- | ----  |
 | clk | Input | 1 | Clock |
 | rst | Input | 1 | Synchronous Reset |
-| we | Input | 1 | Write enable |
-| re | Input | 8 | Read enable |
-| din | Input | 8 | Data In |
+| init | Input | 1 | Return pointer to zero |
+| re | Input | 1 | Read enable |
 | dout | Output | 8 | Data Out |
-| full | Output | 1 | Indicates FIFO is full |
-| empty | Output | 1 | Indicates FIFO is empty |
+| end | Output | 1 | Indicates the buffer is empty  |
 
-Create a simple testbench that demonstrates 
+| Parameter | Type | Function |
+| ---- | ---- | ---- |
+| FILE_NAME | string | File name of the ASCII file to read |
 
-## Fight Song RAM
+Design your module to operate as follows:
+* Create an "inferred" memory that is 8 bits x 4096
+* Provide a parameter that contains a file name that contains the data to be stored in the ROM. Create an initial block that performs this initialization.
+* Create a read pointer that indicates which address to read from
+* Increment this pointer every time 're' is asserted
+* Reset the pointer when 'init' is asserted
+* Assert the 'end' signal when the the value of the memory output is zero
 
-Create a second module that implements a simple RAM that stores the BYU fight song.
-
-Instance a single BRAM as a device primitive in your HDL (do not 'infer' the BRAM with your RTL). 
-This BRAM should be organized as 8bit x 4096 (i.e., 4096 8-bit ASCII characters). 
-Initialize the contents of the BRAM to include the text of the BYU fight song (see below). 
-Note that the fight song will not fill the entire BRAM so you should only send the characters associated with the fight song and no more.
-Make sure you send new line characters(\r\n) at the end of each line.
-
-You should design your circuit so that when the **left** button is pressed, the _entire_ fight song is sent over the UART transmitter. 
-You will need to implement flow control so that you don't send another character until the previous character has been sent. 
-Also, you will need to put some sort of null or stop character at the end of the fight song so that you know when to stop.
-
-```
-Rise all loyal Cougars and hurl your challenge to the foe.
-You will fight, day or night, rain or snow.
-Loyal, strong, and true
-Wear the white and blue.
-While we sing, get set to spring.
-Come on Cougars it's up to you. Oh!
-
-Chorus:
-Rise and shout, the Cougars are out
-along the trail to fame and glory.
-Rise and shout, our cheers will ring out
-As you unfold your victr'y story.
-
-On you go to vanquish the foe for Alma Mater's sons and daughters.
-As we join in song, in praise of you, our faith is strong.
-We'll raise our colors high in the blue
-And cheer our Cougars of BYU.
-```
-
-If the left button is pressed again during transmission you should ignore it (i.e., send the entire text before sending another one)
-
-
-
+Create a testbench that demonstrates the ability to read all the contents of the ROM until the 'end' signal is asserted.
+Make sure you provide a couple of clock cycles between each read.
+Create a makefile rule named `sim_bram_rom` that runs this simulation from the command line.
 
 
 ## Top-Level Design
 
-Start this assignment by creating a top-level module with the same top-level ports as the UART receiver assignment.
-Add the BTNL and BTNR ports to the top-level module to represent the left and right buttons on the Basys3 board (you will need a debouncer for each of these buttons).
-You may want to copy your top-level design and modify it as a starting point.
-Include the following in your top-level design:
-* Attach the `CPU_RESETN` signal to two flip-flops as you did in the previous assignment.
-* Instance your transmitter much as you did in the previous assignment
-  * Hook the TX output signal to the top-level `UART_RXD_OUT` pin of the board (i.e., to the host)
-  * Attach the TX busy signal to the LED16_B signal to provide a blue LED indicator when the transmitter is busy
-* Instance your receiver
-  * Add a two flip-flop synchronizer between the RX input signal (`UART_TXD_IN`)
-  * Attach the rx busy signal to the LED17_R signal to provide a red LED indicator when the receiver is busy
-  * Attach the rx error signal to the LED17_G signal to provide a green LED indicator when the receiver has an error
-* Attach the lower 8 switches on the board to the lower 8 LEDs.
-* Create four 8-bit registers that hold the last four values received by your receiver
-* Instance your seven segment display controller and display the last four values as you did in the previous assignment
-* Hook up the center button (BTNC) to your circuit through a debouncer and cause the transmitter to send the values on the switches when this button has been pushed. 
+Create a top-level design that instantiates both the FIFO and the ROM modules.
+Design your top-level design to operate as follows:
+* Instance your UART transmitter and receiver and connect them to the top-level UART ports
+* When the **left** button is pressed, the _entire_ ROM contents are sent over the UART transmitter one character at a time. Ignore any button presses that may occur until the entire ROM has been sent.
+You will need to implement flow control so that you don't send another character until the previous character has been sent.
+* When characters are received by the UART receiver, they are placed in the BRAM FIFO.
+  * When the **right** button is pressed, your circuit should send each character received in the BRAM over the UART back to the host until the BRAM FIFO is empty. Ignore any button presses that may occur until the entire FIFO has been sent.
+  * After sending the full contents of the FIFO, reset your counters so that you only send the new data received after the button has been pressed (you don't want to send the data received more than once).
+* Use LED16_B for the TX busy signal, LED17_R for the RX busy signal, and LED17_G for the RX error signal.
 
-The difference between this assignment and the previous one is that you will transmit data over the UART from three different sources: BRAM Fight song, BRAM buffer, and the switches with BTNC.
-In addition, you will be saving the storing the received values into a BRAM buffer.
-More details on these additions will be described below.
-
-
-
-Implement a UART "buffer" with a second BRAM that saves the data received from the UART receiver one character after another.
-Infer a second BRAM from HDL (no instancing of primitive) that is organized as 8x4096. 
-This BRAM should store each character received from the UART in one address after the next. 
-Create a counter that indicates the location where to store the next UART received character (you will need to display this counter in hex on the seven segment display).
-When the **right** button is pressed, your circuit should send each character received in the BRAM over the UART back to the host.
-Once the data has been sent, reset your counters so that you only send the new data received after the button has been pressed (you don't want to send the data received more than once).
-
-Your BRAM will act like a FIFO: characters received from the UART are placed in the BRAM FIFO and when the button is pressed, the BRAM fifo is read and sent over the transmitter until the FIFO has emptied.
 
 ## Fight Song BRAM
 
@@ -184,3 +143,15 @@ Create a makefile rule `gen_bit` that generates a bitstream for your top-level d
 ## Submission
 
 Add detailed timing analysis to your README.md file.
+
+
+<!--
+They use glbl.v file for simulation. Need to include in their repository.
+Don't hard code any paths in makefile! (perhaps have an environment variable that is set so I can reuse their makefiles)
+- Have them simulate the full fight song
+
+Futgure: if they hit enter, make sure both CR/LF are sent back
+- buffer empties when right pressed.
+- start fight song with new line (make it more clear how to setup putty and what to send at the end of the line)
+- Have the fight song spit out the text as fast as possible (no delays).
+-->
