@@ -92,6 +92,7 @@ Create a controller with the following top-level ports and parameters:
 | SPI_SCLK | Output | 1 | SCLK output signal |
 | SPI_MOSI | Output | 1 | MOSI output signal |
 | SPI_CS | Output | 1 | CS output signal |
+
 | Parameter Name | Default Value | Purpose |
 | ---- | ---- | ---- |
 | CLK_FREQUENCY | 100_000_000 | Specify the clock frequency of the board |

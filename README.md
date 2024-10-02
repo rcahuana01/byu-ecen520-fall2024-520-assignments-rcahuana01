@@ -29,16 +29,16 @@ This repository contains the lecture schedule (including links to lecture summar
 | 10/4/2024 | **Exam #1** |
 | **Week 6** | |
 | 10/7/2024 | [Memories](./lectures/memories.md)  |
-| 10/9/2024 | [Timing overview and review]() |
-| 10/11/2024 | [Clock jitter, duty cycle, clock skew]() |
+| 10/9/2024 | [Timing overview and review](./lectures/timing_overview.md) |
+| 10/11/2024 | [Clock jitter, duty cycle, clock skew](./lectures/clock_skew.md) |
 | **Week 7** | |
-| 10/14/2024 | [Clock Skew Analylsis]() |
+| 10/14/2024 | [Clock Skew Analysis]() |
 | 10/16/2024 | [Xilinx Clock Skew Timing reports]() |
 | 10/18/2024 | [Xilinx Clock Resources (MMCM)]() |
 | **Week 8** | |
 | 10/21/2024 | [Reset timing and strategies]() |
 | 10/23/2024 | [Poor Sequential Design Practice]() |
-| 10/25/2024 | [Metastability & Syncrhonizer design]() |
+| 10/25/2024 | [Metastability & Synchronizer design]() |
 | **Week 9** | |
 | 10/28/2024 | [Clock domain crossing]() |
 | 10/30/2024 | [Handshaking]() |
