@@ -7,6 +7,7 @@ We will discuss different ways of insantiating memories within HDL code and how 
   * [Xilinx Synthesis Guide (UG901)](https://docs.amd.com/r/en-US/ug901-vivado-synthesis). "RAM HDL Coding Guidelines" in Chapter 5 (120-170)x`
   * [7 Series Memory Resources (UG473)](https://docs.amd.com/v/u/en-US/ug473_7Series_Memory_Resources). Pages 11-25
   * [Xilinx Libraries Guide (UG953)](https://docs.amd.com/r/en-US/ug953-vivado-7series-libraries). Read the summary of the FIFO36E1, FIFO18E1, RAMB36E1, and RAMB18E1 primitives.
+  <!-- * [](). Chapter 19 from Brent's book -->>
 
 ## Key Concepts
 
@@ -18,3 +19,5 @@ We will discuss different ways of insantiating memories within HDL code and how 
   * How to instance a BRAM as a module
   * How to infer BRAMs from HDL
   * What is a FIFO and why is it used
+
+<!-- discuss CAM memories? -->

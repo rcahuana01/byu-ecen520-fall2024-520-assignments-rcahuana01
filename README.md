@@ -38,7 +38,7 @@ This repository contains the lecture schedule (including links to lecture summar
 | **Week 8** | |
 | 10/21/2024 | [Reset timing and strategies]() |
 | 10/23/2024 | [Poor Sequential Design Practice]() |
-| 10/25/2024 | [Metastability & Syncrhonizer design]() |
+| 10/25/2024 | [Metastability & Synchronizer design]() |
 | **Week 9** | |
 | 10/28/2024 | [Clock domain crossing]() |
 | 10/30/2024 | [Handshaking]() |

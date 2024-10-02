@@ -14,7 +14,7 @@ Futgure: if they hit enter, make sure both CR/LF are sent back
 -->
 # BRAM
 
-In this assignment you will practice instancing BRAMs and interface them to your UART. 
+In this assignment you will practice using BRAMs and interfacing them to your UART. 
 You will use your BRAM to buffer data received from the UART receiver and to send over the transmitter. 
 Two different BRAMs will be used in this assignment. 
 
