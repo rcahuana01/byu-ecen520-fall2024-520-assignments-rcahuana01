@@ -22,84 +22,80 @@ module ssd (
     // Parameters
     parameter CLK_FREQUENCY = 100_000_000;
     parameter MIN_SEGMENT_DISPLAY_US = 10_000; // Time to display each digit
-    localparam COUNTER_MAX = CLK_FREQUENCY * (MIN_SEGMENT_DISPLAY_US / 1_000_000);
+    localparam COUNTER_MAX = CLK_FREQUENCY * (MIN_SEGMENT_DISPLAY_US / 1000000);
+    
+    // State definitions
+    typedef enum logic[1:0] {DISPLAY, START} state_t;
+    state_t cs, ns;                         
 
-    // State variables
-    typedef enum logic [1:0] {
-        IDLE,
-        DISPLAY,
-        START
-    } state_t;
-
-    state_t cs, ns;
-    logic [2:0] bitNum;                  // Number of bits to display (3 bits for 8 digits)
-    logic [31:0] timer;                  // Timer for display duration
-    logic timer_done;                    // Timer completion flag
-
-    // Anode signal and digit select
-    logic [2:0] digit_select;
+    // Internal signals
+    logic [2:0] bitNum;                     // 3 bits for 8 digits
+    logic [$clog2(COUNTER_MAX)-1:0] timer; // Timer width
+    logic timer_done;              
+    logic clrBit, incBit;
 
     // Timer Logic
-    assign timer_done = (timer >= COUNTER_MAX);
-
-    // Timer
     always_ff @(posedge clk or posedge rst) begin
         if (rst) begin
-            timer <= 0;
+            timer <= 0;                           
         end else begin
             if (timer_done) 
-                timer <= 0;
+                timer <= 0;                        
             else
-                timer <= timer + 1;
+                timer <= timer + 1;                
+        end
+    end
+
+    // Timer Done Logic
+    assign timer_done = (timer >= COUNTER_MAX);
+
+    // Counter Logic
+    always_ff @(posedge clk or posedge rst) begin
+        if (rst) begin
+            bitNum <= 0;                              
+        end else begin
+            if (clrBit)
+                bitNum <= 0;                          
+            else if (incBit)
+                bitNum <= bitNum + 1;                 
         end
     end
 
     // State Machine
     always_ff @(posedge clk or posedge rst) begin
         if (rst) begin
-            cs <= IDLE;
+            cs <= START;                            
         end else begin
-            cs <= ns; 
+            cs <= ns;                              
         end
     end
 
     // State Transition Logic
     always_comb begin
-        ns = cs; 
+        ns = cs;                                     
+        clrBit = 0; 
+        incBit = 0;
+        
         case (cs)
-            IDLE: ns = START;
-            START: begin
-                if (timer_done) ns = DISPLAY;
-            end
             DISPLAY: begin
-                if (timer_done) ns = START;
+                if (timer_done) begin
+                    ns = START;                         
+                    incBit = 1; // Increment the digit index
+                end
             end
-            default: ns = IDLE;
+            START: begin
+                if (timer_done) begin
+                    clrBit = 1; // Clear the bit number for next digit
+                    ns = DISPLAY;
+                end
+            end
+            default: ns = START;                               
         endcase
     end
 
-    // Control BitNum and Anodes
-    always_ff @(posedge clk or posedge rst) begin
-        if (rst) begin
-            bitNum <= 0;                  
-        end else if (cs == DISPLAY) begin
-            bitNum <= bitNum + 1;
-        end else if (cs == START) begin
-            bitNum <= 0;
-        end
-    end
-
     // Anode signals and DP output
-    always_ff @(posedge clk or posedge rst) begin
-        if (rst) begin
-            digit_select <= 0;
-        end else begin
-            digit_select <= bitNum; // Select the current digit to display
-        end
-    end
-
-    assign an_out = blank ? 8'hFF : ~(1 << digit_select); // Active low
-    assign dp_out = dp[digit_select];
+    assign an_out = blank ? 8'hFF : ~(1 << bitNum); // Active low
+    assign dp_out = dp[bitNum];
 
     // Function to decode digit value to segment representation
     function logic [6:0] decode_digit(input logic [3:0] digit);
@@ -129,7 +125,7 @@ module ssd (
         if (rst) begin
             segments <= 7'b1111111; // All segments off
         end else begin
-            segments <= decode_digit(display_val[digit_select * 4 +: 4]);
+            segments <= decode_digit(display_val[bitNum * 4 +: 4]);
         end
     end
 
