@@ -134,10 +134,10 @@ This testbench should be designed as follows:
     * Check to make sure there is no error
 
 Make sure your top-level design successfully passes this testbench.
-Add a makefile rule named `sim_rx_top` that will perform this simulation from the command line.
+Add a makefile rule named `sim_rxtop` that will perform this simulation from the command line.
 
 When simulating, you can [change the top-level parameters](../resources/vivado_command_line.md#setting-parameters-for-simulation) of your testbench or module to simulate different conditions of your system.
-Create another makefile rule named `sim_rx_top_115200_even` that will simulate your top-level design with a baud rate of 115200 and even parity.
+Create another makefile rule named `sim_rxtop_115200_even` that will simulate your top-level design with a baud rate of 115200 and even parity.
 You will need to add the command line option to change the baud rate of your top-level design as described [here](../resources/vivado_command_line.md#setting-parameters-for-simulation).
 
 ## Implementation and Download
