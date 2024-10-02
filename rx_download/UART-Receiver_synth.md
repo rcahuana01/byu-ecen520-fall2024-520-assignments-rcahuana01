@@ -202,4 +202,8 @@ Notes:
   - Make sure that the data displayed on the LEDs doesn't change/flicker (i.e., latch the data)
   - Note that many studens struggled debugging their receiver and the transmitter model at the same time. It wasn't clear which one has the problem.
      - Suggestion: create a top-level testbench that just hooks up my receiver model to their transmitter model and is used to validate their transmitter model. This way, they can have a known good transmitter model to test their receiver.
+  - seven segment display model/checker
+    - Explain how to use the "check signal" or end of line
+    - Get rid of the initial warning
+    - Sample the data every cycle instead of at the end of a segment to avoid one cycle off issue
 -->
