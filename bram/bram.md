@@ -18,9 +18,70 @@ In this assignment you will practice using BRAMs and interfacing them to your UA
 You will use your BRAM to buffer data received from the UART receiver and to send over the transmitter. 
 Two different BRAMs will be used in this assignment. 
 
-<!--
-You can create this design in a single HDL file if you like.
--->
+## Synchronous FIFO
+
+Create a module that implements a simple synchronous FIFO for 8-bit bytes (this will be used with the UART).
+Your FIFO should be created by as follows:
+* Instance a RAMB36E1 primitive into your design using an 8-bit data bus
+* Create a "write address" counter that indicates which address to write to. Every time a byte is written to the FIFO (i.e., when 'we' is asserted), the write address should increment by one. The address should roll over if you reach the limit
+* Perform a write to the memory when the 'we' signal is asserted.
+* Create a "read address" counter that indicates which address to read from. You should read from the memory every clock cycle. Increment this address every time the 're' signal is asserted.
+* Create an 'empty' signal that is asserted when the read address is equal to the write address.
+* Create a 'full' signal that is asserted when the write address is one less than the read address.
+
+Your design 
+| Port Name | Direction | Width | Function |
+| ---- | ---- | ---- | ----  |
+| clk | Input | 1 | Clock |
+| rst | Input | 1 | Synchronous Reset |
+| we | Input | 1 | Write enable |
+| re | Input | 8 | Read enable |
+| din | Input | 8 | Data In |
+| dout | Output | 8 | Data Out |
+| full | Output | 1 | Indicates FIFO is full |
+| empty | Output | 1 | Indicates FIFO is empty |
+
+Create a simple testbench that demonstrates 
+
+## Fight Song RAM
+
+Create a second module that implements a simple RAM that stores the BYU fight song.
+
+Instance a single BRAM as a device primitive in your HDL (do not 'infer' the BRAM with your RTL). 
+This BRAM should be organized as 8bit x 4096 (i.e., 4096 8-bit ASCII characters). 
+Initialize the contents of the BRAM to include the text of the BYU fight song (see below). 
+Note that the fight song will not fill the entire BRAM so you should only send the characters associated with the fight song and no more.
+Make sure you send new line characters(\r\n) at the end of each line.
+
+You should design your circuit so that when the **left** button is pressed, the _entire_ fight song is sent over the UART transmitter. 
+You will need to implement flow control so that you don't send another character until the previous character has been sent. 
+Also, you will need to put some sort of null or stop character at the end of the fight song so that you know when to stop.
+
+```
+Rise all loyal Cougars and hurl your challenge to the foe.
+You will fight, day or night, rain or snow.
+Loyal, strong, and true
+Wear the white and blue.
+While we sing, get set to spring.
+Come on Cougars it's up to you. Oh!
+
+Chorus:
+Rise and shout, the Cougars are out
+along the trail to fame and glory.
+Rise and shout, our cheers will ring out
+As you unfold your victr'y story.
+
+On you go to vanquish the foe for Alma Mater's sons and daughters.
+As we join in song, in praise of you, our faith is strong.
+We'll raise our colors high in the blue
+And cheer our Cougars of BYU.
+```
+
+If the left button is pressed again during transmission you should ignore it (i.e., send the entire text before sending another one)
+
+
+
+
 
 ## Top-Level Design
 
@@ -45,6 +106,16 @@ The difference between this assignment and the previous one is that you will tra
 In addition, you will be saving the storing the received values into a BRAM buffer.
 More details on these additions will be described below.
 
+
+
+Implement a UART "buffer" with a second BRAM that saves the data received from the UART receiver one character after another.
+Infer a second BRAM from HDL (no instancing of primitive) that is organized as 8x4096. 
+This BRAM should store each character received from the UART in one address after the next. 
+Create a counter that indicates the location where to store the next UART received character (you will need to display this counter in hex on the seven segment display).
+When the **right** button is pressed, your circuit should send each character received in the BRAM over the UART back to the host.
+Once the data has been sent, reset your counters so that you only send the new data received after the button has been pressed (you don't want to send the data received more than once).
+
+Your BRAM will act like a FIFO: characters received from the UART are placed in the BRAM FIFO and when the button is pressed, the BRAM fifo is read and sent over the transmitter until the FIFO has emptied.
 
 ## Fight Song BRAM
 
