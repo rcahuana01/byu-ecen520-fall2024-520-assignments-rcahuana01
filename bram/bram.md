@@ -21,17 +21,35 @@ The ports of this module should be as follows:
 | empty | Output | 1 | Indicates FIFO is empty |
 
 Your FIFO should be created by as follows:
-* Instance a RAMB36E1 primitive into your design using an 8-bit data bus
+* Instance a `RAMB36E1` primitive into your design using an 8-bit data bus
 * Create a "write address" counter that indicates which address to write to. Every time a byte is written to the FIFO (i.e., when 'we' is asserted), the write address should increment by one. The address should roll over if you reach the limit
 * Perform a write to the memory when the 'we' signal is asserted.
 * Create a "read address" counter that indicates which address to read from. You should read from the memory every clock cycle. Increment this address every time the 're' signal is asserted.
 * Create an 'empty' signal that is asserted when the read address is equal to the write address.
 * Create a 'full' signal that is asserted when the write address is one less than the read address.
 
-Create a simple testbench that demonstrates writing a few bytes, reading/writing a few bytes, and the full/empty signals working.
+Create a simple testbench that demonstrates writing a few bytes, reading/writing a few bytes, and the full/empty signals working properly.
+
+Use a SystemVerilog 'queue' to store the values of the FIFO so you can check that the order you write is the order that you read.
+
+
+To simulate the `RAMB36E1` primitive you will need to include the 'unisim' library in your simulation.
+This precompiled library contains all the simulation models of the Xilinx primitives.
+To add this library to your simulation environment, include the following commands in your simulation script:
+* `vlib unisim`
+* `vmap unisim <Simulation library path>`. For the computers in the digital lab, the simulation path is: `/tools/Xilinx/Vivado/2024.1/data/questa/unisim`
+
+command:
+vmap unisim /mnt/toolsdisk/Xilinx/Vivado/2024.1/data/questa/unisim
+
+Modelsim.ini file entry:
+unisim = /mnt/toolsdisk/Xilinx/Vivado/2024.1/data/questa/unisim
+
+
+
 Create a makefile rule named `sim_bram_fifo` that runs this simulation from the command line.
 
-## Fight Song RAM
+## ASCII BRAM ROM
 
 Create a second module that implements a "ROM" that stores a set of ASCII characters that can be read out one at a time.
 This module will be used to store a message sent over the UART.
@@ -44,11 +62,11 @@ The ports of this module should be as follows:
 | init | Input | 1 | Return pointer to zero |
 | re | Input | 1 | Read enable |
 | dout | Output | 8 | Data Out |
-| end | Output | 1 | Indicates the buffer is empty  |
+| rom_end | Output | 1 | Indicates the buffer is empty  |
 
 | Parameter | Type | Function |
 | ---- | ---- | ---- |
-| FILE_NAME | string | File name of the ASCII file to read |
+| FILENAME | string | File name of the ASCII file to read |
 
 Design your module to operate as follows:
 * Create an "inferred" memory that is 8 bits x 4096
@@ -142,7 +160,12 @@ Create a makefile rule `gen_bit` that generates a bitstream for your top-level d
 
 ## Submission
 
+Report:
+- Get something out of the syntehsis log (verigy number of BRAMs)
+- Take a screen shot of the layout of the device. Point out the BRAMs.
+
 Add detailed timing analysis to your README.md file.
+
 
 
 <!--
