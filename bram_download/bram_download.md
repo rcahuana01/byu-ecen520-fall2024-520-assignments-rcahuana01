@@ -1,19 +1,16 @@
 # BRAM Download
 
-In this assignment you will practice using BRAMs and interfacing them to your UART. 
-You will use your BRAM to buffer data received from the UART receiver and to send over the transmitter. 
-Two different BRAMs will be used in this assignment. 
+In this assignment you will create a top-level design that instances your BRAM modules and interfaces them to your UART transmitter and receiver.
 
 ## Top-Level Design
 
-Create a top-level design that instantiates both the FIFO and the ROM modules.
+Create a top-level design that instantiates both the FIFO and the ROM modules from the previous assignment.
 Design your top-level design to operate as follows:
 * Instance your UART transmitter and receiver and connect them to the top-level UART ports
 * When the **left** button is pressed, the _entire_ ROM contents are sent over the UART transmitter one character at a time. Ignore any button presses that may occur until the entire ROM has been sent. You will need to implement flow control so that you don't send another character until the previous character has been sent.
 * When characters are received by the UART receiver, they are placed in the BRAM FIFO.
 * When the **right** button is pressed, your circuit should send each character received in the BRAM over the UART back to the host until the BRAM FIFO is empty. Ignore any button presses that may occur until the entire FIFO has been sent. After sending the full contents of the FIFO, reset your counters so that you only send the new data received after the button has been pressed (you don't want to send the data received more than once).
 * Use `LED16_B` for the TX busy signal, `LED17_R` for the RX busy signal, and `LED17_G` for the RX error signal.
-
 
 ## BRAM Playback
 
