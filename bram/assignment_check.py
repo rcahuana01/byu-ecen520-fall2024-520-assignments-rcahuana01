@@ -16,10 +16,9 @@ def main():
 
     tester = test_suite_520.build_test_suite_520("bram",  min_err_commits = 4, max_repo_files = 25)
     tester.add_make_test("sim_bram_fifo")
-    # tester.add_make_test("synth_ssd")
-    # tester.add_make_test("sim_rxtop")
-    # tester.add_make_test("gen_bit")
-    # tester.add_build_test(repo_test.file_exists_test(["rxtx_top.bit", "rxtx_top_115200_even.bit",]))
+    tester.add_make_test("synth_bram_fifo")
+    tester.add_make_test("sim_bram_rom")
+    tester.add_make_test("synth_bram_rom")
     tester.run_tests()
 
 if __name__ == "__main__":
