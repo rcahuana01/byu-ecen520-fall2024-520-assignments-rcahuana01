@@ -4,6 +4,9 @@
 
 ## Reading
 
+* Sequential Timing (Dr. Nelson - see Learning Suite)
+* Hold Time (Dr. Nelson - see Learning Suite)
+* Section 8.6 from Chu's book
 
 ## Key Concepts
 
