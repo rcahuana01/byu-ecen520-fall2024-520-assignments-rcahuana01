@@ -166,7 +166,7 @@ Start your controller module by creating the top-level ports:
 | CLK_FREQUENCY | 100_000_000 | Specify the clock frequency of the board |
 | SCLK_FREQUENCY  | 500_000 | Specify the frequency of the SCLK |
 
-You will need to create a state machine in your top-level design to implement the three byte transfer using the SPI controller (i.e., send one byte, issue hold_ss and issue second byte, and so on for three bytes). 
+You will need to create a state machine in your top-level design to implement the three byte transfer using the SPI controller (i.e., send one byte, issue hold_cs and issue second byte, and so on for three bytes). 
 When the `start` signal is asserted read the `write` signal to determine what type of operation to perform.
 If `write` is asserted, perform a write sequence.
 If `read` is asserted, perform a read sequence. 
