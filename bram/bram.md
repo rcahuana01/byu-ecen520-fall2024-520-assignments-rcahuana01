@@ -100,6 +100,9 @@ Resolve any synthesis errors or warnings before proceeding with the next module.
 Make sure the synthesis log shows that one RAMB36E1 was allocated for your module.
 If you made any changes to your modules to resolve synthesis errors, rerun the testbench to make sure the module operates correctly.
 
+*TODO*:
+-generic "FILENAME=fight_song.txt"
+
 ## Submission
 
 The assignment submission steps are described in the [assignment mechanics checklist](../resources/assignment_mechanics.md#assignment-submission-checklist) page.
