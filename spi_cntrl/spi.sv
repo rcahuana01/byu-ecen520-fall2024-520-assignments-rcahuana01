@@ -32,38 +32,30 @@ module spi(
     
     // Internal signals
     logic [7:0] shift_register;           
-    logic sclk_toggle; // Signals to toggle SCLK
     logic [BIT_RANGE:0] bitNum;                  
     logic [TIMER_RANGE:0] timer;                  
-    logic timer_done, half_timer_done;              
+    logic timer_done, clrTimer, half_timer_done;              
     logic clrBit, incBit, bitDone, bitTimer;  
-    logic spi_cs, spi_sclk,  
+    logic spi_cs, spi_sclk, spi_mosi;  
 
+    // State definitions
     typedef enum logic [2:0] {IDLE, LOW, HIGH} state_t;
     state_t current_state, next_state;
 
     // Timer logic block
     always_ff @(posedge clk or posedge rst) begin
-        if (rst) begin
-            timer <= 0;                           
-        end else begin
-            if (timer_done) 
-                timer <= 0;                        
-            else
-                timer <= timer + 1;                
-        end
+        if (rst || clrTimer)
+            timer <= 0;                                              
+        else
+            timer <= timer + 1;                
     end
 
     // Bit Counter Logic
     always_ff @(posedge clk or posedge rst) begin
-        if (rst) begin
+        if (rst || clrBit)
             bitNum <= 0;                              
-        end else begin
-            if (clrBit)
-                bitNum <= 0;                          
-            else if (incBit)
-                bitNum <= bitNum + 1;                 
-        end
+        else if (incBit)
+            bitNum <= bitNum + 1;                 
     end
 
     // Assign busy state
@@ -102,7 +94,7 @@ module spi(
 
             LOW: begin
                 if (half_timer_done) begin // On rising edge of SCLK
-                    spi_mosi = shift_register[7];
+                    spi_mosi = shift_register[7 - bitNum];
                     next_state = HIGH;
                     end
                 end
@@ -112,34 +104,37 @@ module spi(
                     clrTimer = 1;
                     incBit = 1;
                     current_state = LOW; // Return to IDLE state
-                else if (timer_done && bitDone)
+                end
+                else if (timer_done && bitDone) begin
                     current_state = IDLE; // Return to IDLE state
                     done = 1; // Indicate transfer complete
-
                 end
             end
         endcase
     end
 
-    //
+    // Assign output signals
+    assign data_received = shift_register;
     assign spi_cs = hold_cs ? 0 : 1; // Manage CS based on hold_cs
     assign spi_sclk = (current_state == LOW || current_state == HIGH) ? (half_timer_done ? ~spi_sclk : spi_sclk) : 0; // Toggle SCLK
     assign spi_mosi = shift_register[7 - bitNum];
 
     // State Machine
     always_ff @(posedge clk or posedge rst) begin
-        if (rst)
+        if (rst) begin
             SPI_SCLK <= 0;
             SPI_MOSI <= 0;
-            SPI_CS <= 0;
+            SPI_CS <= 1;
             shift_register <= 0;
-        else 
+        end
+        else begin
             SPI_SCLK <= spi_sclk;
             SPI_MOSI <= spi_mosi;
             SPI_CS <= spi_cs;
-            if (halftimerDone)
+            if (half_timer_done) begin
                 shift_register <= {shift_register[6:0], 1'b0}; // Shift left
-
+            end
+        end
     end
 
 endmodule
