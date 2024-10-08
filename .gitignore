@@ -15,4 +15,23 @@
 **/__pycache__
 **/tmp
 **/tx.sv.bak
-
+**/*.do*
+transcript ./work/* *.Xil
+*.mpf 
+*.mti 
+*.log 
+*.pb 
+*.vstf 
+*wlft* *
+.wlf 
+.nfs* 
+*.bak
+*.jou 
+*.rpt 
+*.txt
+*.dcp
+*.Xil
+*.backup.log 
+*.txt 
+*.rpt 
+*.do
