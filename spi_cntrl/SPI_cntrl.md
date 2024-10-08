@@ -197,7 +197,7 @@ This testbench should be designed as follows:+
   * Perform the following operations within your testbench by setting the address and data_to_send:
     * Read the DEVICEID register (0x0). Should get 0xad
     * Read the PARTID (0x02) to make sure you are getting consistent correct data (0xF2)
-    * Read the status register (0x0b): should get 0x40 on power up (0xC0?)
+    * Read the status register (0x0b): should get 0x41 on power up (0xC0?)
     * Write the value 0x52 to register 0x1F for a soft reset
 
 Make sure your design successfully passes this testbench.
