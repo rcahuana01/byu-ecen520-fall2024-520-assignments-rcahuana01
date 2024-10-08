@@ -24,12 +24,12 @@ module spi(
 );
 
     // Parameters
-    parameter SYS_CLOCK_HZ = 100_000_000;     // System clock frequency
-    parameter SPI_CLOCK_HZ = 500_000;          // Desired SPI clock frequency
+    parameter CLK_FREQUENCY = 100_000_000;     // System clock frequency
+    parameter SCLK_FREQUENCY = 500_000;          // Desired SPI clock frequency
     parameter DATA_BITS = 8;                    // Number of data bits
 
     // Clock division factor
-    localparam CLOCK_DIV = SYS_CLOCK_HZ / SPI_CLOCK_HZ;
+    localparam CLOCK_DIV = CLK_FREQUENCY / SCLK_FREQUENCY;
 
     // Internal signals
     logic [2:0] bit_counter;                   // Bit counter for shifting data
