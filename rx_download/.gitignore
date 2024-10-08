@@ -1,1 +1,18 @@
-testvcd
+transcript ./work/* *.Xil
+*.mpf 
+*.mti 
+*.log 
+*.pb 
+*.vstf 
+*wlft* *
+.wlf 
+.nfs* 
+*.bak
+*.jou 
+*.rpt 
+*.txt
+*.dcp
+*.Xil
+*.backup.log 
+*.txt 
+*.rpt 
