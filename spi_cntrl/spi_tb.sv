@@ -1,169 +1,114 @@
-`timescale 1ns / 1ps
-//////////////////////////////////////////////////////////////////////////////////
-// RX testbench
-//////////////////////////////////////////////////////////////////////////////////
+module tb_spi_controller();
 
-module spi_tb ();
+    // Parameters
+    localparam CLK_FREQUENCY = 100_000_000;  // Clock frequency (100 MHz)
+    localparam SCLK_FREQUENCY = 500_000;      // SCLK frequency (500 kHz)
 
-    logic clk, rst, tb_start, [7:0]tb_data_to_send, tb_hold_cs;
-    logic tb_data_received, 
-    logic [7:0] tb_din;
+    // Inputs and outputs
+    reg clk;
+    reg rst;
+    reg start;
+    reg hold_cs;
+    reg [7:0] data_to_send;
+    wire [7:0] data_received;
+    wire busy;
+    wire done;
+    wire SPI_SCLK;
+    wire SPI_MOSI;
+    wire SPI_CS;
+    reg SPI_MISO;
 
-    parameter CLK_FREQUENCY = 100_000_000;
-    parameter SCLK_FREQUENCY = 500_000;
-
-    localparam BAUD_CLOCKS = CLOCK_PERIOD / BAUD_RATE;
-
-    logic [7:0] char_to_send = 0;
-    logic [7:0] rx_data;
-    logic odd_parity_calc = 1'b0;
-    logic rx_busy;
-
-    typedef enum { UNINIT, IDLE, BUSY } receive_state_type;
-    receive_state_type r_state = UNINIT;
-
-    //////////////////////////////////////////////////////////////////////////////////
-    // Instantiate Desgin Under Test (DUT)
-    //////////////////////////////////////////////////////////////////////////////////
-
-  // Instantiate the rx module with parameter overrides
-  spi #(
-    .CLK_FREQUENCY(CLK_FREQUENCY),  // Set clock frequency
-    .SCLK_FREQUENCY(BAUD_RATE)           // Set baud rate
-  ) spi (
-    .clk(clk),                   // Clock input
-    .rst(rst),                   // Reset input
-    .start(start),               // Start transfer
-    .data_to_send(data_to_send), // Data to send
-    .hold_cs(hold_cs),           // Hold chip select for multi-byte transfers
-    .SPI_MISO(SPI_MISO),         // SPI MISO signal
-    .data_received(data_received),// Data received from the last transfer
-    .busy(busy),                 // Indicates if the controller is busy
-    .done(done),                 // Transfer complete signal
-    .SPI_SCLK(SPI_SCLK),         // SPI clock signal
-    .SPI_MOSI(SPI_MOSI),         // SPI MOSI signal
-    .SPI_CS(SPI_CS)              // SPI chip select signal
-  );
-
-    //////////////////////////////////////////////////////////////////////////////////
-    // Clock Generator
-    //////////////////////////////////////////////////////////////////////////////////
-    always
-    begin
-        clk <=1; #5ns;
-        clk <=0; #5ns;
+    // Clock generation
+    initial begin
+        clk = 0;
+        forever #5 clk = ~clk; // 100 MHz clock
     end
 
-    // Task for initiating
-    task initiate_spi( input [7:0] char_value );
+    // Instantiate the SPI controller
+    spi #(
+        .CLK_FREQUENCY(CLK_FREQUENCY),
+        .SCLK_FREQUENCY(SCLK_FREQUENCY)
+    ) spi_cntrl (
+        .clk(clk),
+        .rst(rst),
+        .start(start),
+        .data_to_send(data_to_send),
+        .hold_cs(hold_cs),
+        .SPI_MISO(SPI_MISO),
+        .data_received(data_received),
+        .busy(busy),
+        .done(done),
+        .SPI_SCLK(SPI_SCLK),
+        .SPI_MOSI(SPI_MOSI),
+        .SPI_CS(SPI_CS)
+    );
 
-        // Initiate transfer on negative clock edge
-        @(negedge clk)
-        $display("[%0tns] Transmitting 0x%h", $time/1000.0, char_to_send);
+    // Instantiate the SPI subunit model
+    spi_subunit spi_sub (
+        .sclk(SPI_SCLK),
+        .mosi(SPI_MOSI),
+        .miso(SPI_MISO),
+        .cs(SPI_CS),
+        .send_value({8'h00}), // Sending a dummy value initially
+        .received_value(data_received)
+    );
 
-        // set inputs
-        tb_send = 1;
-        tb_din = char_value;
-
-        // Wait a clock
-        @(negedge clk)
-
-        // Wait until busy goes high or reset is asserted
-        wait (tx_busy == 1'b1 || rst == 1'b1);
-
-        // Deassert send
-        @(negedge clk)
-        tb_send = 0;
-    endtask   
-
-    //////////////////////////////////
-    // Main Test Bench Process
-    //////////////////////////////////
+    // Test sequence
     initial begin
-        int clocks_to_delay;
-        $display("===== SPI TB =====");
-
-        // Simulate some time with no stimulus/reset
-        #100ns
-
-        // Set some defaults
-        rst = 0;
-        tb_start = 0;
-        tb_hold_cs = 0;
-        #100ns
-
-        //Test Reset
-        $display("[%0tns] Testing Reset", $time/1000.0);
+        // Initialize signals
         rst = 1;
-        #80ns;
-        // Un reset on negative edge
-        @(negedge clk)
-        rst = 0;
+        start = 0;
+        data_to_send = 8'h00;
+        hold_cs = 0;
 
-        // Make sure tx is high
-        @(negedge clk)
-        if (tb_tx_out != 1'b1)
-            $display("[%0tns] Warning: TX out not high after reset", $time/1000.0);
+        // Reset sequence
+        #20 rst = 0; // Release reset after a few clock cycles
 
-        //////////////////////////////////
-        // Transmit a few characters to design
-        //////////////////////////////////
-        #10us;
-        for(int i = 0; i < NUMBER_OF_CHARS; i++) begin
-            char_to_send = $urandom_range(0,255);
-            initiate_tx(char_to_send);
-            // Wait until transmission is over
-            wait (rx_busy == 1'b0);
-            // check to see that character received is the one that was sent
-            if (tx_data != char_to_send)
-                $display("\[%0tns] WARNING: Received 0x%h instead of 0x%h", $time/1000,rx_data,char_to_send);
-
-            // Delay a random amount of time
-            clocks_to_delay = $urandom_range(1000,30000);
-            repeat(clocks_to_delay)
-                @(negedge clk);
+        // Perform single-byte transfers
+        repeat(10) begin
+            send_byte($random);  // Send random 8-bit values
+            #20;
         end
 
-        // Issue a reset in the middle of a transmission
-        initiate_spi(8'ha5);
-        // Wait 4 baud periods
-        repeat(BAUD_CLOCKS * 4)
-            @(negedge clk);
-        // Issue reset
-        $display("[%0tns] Testing reset of TX in middle of transaction", $time/1000.0);
-        rst = 1;
-        #20ns;
-        // Un reset on negative edge
-        @(negedge clk)
-        rst = 0;
-        // Make sure tx is high and no longer busy
-        repeat(2)
-            @(negedge clk);
-        if (tb_tx_out != 1'b1)
-            $display("[%0tns] Warning: TX out not high after reset", $time/1000.0);
-        if (tx_busy != 1'b0)
-            $display("[%0tns] Warning: busy is high after reset", $time/1000.0);
-        // Wait 4 baud periods
-        repeat(BAUD_CLOCKS * 4)
-            @(negedge clk);
+        // Perform multi-byte transfers
+        repeat(5) begin
+            send_multi_byte($random, $random, $random);  // Send 3 random bytes
+            #40;
+        end
 
-        /*
-        // Try to issue a new transaciton before the last one ends
-        //$display("[%0tns] Testing issue of a new transaction before last one ends", $time/1000.0);
-        char_to_send = 8'h5a;
-        initiate_tx(char_to_send);
-        // Wait 4 baud periods
-        delay_baud(4);
-        // Initiate a new transaction with a different value (should be ignoreds)
-        initiate_tx(char_to_send >> 1);
-        // Wait until transmission is over
-        wait (tx_busy == 1'b0);
-        // check to see that character received is the one that was sent
-        if (r_char != char_to_send)
-            $display("\[%0tns] WARNING: Received 0x%h instead of 0x%h", $time/1000,r_char,char_to_send);
-        */
-
+        // End simulation
+        #100;
         $stop;
     end
+
+    // Task to send a single byte
+    task send_byte(input [7:0] data_byte);
+        begin
+            wait(~busy);  // Wait until controller is not busy
+            data_to_send = data_byte;
+            start = 1;
+            @(posedge clk);
+            start = 0;
+            wait(done);  // Wait for transaction to complete
+            $display("Sent: 0x%02X, Received: 0x%02X", data_byte, data_received);
+            if (data_received == data_byte)
+                $display("Data matched!");
+            else
+                $display("Error: Data mismatch!");
+        end
+    endtask
+
+    // Task to send multiple bytes
+    task send_multi_byte(input [7:0] data_byte1, data_byte2, data_byte3);
+        begin
+            hold_cs = 1;  // Keep CS low for multi-byte transaction
+
+            send_byte(data_byte1);  // Send first byte
+            send_byte(data_byte2);  // Send second byte
+            send_byte(data_byte3);  // Send third byte
+
+            hold_cs = 0;  // End transaction by raising CS
+        end
+    endtask
 
 endmodule

@@ -1,6 +1,6 @@
 sim_spi_cntrl:
 	vlog -sv spi.sv spi_tb.sv spi_subunit.sv
-	vsim -c work.sim_spi_cntrl -do "run -all; quit"
+	vsim -c work.spi_tb -do "run -all; quit"
 
 sim_spi_cntrl_100:
 	vlog -sv spi.sv spi_tb.sv spi_subunit.sv
