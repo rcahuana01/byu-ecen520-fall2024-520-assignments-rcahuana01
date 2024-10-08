@@ -15,6 +15,7 @@
 **/__pycache__
 **/tmp
 **/tx.sv.bak
+transcript ./work/* *.Xil
 **/tx_download/debounce.cr.mti
 **/tx_download/transcript
 **/tx_download/tx_synth.log

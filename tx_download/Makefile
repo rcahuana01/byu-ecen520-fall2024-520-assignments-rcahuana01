@@ -19,4 +19,4 @@ gen_tx_bit_115200_even:
 clean:
 	rm -rf transcript work
 	rm -f *.mpf *.mti *.log *.pb *.vstf *wlft* *.wlf .nfs* tmp *.bak *.jou *.rpt *.txt *.dcp
-	rm -f *.Xil *.jou *.backup.log *.dcp *.txt *.rpt 
+	rm -f *.Xil *.jou *.backup.log *.dcp *.txt *.rpt *.do
