@@ -1,16 +1,4 @@
 
-<!--
-Notes:
-- Warnings:
-  - Teach them how to set the tools to ignore warnings and how to get rid of warnings
-  - Tell them that they should not have *any* warnings during synthesis
--- Any _new_ coding standards to add? It would be nice to add something for this assignment
-
-- Future:
-  - Make sure that the data displayed on the LEDs doesn't change/flicker (i.e., latch the data)
-  - Note that many studens struggled debugging their receiver and the transmitter model at the same time. It wasn't clear which one has the problem.
-     - Suggestion: create a top-level testbench that just hooks up my receiver model to their transmitter model and is used to validate their transmitter model. This way, they can have a known good transmitter model to test their receiver.
--->
 
 # UART Receiver
 
@@ -37,9 +25,11 @@ Include the following ports and parameters in your module:
 | segments | Output | 7 | The seven segment drivers (see table below) |
 | dp_out | Output | 1 | The output digit point driver signal |
 | an_out | Output | 8 | Anode signal for each segment |
+
+| Parameter Name | Default Value | Purpose |
 | ---- | ---- | ---- |
 | CLK_FREQUECY | 100_000_000 | The clock frequency |
-| SEGMENT_DISPLAY_US  | 10_000 | The amount of time to display each digit  |
+| MIN_SEGMENT_DISPLAY_US  | 10_000 | The amount of time to display each digit  |
  
 The anode signals should be driven in a round-robin fashion so that each digit is displayed for a short amount of time.
 These signals are low asserted. 
@@ -96,8 +86,8 @@ Create a top-level design that uses the following top-level ports:
 | CLK_FREQUENCY  | 100_000_000 | Specify the clock frequency |
 | BAUD_RATE | 19_200 | Specify the receiver baud rate |
 | PARITY | 1 | Specify the parity bit (0 = even, 1 = odd) |
-| SEGMENT_DISPLAY_US  | 1_000 | The amount of time in microseconds to display each digit (1 ms) |
-| DEBOUNCE_DELAY_US | integer | 1_000 | Specifies the minimum debounce delay in micro seconds (1 ms) |
+| MIN_SEGMENT_DISPLAY_US  | 1_000 | The amount of time in microseconds to display each digit (1 ms) |
+| DEBOUNCE_TIME_US | integer | 1_000 | Specifies the minimum debounce delay in micro seconds (1 ms) |
 
 Design your top-level circuit as follows:
 * Attach the `CPU_RESETN` signal to two flip-flops to synchronize it to the clock. Use this synchronized signal for the reset in your design (note that the input reset polarity is negative asserted)
@@ -144,17 +134,17 @@ This testbench should be designed as follows:
     * Check to make sure there is no error
 
 Make sure your top-level design successfully passes this testbench.
-Add a makefile rule named `sim_rx_top` that will perform this simulation from the command line.
+Add a makefile rule named `sim_rxtop` that will perform this simulation from the command line.
 
 When simulating, you can [change the top-level parameters](../resources/vivado_command_line.md#setting-parameters-for-simulation) of your testbench or module to simulate different conditions of your system.
-Create another makefile rule named `sim_rx_top_115200_even` that will simulate your top-level design with a baud rate of 115200 and even parity.
+Create another makefile rule named `sim_rxtop_115200_even` that will simulate your top-level design with a baud rate of 115200 and even parity.
 You will need to add the command line option to change the baud rate of your top-level design as described [here](../resources/vivado_command_line.md#setting-parameters-for-simulation).
 
 ## Implementation and Download
 
 At this point you are ready to implement your design, generate a bitfile and download it to your board.
 Create a new makefile rule named `gen_bit` that will generate a bitfile named `rxtx_top.bit` for your top-level design with the default top-level parameters.
-Download your design to your board and use 'putty' to make sure the UART receiver is working correctly using Putty or some other terminal emulator.
+Download your design to your board and use 'putty' to make sure the UART receiver is working correctly using Putty or some other terminal emulator. You will need to transmit signals from 'putty' to your board, you can do this by pressing 'ctrl+j' in the 'putty' emulator, and then using your keyboard to send char values.
 
 After demonstrating that your uart works properly, create a new makefile rule named `gen_bit_115200_even` that will generate a bitfile operating with a baud rate of 115200 and even parity and named `rxtx_top_115200_even.bit`.
 To generate such a bitfile you will need to change the top-level BAUD_RATE parameter to 115200 during the logic synthesis.
@@ -186,12 +176,13 @@ The following assignment specific items should be included in your repository:
 1. Required Makefile rules:
     * `sim_ssd`:
     * `synth_ssd`:
-    * `sim_rx_top`: performs command line simulation of the top testbench
-    * `sim_rx_top_115200_even`: performs command line simulation of the top testbench
+    * `sim_rxtop`: performs command line simulation of the top testbench
+    * `sim_rxtop_115200_even`: performs command line simulation of the top testbench
     * `gen_bit`: Generates a bitstream for your top-level design
     * `gen_bit_115200_even`: Generates a bitstream for your top-level design
-1. You need to have at least 5 "Error" commits in your repository
-2. Assignment specific Questions:
+2. You need to have at least 5 "Error" commits in your repository
+3. Tag your repo 'rx_download'
+4. Assignment specific Questions:
     1. Provide a table summarizing the resources your design uses from the implementation utilization report.
     1. Review the timing report and summarize the following:
        * Determine the "Worst Negative Slack" (or WNS). 
@@ -200,3 +191,16 @@ The following assignment specific items should be included in your repository:
        * Find the first net in the `Max Delay Paths` section and indicate the source and destination of this maximum path.
     1. Indicate how many times you had to synthesize and download your bitstream before your circuit worked.
 
+
+<!--
+Notes:
+- Warnings:
+  - Teach them how to set the tools to ignore warnings and how to get rid of warnings
+  - Tell them that they should not have *any* warnings during synthesis
+-- Any _new_ coding standards to add? It would be nice to add something for this assignment
+
+- Future:
+  - Make sure that the data displayed on the LEDs doesn't change/flicker (i.e., latch the data)
+  - Note that many studens struggled debugging their receiver and the transmitter model at the same time. It wasn't clear which one has the problem.
+     - Suggestion: create a top-level testbench that just hooks up my receiver model to their transmitter model and is used to validate their transmitter model. This way, they can have a known good transmitter model to test their receiver.
+-->

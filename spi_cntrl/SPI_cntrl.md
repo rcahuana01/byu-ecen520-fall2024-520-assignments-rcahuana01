@@ -15,7 +15,7 @@ This allows devices to communicate without agreeing ahead of time on the baud ra
 Many technical protocols including SPI were originally defined using the terms "master" and "slave" to represent the relationship between different devices in the protocol.
 "Master" devices are usually in control of an operation or communication protocol and "slave" devices are designed to respond to the master.
 There is a growing effort to replace this master/slave terminology due to its reference to human slavery
-(see [here](https://www.allaboutcircuits.com/news/how-master-slave-terminology-reexamined-in-electrical-engineering/),[here](https://www.sparkfun.com/spi_signal_names), and [here](https://en.wikipedia.org/wiki/Master/slave_(technology))).
+(see [here](https://www.allaboutcircuits.com/news/how-master-slave-terminology-reexamined-in-electrical-engineering/), [here](https://www.sparkfun.com/spi_signal_names), and [here](https://en.wikipedia.org/wiki/Master/slave_(technology))).
 Several proposed alternatives have been made for these terms in the context of SPI.
 For the purposes of this assignment, the term "Main" will be used for the term "Master" and the term "Subnode" will be used for the term "Slave" as described by the [Analog Devices](https://www.analog.com/en/analog-dialogue/articles/introduction-to-spi-interface.html) SPI overview (since we will be talking to an Analog Devices device).
 While these terms are not perfect, they retain the "M" letter and the "S" letter from the original terms and thus are consistent with the pin names of the SPI protocol.
@@ -37,16 +37,16 @@ Unlike the UART, data is being written and read at the same time.
 The use of two data signals, `MISO` and `MOSI` allow this full duplex communication to occur.
 
 <!-- SCLK -->
-The controller you design will need to generate the `SCLK` signal used by the subunits.
+The controller you design will need to generate the `SPI_SCLK` signal used by the subunits.
 This clock is not continuous as with a conventional clock and will only toggle during a transaction.
 When there is no transaction, the signal should be low.
-There is a control bit `CPOL` that determines the polarity of the idle `SCLK`.
+There is a control bit `CPOL` that determines the polarity of the idle `SPI_SCLK`.
 We will assume `CPOL` = 0 meaning that SCLK is low when no transactions are in process.
-The `SCLK` signal will toggle at a much slower rate than our input 100 MHz clock.
-For the [accelerometer](https://www.analog.com/media/en/technical-documentation/data-sheets/ADXL362.pdf) we are using, the maximum frequency of the `SCLK` is 10 MHz (the clock low and clock high phases must be 50 ns or longer for a minimum clock period of 100 ns).  
-Your controller will need to generate the desired `SCLK` frequency based on a parameter, `SPI_CLOCK_HZ`.
-Like the UART, you will need to have a state that is multiple clock cycles long for each phase of the `SCLK` signal.
-You will determine the number of clock cycles for each phase of `SCLK` by the `SPI_CLOCK_HZ` and `SYS_CLOCK_HZ` module parameters.
+The `SPI_SCLK` signal will toggle at a much slower rate than our input 100 MHz clock.
+For the [accelerometer](https://www.analog.com/media/en/technical-documentation/data-sheets/ADXL362.pdf) we are using, the maximum frequency of the `SPI_SCLK` is 10 MHz (the clock low and clock high phases must be 50 ns or longer for a minimum clock period of 100 ns).  
+Your controller will need to generate the desired `SPI_SCLK` frequency based on a parameter, `SCLK_FREQUENCY`.
+Like the UART, you will need to have a state that is multiple clock cycles long for each phase of the `SPI_SCLK` signal.
+You will determine the number of clock cycles for each phase of `SPI_SCLK` by the `SCLOCK_FREQUENCY` and `CLK_FREQUENCY` module parameters.
 
 Your controller should generate the `/CS`, `SCLK`, and `MOSI` signals as shown in the following SPI transaction diagram:
 
@@ -92,6 +92,7 @@ Create a controller with the following top-level ports and parameters:
 | SPI_SCLK | Output | 1 | SCLK output signal |
 | SPI_MOSI | Output | 1 | MOSI output signal |
 | SPI_CS | Output | 1 | CS output signal |
+
 | Parameter Name | Default Value | Purpose |
 | ---- | ---- | ---- |
 | CLK_FREQUENCY | 100_000_000 | Specify the clock frequency of the board |
@@ -135,17 +136,6 @@ Design your testbench to do the following:
 Create a makefile rule named `sim_spi_cntrl` that will run your testbench with the default parameters.
 In addition, create a makefile named `sim_spi_cntrl_100` that runs the same testbench but using 100_000 as the `SCLK_FREQUENCY` parameter.
 
-<!--
-Use Verilog 2001/SystemVerilog:
-* Improved module instantiation with ports
-* Use an `interface` in your testbench
-* Use a `Queue` in your testbench
-* Use at least one of both types of SystemVerilog Assertions
-  * Immediate Assertion
-  * Concurrent Assertion
-
--->
-
 ## ADXL362 Controller
 
 You will create another module that instances your SPI controller and controls the accelerometer on the Nexys4 board. 
@@ -176,7 +166,7 @@ Start your controller module by creating the top-level ports:
 | CLK_FREQUENCY | 100_000_000 | Specify the clock frequency of the board |
 | SCLK_FREQUENCY  | 500_000 | Specify the frequency of the SCLK |
 
-You will need to create a state machine in your top-level design to implement the three byte transfer using the SPI controller (i.e., send one byte, issue hold_ss and issue second byte, and so on for three bytes). 
+You will need to create a state machine in your top-level design to implement the three byte transfer using the SPI controller (i.e., send one byte, issue hold_cs and issue second byte, and so on for three bytes). 
 When the `start` signal is asserted read the `write` signal to determine what type of operation to perform.
 If `write` is asserted, perform a write sequence.
 If `read` is asserted, perform a read sequence. 
@@ -207,7 +197,7 @@ This testbench should be designed as follows:+
   * Perform the following operations within your testbench by setting the address and data_to_send:
     * Read the DEVICEID register (0x0). Should get 0xad
     * Read the PARTID (0x02) to make sure you are getting consistent correct data (0xF2)
-    * Read the status register (0x0b): should get 0x40 on power up (0xC0?)
+    * Read the status register (0x0b): should get 0x41 on power up (0xC0?)
     * Write the value 0x52 to register 0x1F for a soft reset
 
 Make sure your design successfully passes this testbench.
@@ -226,22 +216,17 @@ Make sure all synthesis warnings and errors are resolved before submitting your 
   * [ADXL362 Product Page](https://www.analog.com/en/products/adxl362.html)
   * [ADXL362 Data Sheet](https://www.analog.com/media/en/technical-documentation/data-sheets/ADXL362.pdf)
 
-
 ## Submission and Grading
 
 1. Required Makefile rules:
     * `sim_spi_cntrl`
     * `sim_spi_cntrl_100`
     * `sim_adxl362`
-<!--
-    * `synth_spi_cntrl`
-    * `synth_adxl362_cntrl`
--->
+1. You need to have at least 4 "Error" commits in your repository
+2. No assignment specific questions for this assignment
 
 
 <!--
--- SPI Controller Part 1 (controller, use model, create testbench, synthesize to find synthesis errors)
-
 - Come up with some "discussion" or exploration exercise as part of the readme.md
 - It is hard to follow their testbenches. Need to provide more constraints so that I can follow and see that what was recieved is what was sent
   (prehaps have them provide such a statement in the testbench output)

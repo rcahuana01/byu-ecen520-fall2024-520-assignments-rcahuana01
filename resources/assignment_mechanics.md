@@ -262,3 +262,15 @@ The steps for updating your starter code are as follows:
 git fetch startercode
 git merge startercode/main -m "Merging starter code"
 ```
+
+### Pull Requests
+
+As you complete the assignments, you may find errors in the starter code files.
+You are encouraged to contribute [pull requests](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/about-pull-requests) to the repository to fix these errors.
+To submit a pull request, you need to do the following:
+* Create a fork of the ECEN 520 student repository to your personal GitHub account (one time only)
+  * Visit the [ECEN 520 student repository](https://github.com/byu-cpe/ecen520_student/tree/main) and click the "Fork" button
+  * Create a fork on the main branch
+* Make changes to the files in your forked repository
+* Click on "Pull Requests" and then "New Pull Request"
+
