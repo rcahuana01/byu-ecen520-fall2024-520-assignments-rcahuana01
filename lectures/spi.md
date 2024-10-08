@@ -1,8 +1,7 @@
 
 # SPI Protocol
 
-For one of your assignments you will be implementing an SPI controller to communicate with a SPI device.
-In this lecture we will review the SPI protocol and discuss how you can implement this protocol in RTL.
+In this lecture we will review the SPI protocol in preparation for you to complete the SPI assignments.
 
 ## Reading
 

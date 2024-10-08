@@ -134,17 +134,17 @@ This testbench should be designed as follows:
     * Check to make sure there is no error
 
 Make sure your top-level design successfully passes this testbench.
-Add a makefile rule named `sim_rx_top` that will perform this simulation from the command line.
+Add a makefile rule named `sim_rxtop` that will perform this simulation from the command line.
 
 When simulating, you can [change the top-level parameters](../resources/vivado_command_line.md#setting-parameters-for-simulation) of your testbench or module to simulate different conditions of your system.
-Create another makefile rule named `sim_rx_top_115200_even` that will simulate your top-level design with a baud rate of 115200 and even parity.
+Create another makefile rule named `sim_rxtop_115200_even` that will simulate your top-level design with a baud rate of 115200 and even parity.
 You will need to add the command line option to change the baud rate of your top-level design as described [here](../resources/vivado_command_line.md#setting-parameters-for-simulation).
 
 ## Implementation and Download
 
 At this point you are ready to implement your design, generate a bitfile and download it to your board.
 Create a new makefile rule named `gen_bit` that will generate a bitfile named `rxtx_top.bit` for your top-level design with the default top-level parameters.
-Download your design to your board and use 'putty' to make sure the UART receiver is working correctly using Putty or some other terminal emulator.
+Download your design to your board and use 'putty' to make sure the UART receiver is working correctly using Putty or some other terminal emulator. You will need to transmit signals from 'putty' to your board, you can do this by pressing 'ctrl+j' in the 'putty' emulator, and then using your keyboard to send char values.
 
 After demonstrating that your uart works properly, create a new makefile rule named `gen_bit_115200_even` that will generate a bitfile operating with a baud rate of 115200 and even parity and named `rxtx_top_115200_even.bit`.
 To generate such a bitfile you will need to change the top-level BAUD_RATE parameter to 115200 during the logic synthesis.
@@ -176,12 +176,13 @@ The following assignment specific items should be included in your repository:
 1. Required Makefile rules:
     * `sim_ssd`:
     * `synth_ssd`:
-    * `sim_rx_top`: performs command line simulation of the top testbench
-    * `sim_rx_top_115200_even`: performs command line simulation of the top testbench
+    * `sim_rxtop`: performs command line simulation of the top testbench
+    * `sim_rxtop_115200_even`: performs command line simulation of the top testbench
     * `gen_bit`: Generates a bitstream for your top-level design
     * `gen_bit_115200_even`: Generates a bitstream for your top-level design
-1. You need to have at least 5 "Error" commits in your repository
-2. Assignment specific Questions:
+2. You need to have at least 5 "Error" commits in your repository
+3. Tag your repo 'rx_download'
+4. Assignment specific Questions:
     1. Provide a table summarizing the resources your design uses from the implementation utilization report.
     1. Review the timing report and summarize the following:
        * Determine the "Worst Negative Slack" (or WNS). 
