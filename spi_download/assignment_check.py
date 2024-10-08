@@ -13,7 +13,7 @@ import repo_test
 
 def main():
 
-    tester = test_suite_520.build_test_suite_520("spi_download",  min_err_commits = 5, max_repo_files = 30)
+    tester = test_suite_520.build_test_suite_520("spi_download",  min_err_commits = 4, max_repo_files = 30)
     tester.add_make_test("synth_adxl362_cntrl")
     tester.add_make_test("sim_top")
     tester.add_make_test("sim_top_100")

@@ -1,173 +1,115 @@
 `timescale 1ns / 1ps
 //////////////////////////////////////////////////////////////////////////////////
-// RX testbench
+//  
+//  Module name: rx_tb.sv
+//  Name: Rodrigo Cahuana
+//  Class: ECEN 520
+//  Date: 09/24/2024
+//  Description: Testbench for UART Receiver module. 
+//
 //////////////////////////////////////////////////////////////////////////////////
 
-module rx_tb ();
+module rx_tb; 
+    // Parameters
+    parameter integer CLK_FREQUENCY = 100_000_000; 
+    parameter integer BAUD_RATE = 19_200;          // Default baud rate 
+    parameter integer PARITY = 1;                   // Default parity (1=odd) 
+    parameter integer NUMBER_OF_CHARS = 10;         // Number of characters to transmit 
 
-    logic clk, rst, tb_send, tb_tx_out, tx_busy;
-    logic [7:0] tb_din;
+    // Testbench Parameters 
+    localparam integer NUM_CYCLES_BEFORE_START = 10; // Cycles before starting test
+    localparam integer NUM_CYCLES_RESET = 5;          // Cycles for reset
 
-    parameter NUMBER_OF_CHARS = 10;
-    parameter BAUD_RATE = 19_200;
-    parameter CLOCK_PERIOD = 100_000_000;
+    // Clock and Reset logic 
+    logic clk;                                      
+    logic rst;                                       
 
-    localparam BAUD_CLOCKS = CLOCK_PERIOD / BAUD_RATE;
+    // UART Connections 
+    logic [7:0] tx_data;                            // Data to transmit 
+    logic tx_start;                                  // Start transmission signal 
+    logic tx_busy;                                   // Transmitter busy signal 
+    logic din;                                       // Transmitter output connected to Receiver input 
+    logic [7:0] rx_data;                            // Received data 
+    logic rx_busy, rx_data_strobe, rx_error;       // Receiver signals 
 
-    logic [7:0] char_to_send = 0;
-    logic [7:0] rx_data;
-    logic odd_parity_calc = 1'b0;
-    logic rx_busy;
+    // Instantiate the UART Transmitter 
+    tx #(
+        .CLK_FREQUENCY(CLK_FREQUENCY), 
+        .BAUD_RATE(BAUD_RATE), 
+        .PARITY(PARITY) 
+    ) transmitter (
+        .clk(clk), 
+        .rst(rst), 
+        .send(tx_start), 
+        .din(tx_data), 
+        .busy(tx_busy), 
+        .tx_out(din) // Connect transmitter output to receiver input 
+    ); 
 
-    typedef enum { UNINIT, IDLE, BUSY } receive_state_type;
-    receive_state_type r_state = UNINIT;
+    // Instantiate the UART Receiver 
+    rx #(
+        .CLK_FREQUENCY(CLK_FREQUENCY), 
+        .BAUD_RATE(BAUD_RATE), 
+        .PARITY(PARITY) 
+    ) receiver (
+        .clk(clk), 
+        .rst(rst), 
+        .din(din), 
+        .dout(rx_data), 
+        .busy(rx_busy), 
+        .data_strobe(rx_data_strobe), 
+        .rx_error(rx_error) 
+    ); 
 
-    //////////////////////////////////////////////////////////////////////////////////
-    // Instantiate Desgin Under Test (DUT)
-    //////////////////////////////////////////////////////////////////////////////////
+    // Clock generation 
+    always begin 
+        clk = 1; #5; 
+        clk = 0; #5; 
+    end 
 
-    tx tx(
-        .clk(clk),
-        .rst(rst),
-        .send(tb_send),
-        .din(tb_din),
-        .tx_out(tb_tx_out),
-        .busy(tx_busy)
-    );
+    // Task to send and verify data 
+    task automatic send_and_verify(input logic [7:0] value_to_send); 
+        begin 
+            tx_data = value_to_send; 
+            tx_start = 1; 
+            @(posedge clk); 
+            tx_start = 0; 
+            wait(tx_busy); // Wait for transmission to start 
+            wait(!tx_busy); // Wait for transmission to end 
 
-    //////////////////////////////////////////////////////////////////////////////////
-    // Instantiate RX simulation model
-    //////////////////////////////////////////////////////////////////////////////////
+            // Check received data against sent data
+            if (rx_data == value_to_send && !rx_error) 
+                $display("Time [%0tns]: Transmit OK - Value %h", $time/1000.0, value_to_send); 
+            else 
+                $display("Time [%0tns]: ERROR - Received Value %h, Expected %h, rx_error=%b", 
+                    $time/1000.0, rx_data, value_to_send, rx_error); 
+        end 
+    endtask 
 
-    rx rx(
-        .clk(clk),
-        .rst(rst),
-        .din(tb_tx_out),
-        .dout(rx_data)
-        .busy(rx_busy),
-        .data_strobe(),
-        .rx_error()
-    );
+    // Initial block 
+    initial begin 
+        $display("Starting UART RX Testbench"); 
 
-    //////////////////////////////////////////////////////////////////////////////////
-    // Clock Generator
-    //////////////////////////////////////////////////////////////////////////////////
-    always
-    begin
-        clk <=1; #5ns;
-        clk <=0; #5ns;
-    end
+        // Initialize 
+        clk = 0; 
+        rst = 1; // Assert reset 
+        tx_start = 0; 
+        tx_data = 8'hXX; // Dummy value
 
-    // Task for initiating a transfer
-    task initiate_tx( input [7:0] char_value );
+        repeat(NUM_CYCLES_BEFORE_START) @(posedge clk); 
+        rst = 0; // Deassert reset 
+        repeat(NUM_CYCLES_RESET) @(posedge clk); 
 
-        // Initiate transfer on negative clock edge
-        @(negedge clk)
-        $display("[%0tns] Transmitting 0x%h", $time/1000.0, char_to_send);
+        // Main test sequence 
+        $display("Starting test sequence"); 
 
-        // set inputs
-        tb_send = 1;
-        tb_din = char_value;
+        for (int i = 0; i < NUMBER_OF_CHARS; i++) begin 
+            send_and_verify($random % 256); // Send a random 8-bit value 
+            repeat($urandom_range(1, 10)) @(posedge clk); // Random delay 
+        end 
 
-        // Wait a clock
-        @(negedge clk)
-
-        // Wait until busy goes high or reset is asserted
-        wait (tx_busy == 1'b1 || rst == 1'b1);
-
-        // Deassert send
-        @(negedge clk)
-        tb_send = 0;
-    endtask   
-
-    //////////////////////////////////
-    // Main Test Bench Process
-    //////////////////////////////////
-    initial begin
-        int clocks_to_delay;
-        $display("===== TX TB =====");
-
-        // Simulate some time with no stimulus/reset
-        #100ns
-
-        // Set some defaults
-        rst = 0;
-        tb_send = 0;
-        tb_din = 8'hff;
-        #100ns
-
-        //Test Reset
-        $display("[%0tns] Testing Reset", $time/1000.0);
-        rst = 1;
-        #80ns;
-        // Un reset on negative edge
-        @(negedge clk)
-        rst = 0;
-
-        // Make sure tx is high
-        @(negedge clk)
-        if (tb_tx_out != 1'b1)
-            $display("[%0tns] Warning: TX out not high after reset", $time/1000.0);
-
-        //////////////////////////////////
-        // Transmit a few characters to design
-        //////////////////////////////////
-        #10us;
-        for(int i = 0; i < NUMBER_OF_CHARS; i++) begin
-            char_to_send = $urandom_range(0,255);
-            initiate_tx(char_to_send);
-            // Wait until transmission is over
-            wait (rx_busy == 1'b0);
-            // check to see that character received is the one that was sent
-            if (tx_data != char_to_send)
-                $display("\[%0tns] WARNING: Received 0x%h instead of 0x%h", $time/1000,rx_data,char_to_send);
-
-            // Delay a random amount of time
-            clocks_to_delay = $urandom_range(1000,30000);
-            repeat(clocks_to_delay)
-                @(negedge clk);
-        end
-
-        // Issue a reset in the middle of a transmission
-        initiate_tx(8'ha5);
-        // Wait 4 baud periods
-        repeat(BAUD_CLOCKS * 4)
-            @(negedge clk);
-        // Issue reset
-        $display("[%0tns] Testing reset of TX in middle of transaction", $time/1000.0);
-        rst = 1;
-        #20ns;
-        // Un reset on negative edge
-        @(negedge clk)
-        rst = 0;
-        // Make sure tx is high and no longer busy
-        repeat(2)
-            @(negedge clk);
-        if (tb_tx_out != 1'b1)
-            $display("[%0tns] Warning: TX out not high after reset", $time/1000.0);
-        if (tx_busy != 1'b0)
-            $display("[%0tns] Warning: busy is high after reset", $time/1000.0);
-        // Wait 4 baud periods
-        repeat(BAUD_CLOCKS * 4)
-            @(negedge clk);
-
-        /*
-        // Try to issue a new transaciton before the last one ends
-        //$display("[%0tns] Testing issue of a new transaction before last one ends", $time/1000.0);
-        char_to_send = 8'h5a;
-        initiate_tx(char_to_send);
-        // Wait 4 baud periods
-        delay_baud(4);
-        // Initiate a new transaction with a different value (should be ignoreds)
-        initiate_tx(char_to_send >> 1);
-        // Wait until transmission is over
-        wait (tx_busy == 1'b0);
-        // check to see that character received is the one that was sent
-        if (r_char != char_to_send)
-            $display("\[%0tns] WARNING: Received 0x%h instead of 0x%h", $time/1000,r_char,char_to_send);
-        */
-
-        $stop;
-    end
-
+        // End the simulation 
+        $display("Test sequence complete. Stopping simulation."); 
+        $stop; 
+    end 
 endmodule

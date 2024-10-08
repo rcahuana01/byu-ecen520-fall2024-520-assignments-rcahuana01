@@ -4,7 +4,7 @@
 For one of your assignments you will be implementing an SPI controller to communicate with a SPI device.
 In this lecture we will review the SPI protocol and discuss how you can implement this protocol in RTL.
 
-**Reading**
+## Reading
 
 * [Analog Devices SPI Protocol Overview](https://www.analog.com/en/analog-dialogue/articles/introduction-to-spi-interface.html)
   * Understand what each of the signals do
@@ -14,10 +14,7 @@ In this lecture we will review the SPI protocol and discuss how you can implemen
   * Understand how register reads and writes are performed using SPI on this device (page 21-22)
   * Briefly scan through the pages of device registers (no need to read them in detail - just become familiar with what registers are availablex``)
 
-**Reference**
-
-
-**Key Concepts**
+## Key Concepts
 
   * Basic SPI protocol operation
   * How multiple devices can operate on the same SPI bus

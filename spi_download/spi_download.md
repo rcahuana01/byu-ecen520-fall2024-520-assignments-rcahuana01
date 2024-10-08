@@ -11,10 +11,6 @@ If you made any changes to your modules to resolve synthesis errors, rerun the t
 
 ## SPI Top-Level Design
 
-
-module adxl362_top(
-                ACL_MISO, ACL_SCLK, ACL_CSN, ACL_MOSI);
-
 Create a top-level design that uses the following top-level ports:
 
 | Port Name | Direction | Width | Function |
@@ -51,7 +47,12 @@ Create a top-level circuit that includes the following:
 * The 16 LEDs should follow the value of the switches to allow the user can easily verify that the address/data is properly set.
 * The left button (BTNL) should be used to initiate a write to the accelerometer (where the address and data to write are specfied by the switches)
 * The right button (BTNR) should be used to initiate a read from the accelerometer
-* Instance your seven segment display controller and hook it up so that the last byte received from a register read is displayed on the _lower two digits_ of the seven segment display. The previously received bytes should be shifted up to the other seven segment display so you can still see them (with 8 digits you should be able to display the last four register read values).
+* Instance your seven segment display controller and hook it up so that the last byte received from a register read is displayed on the _right two digits_ of the seven segment display.
+* Read the X, Y, and Z accelerator values periodically and continuously write the values to the seven segment display (one value per digit)
+  * The X-Axis (register 0x08) should be displayed on the digits 2 and 3 (where digit 0 is the rightmost digit)
+  * The Y-Axis (register 0x09) should be displayed on the digits 4 and 5
+  * The Z-Axis (register 0x0A) should be displayed on the digits 6 and 7
+  * Add a parameter `DISPLAY_RATE` that indicates how many times a second these values should be updated. The default should be set to 2 (i.e., 2 times a second).
 
 ## SPI Top-Level Testbench
 
@@ -60,7 +61,7 @@ This testbench should be designed as follows:
 * Make the top-level testbench parameterizable with the top-level parameters
 * Create a free-running clock
 * Instance your top-level design
-* Instance the [ADXL362 simulation](./adxl362_model.sv) model
+* Instance the [ADXL362 simulation](../spi_cntrl/adxl362_model.sv) model
   * attach the SPI signals from the top-level design to the SPI signals of the simulation
 * Perform the following sequence of events for your testbench:
   * Execute the simulation for a few clock cycles without setting any of the inputs
@@ -82,20 +83,30 @@ At this point you are ready to implement your design, generate a bitfile and dow
 Create a new makefile rule named `gen_bit` that will generate a bitfile named `spi_adx362l.bit` for your top-level design with the default top-level parameters.
 Create a new makefile rule named `gen_bit_100` that will generate a bitfile named `spi_adx362l_100.bit` with a 100_000 SCLK frequency.
 
-Once you have created your design and downloaded it to the board, you can make sure it works by trying the following:
+Once you have created your design and downloaded it to the board.
+Test the board by running the commands listed below on the switches and buttons.
+Note that the part may not be in the state as described below as the state may have been modified by a previous student.
+Make sure the board is working properly by doing the following:
+  * Read the DEVICEID register (0x0). You should get 0xad
+  * Read the PARTID (0x02). You should get 0xF2
+  * Read the REVID (0x03). You should get 0x02
+  * Read the status register (0x0b): should get 0x41 (after initial power up)
+    * Note that I once received a 0xC0 after power up and had to do a write to a register to get it out of this mode
+  * Read register 0x2C (you should get a 0x13)
+    * Write the value 0x14 to register 0x2C to set the Filter Control Register control register (50Hz)
+    * Read register 0x2C to make sure you obtained the value 0x14 that you just wrote
+  * Read the various accelerometer values to see changes in the acceleration (You can rotate the board around different axis to see changes in the readings)
+    * Register 0x08 for XDATA
+      * The x-axis goes from left to right while looking at the board. Tilting the board away from you and towards you should change this value.
+    * Register 0x09 for YDATA
+      * The y-axis goes from top to bottom while looking at the board. Tilting the board righ and to the left will change this axis value.
+    * Register 0x0A for ZDATA
+      * The z-axis goes through the board (i.e., gravitational direction). The way to get this value to change is to lift or drop the board (i.e., accelerate in Z direction)
 
-  * Read the DEVICEID register (0x0). Should get 0xad
-  * Read the PARTID (0x02) to make sure you are getting consistent correct data (0xF2)
-  * Read the status register (0x0b): should get 0x40 on power up (0xC0?)
+Other operations:
   * Write the value 0x52 to register 0x1F for a soft reset
   * Write the value 0x00 to register 0x1F to clear the soft reset
   * Write the value 0x02 to register 0x2D to set "enable measure command"
-  * Read the status register (0x0b): should get 0x41 now (you won't get any readings until the status is set to 0x41)
-  * Write the value 0x14 to register 0x2C to set the Filter Control Register control register (50Hz)
-  * Read the various accelerometer values to see changes in the acceleration (You can rotate the board around different axis to see changes in the readings)
-    * Register 0x08 for XDATA
-    * Register 0x09 for YDATA
-    * Register 0x0A for ZDATA
   
 ## Submission and Grading
 
