@@ -114,7 +114,6 @@ module spi(
     end
 
     // Assign output signals
-    assign data_received = shift_register;
     assign spi_cs = hold_cs ? 0 : 1; // Manage CS based on hold_cs
     assign spi_sclk = (current_state == LOW || current_state == HIGH) ? (half_timer_done ? ~spi_sclk : spi_sclk) : 0; // Toggle SCLK
     assign spi_mosi = shift_register[7 - bitNum];
@@ -132,7 +131,7 @@ module spi(
             SPI_MOSI <= spi_mosi;
             SPI_CS <= spi_cs;
             if (half_timer_done) begin
-                shift_register <= {shift_register[6:0], 1'b0}; // Shift left
+                data_received <= {data_received[6:0], 1'b0}; // Shift left
             end
         end
     end
