@@ -222,6 +222,7 @@ Make sure all synthesis warnings and errors are resolved before submitting your 
     * `sim_spi_cntrl`
     * `sim_spi_cntrl_100`
     * `sim_adxl362`
+    * `synth_adxl362_cntrl`
 1. You need to have at least 4 "Error" commits in your repository
 2. No assignment specific questions for this assignment
 
