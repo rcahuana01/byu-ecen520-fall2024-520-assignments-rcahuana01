@@ -232,4 +232,6 @@ Make sure all synthesis warnings and errors are resolved before submitting your 
   (prehaps have them provide such a statement in the testbench output)
 - Perhaps I provide a detailed module test bench and they create the top-level testbench
   (trade off between learning testenches and testing their circuits properly)
+
+- Does it make sense to break this up into two pieces: one 8-bit controller and one 3-byte controller? Perhaps make a single controller for the ADXL that is general.  FOrcing a 8-bit repreaed controller isn't that general.
 -->
