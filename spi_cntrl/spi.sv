@@ -26,79 +26,118 @@ module spi(
     // Parameters
     parameter CLK_FREQUENCY = 100_000_000;  // Sample frequency
     parameter SCLK_FREQUENCY = 500_000;      // Number of signals changed per second
-
+    localparam TIMER_RANGE = 15;               // Timer range
+    localparam BIT_RANGE = 3;                 // Bit range for counter
+    localparam DATA_BITS = 8;                  // Number of data bits
+    
     // Internal signals
-    logic [3:0] bit_counter;               // Bit counter for shifting data
-    logic [7:0] shift_register;             // Shift register for sending data
-    logic [31:0] clk_div_counter;           // Clock division counter
-    logic sclk_toggle, enableBitTimer, enableBitCounter; // Signals to toggle SCLK
+    logic [7:0] shift_register;           
+    logic sclk_toggle; // Signals to toggle SCLK
+    logic [BIT_RANGE:0] bitNum;                  
+    logic [TIMER_RANGE:0] timer;                  
+    logic timer_done, half_timer_done;              
+    logic clrBit, incBit, bitDone, bitTimer;  
 
-    typedef enum logic [2:0] {IDLE, START, TRANSFER, DONE} state_t;
+    typedef enum logic [2:0] {IDLE, LOW, HIGH} state_t;
     state_t current_state, next_state;
 
-    // Clock division and SCLK generation
+    // Timer logic block
     always_ff @(posedge clk or posedge rst) begin
         if (rst) begin
-            clk_div_counter <= 0;
-            SPI_SCLK <= 0;
+            timer <= 0;                           
         end else begin
-            if (clk_div_counter < (CLK_FREQUENCY / SCLK_FREQUENCY) - 1) begin
-                clk_div_counter <= clk_div_counter + 1;
-            end else begin
-                clk_div_counter <= 0;
-                SPI_SCLK <= ~SPI_SCLK; // Toggle SCLK
-            end
+            if (timer_done) 
+                timer <= 0;                        
+            else
+                timer <= timer + 1;                
         end
     end
 
-    // State Machine
+    // Bit Counter Logic
     always_ff @(posedge clk or posedge rst) begin
         if (rst) begin
-            current_state <= IDLE;
-            busy <= 0;
-            done <= 0;
-            SPI_CS <= 1; // CS inactive
-            bit_counter <= 0;
-            shift_register <= 0;
-            data_received <= 0;
+            bitNum <= 0;                              
         end else begin
-            case (current_state)
-                IDLE: begin
-                    busy <= 0;
-                    done <= 0;
-                    SPI_CS <= 1; // CS inactive
-                    if (start) begin
-                        busy <= 1;
-                        SPI_CS <= 0; // CS active
-                        shift_register <= data_to_send; // Load data to send
-                        bit_counter <= 0; // Reset bit counter
-                        next_state <= START;
-                    end
-                end
-
-                START: begin
-                    if (SPI_SCLK) begin // On rising edge of SCLK
-                        SPI_MOSI <= shift_register[7]; // Send MSB first
-                        data_received[bit_counter] <= SPI_MISO; // Sample MISO
-                        shift_register <= {shift_register[6:0], 1'b0}; // Shift left
-                        bit_counter <= bit_counter + 1; // Increment bit counter
-                        if (bit_counter == 7) begin // After sending all bits
-                            next_state <= DONE;
-                        end
-                    end
-                end
-
-                DONE: begin
-                    busy <= 0;
-                    done <= 1; // Indicate transfer complete
-                    SPI_CS <= hold_cs ? 0 : 1; // Manage CS based on hold_cs
-                    if (!start) begin
-                        current_state <= IDLE; // Return to IDLE state
-                    end
-                end
-            endcase
-            current_state <= next_state; // Update current state
+            if (clrBit)
+                bitNum <= 0;                          
+            else if (incBit)
+                bitNum <= bitNum + 1;                 
         end
+    end
+
+    // Assign busy state
+    assign busy = (current_state != IDLE);
+
+    // Timer logic
+    assign timer_done = (timer >= (CLK_FREQUENCY / SCLK_FREQUENCY));
+    assign half_timer_done = (timer >= ((CLK_FREQUENCY / SCLK_FREQUENCY) / 2)); 
+
+    assign bitDone = (bitNum == 7);
+
+    // State Machine
+    always_ff @(posedge clk or posedge rst) begin
+        if (rst)
+            current_state <= IDLE;
+        else 
+            current_state <= next_state; // Update current state
+    end
+
+    // Combinational logic    
+    always_comb begin
+        next_state = current_state;
+        done = 0;
+        SPI_CS = 1; // CS inactive
+        data_received = 0;
+        incBit = 0;
+        clrBit = 0;
+        case (current_state)
+            IDLE: begin
+                if (start) begin
+                    SPI_CS = 0;
+                    shift_register = data_to_send;
+                    next_state = LOW;
+                end
+            end
+
+            LOW: begin
+                if (half_timer_done) begin // On rising edge of SCLK
+                    SPI_MOSI = shift_register[7];
+                    next_state = HIGH;
+                    end
+                end
+
+            HIGH: begin
+                if (timer_done) begin
+                    clrTimer = 1;
+                    incBit = 1;
+                    current_state = LOW; // Return to IDLE state
+                else if (timer_done && bitDone)
+                    current_state = IDLE; // Return to IDLE state
+                    done = 1; // Indicate transfer complete
+
+                end
+            end
+        endcase
+    end
+
+    //
+    assign SPI_MISO = data_received[7 - bitNum];
+    assign SPI_CS = hold_cs ? 0 : 1; // Manage CS based on hold_cs
+
+    // State Machine
+    always_ff @(posedge clk or posedge rst) begin
+        if (rst)
+            SPI_SCLK <= 0;
+            SPI_MOSI <= 0;
+            SPI_CS <= 0;
+            shift_register <= 0;
+        else 
+            SPI_SCLK <= 0;
+            SPI_MOSI <= 0;
+            SPI_CS <= 0;
+            if (halftimerDone)
+                shift_register = {shift_register[6:0], 1'b0}; // Shift left
+
     end
 
 endmodule
