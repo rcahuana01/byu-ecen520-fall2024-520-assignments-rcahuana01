@@ -37,6 +37,7 @@ module spi(
     logic [TIMER_RANGE:0] timer;                  
     logic timer_done, half_timer_done;              
     logic clrBit, incBit, bitDone, bitTimer;  
+    logic spi_cs, spi_sclk,  
 
     typedef enum logic [2:0] {IDLE, LOW, HIGH} state_t;
     state_t current_state, next_state;
@@ -86,14 +87,14 @@ module spi(
     always_comb begin
         next_state = current_state;
         done = 0;
-        SPI_CS = 1; // CS inactive
+        spi_cs = 1; // CS inactive
         data_received = 0;
         incBit = 0;
         clrBit = 0;
         case (current_state)
             IDLE: begin
                 if (start) begin
-                    SPI_CS = 0;
+                    spi_cs = 0;
                     shift_register = data_to_send;
                     next_state = LOW;
                 end
@@ -101,7 +102,7 @@ module spi(
 
             LOW: begin
                 if (half_timer_done) begin // On rising edge of SCLK
-                    SPI_MOSI = shift_register[7];
+                    spi_mosi = shift_register[7];
                     next_state = HIGH;
                     end
                 end
@@ -121,8 +122,9 @@ module spi(
     end
 
     //
-    assign SPI_MISO = data_received[7 - bitNum];
-    assign SPI_CS = hold_cs ? 0 : 1; // Manage CS based on hold_cs
+    assign spi_cs = hold_cs ? 0 : 1; // Manage CS based on hold_cs
+    assign spi_sclk = (current_state == LOW || current_state == HIGH) ? (half_timer_done ? ~spi_sclk : spi_sclk) : 0; // Toggle SCLK
+    assign spi_mosi = shift_register[7 - bitNum];
 
     // State Machine
     always_ff @(posedge clk or posedge rst) begin
@@ -132,11 +134,11 @@ module spi(
             SPI_CS <= 0;
             shift_register <= 0;
         else 
-            SPI_SCLK <= 0;
-            SPI_MOSI <= 0;
-            SPI_CS <= 0;
+            SPI_SCLK <= spi_sclk;
+            SPI_MOSI <= spi_mosi;
+            SPI_CS <= spi_cs;
             if (halftimerDone)
-                shift_register = {shift_register[6:0], 1'b0}; // Shift left
+                shift_register <= {shift_register[6:0], 1'b0}; // Shift left
 
     end
 
