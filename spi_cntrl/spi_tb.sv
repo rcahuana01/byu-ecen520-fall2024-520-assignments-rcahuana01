@@ -3,7 +3,7 @@
 *
 * Module: spi_tb.sv
 * Author: Rodrigo Cahuana
-* Class: ECEN 520
+* Class: ECEN 520. Section 01, Fall2024
 * Date: 10/09/2024
 * Description: Testbench to verify the functionality of the SPI controller
 *
@@ -118,7 +118,7 @@ module spi_tb();
             end
         end
     endtask
-    
+
     // Main process testbench
     initial begin
         // Initialize signals

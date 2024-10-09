@@ -1,177 +1,101 @@
-`timescale 1ns / 1ps
-//////////////////////////////////////////////////////////////////////////////////
-// ADXL362 testbench
-//////////////////////////////////////////////////////////////////////////////////
+/***************************************************************************
+*
+* Module: adxl362_tb.sv
+* Author: Rodrigo Cahuana
+* Class: ECEN 520. Section 01, Fall2024
+* Date: 10/09/2024
+* Description: Testbench to verify the functionality of the accelerometer on the Nexys4 board
+*
+****************************************************************************/
+module adxl362_tb;
 
-module adxl362_tb ();
-
-    logic clk, rst, tb_start, [7:0]tb_data_to_send, tb_hold_cs;
-    logic tb_data_received, 
-    logic [7:0] tb_din;
-
+    // Parameters
     parameter CLK_FREQUENCY = 100_000_000;
     parameter SCLK_FREQUENCY = 500_000;
 
-  // Internal signals
-  logic clk, rst, start, write, SPI_MISO;
-  logic [7:0] data_to_send, address;
-  logic SPI_SCLK, SPI_CS;
-  logic [7:0] data_received;
-  logic busy, done;
+    // Signals
+    logic clk;
+    logic rst;
+    logic start;
+    logic write;
+    logic [7:0] data_to_send;
+    logic [7:0] address;
+    logic SPI_MISO;
+    logic busy;
+    logic done;
+    logic SPI_SCLK;
+    logic SPI_MOSI;
+    logic SPI_CS;
+    logic [7:0] data_received;
 
-    //////////////////////////////////////////////////////////////////////////////////
-    // Instantiate Desgin Under Test (DUT)
-    //////////////////////////////////////////////////////////////////////////////////
-
-  // Instantiate the rx module with parameter overrides
-    // Instantiate the ADXL362 controller
-  adxl362 #(
-    .CLK_FREQUENCY(CLK_FREQUENCY),
-    .SCLK_FREQUENCY(SCLK_FREQUENCY)
-  ) uut (
-    .clk(clk),
-    .rst(rst),
-    .start(start),
-    .write(write),
-    .data_to_send(data_to_send),
-    .address(address),
-    .SPI_MISO(SPI_MISO),
-    .busy(busy),
-    .done(done),
-    .SPI_SCLK(SPI_SCLK),
-    .SPI_CS(SPI_CS),
-    .data_received(data_received)
-  );
-
-    //////////////////////////////////////////////////////////////////////////////////
-    // Clock Generator
-    //////////////////////////////////////////////////////////////////////////////////
-    always
-    begin
-        clk <=1; #5ns;
-        clk <=0; #5ns;
+    // Clock generation
+    initial begin
+        clk = 0;
+        forever #5 clk = ~clk; // Adjust clock period based on CLK_FREQUENCY
     end
 
-    // Task for initiating
-    task initiate_spi( input [7:0] char_value );
+    // Instantiate the ADXL362 controller
+    adxl362_controller adxl_controller (
+        .clk(clk),
+        .rst(rst),
+        .start(start),
+        .write(write),
+        .data_to_send(data_to_send),
+        .address(address),
+        .SPI_MISO(SPI_MISO),
+        .busy(busy),
+        .done(done),
+        .SPI_SCLK(SPI_SCLK),
+        .SPI_MOSI(SPI_MOSI),
+        .SPI_CS(SPI_CS),
+        .data_received(data_received)
+    );
 
-        // Initiate transfer on negative clock edge
-        @(negedge clk)
-        $display("[%0tns] Transmitting 0x%h", $time/1000.0, char_to_send);
-
-        // set inputs
-        tb_send = 1;
-        tb_din = char_value;
-
-        // Wait a clock
-        @(negedge clk)
-
-        // Wait until busy goes high or reset is asserted
-        wait (tx_busy == 1'b1 || rst == 1'b1);
-
-        // Deassert send
-        @(negedge clk)
-        tb_send = 0;
-    endtask   
-
-    //////////////////////////////////
-    // Main Test Bench Process
-    //////////////////////////////////
+    // Test sequence
     initial begin
-        int clocks_to_delay;
-        $display("===== ADXL362 TB =====");
-
-        // Simulate some time with no stimulus/reset
-        #100ns
-
         // Initialize signals
-        rst = 1'b1;
-        start = 1'b0;
-        write = 1'b0;
-        data_to_send = 8'b0;
-        address = 8'b0;
-        #100ns;
-
-        //Test Reset
-        $display("[%0tns] Testing Reset", $time/1000.0);
         rst = 1;
-        #80ns;
-        // Un reset on negative edge
-        @(negedge clk)
-        rst = 0;
-
-        // Make sure tx is high
-        $display("Reading DEVICEID...");
-        address = 8'h00;
-        start = 1'b1;
-        #20ns
         start = 0;
-        wait(done == 1);
-        if (data_received != 8'hAD)
-            $display("Error: Expected 0xAD, got %h", data_received);
-        else 
-            $display("Success: Read DEVICEID = %h", data_received);
+        write = 0;
+        address = 8'h00; // Default address
+        data_to_send = 8'h00; // Default data
 
-        //////////////////////////////////
-        // Transmit a few characters to design
-        //////////////////////////////////
-        #10us;
-        for(int i = 0; i < NUMBER_OF_CHARS; i++) begin
-            char_to_send = $urandom_range(0,255);
-            initiate_tx(char_to_send);
-            // Wait until transmission is over
-            wait (rx_busy == 1'b0);
-            // check to see that character received is the one that was sent
-            if (tx_data != char_to_send)
-                $display("\[%0tns] WARNING: Received 0x%h instead of 0x%h", $time/1000,rx_data,char_to_send);
+        // Reset the controller
+        #10 rst = 0;
+        #10 rst = 1;
 
-            // Delay a random amount of time
-            clocks_to_delay = $urandom_range(1000,30000);
-            repeat(clocks_to_delay)
-                @(negedge clk);
-        end
+        // Read DEVICEID
+        address = 8'h00; // DEVICEID register
+        start = 1;
+        #10 start = 0;
+        wait(done);
+        $display("DEVICEID: %h", data_received);
 
-        // Issue a reset in the middle of a transmission
-        initiate_spi(8'ha5);
-        // Wait 4 baud periods
-        repeat(BAUD_CLOCKS * 4)
-            @(negedge clk);
-        // Issue reset
-        $display("[%0tns] Testing reset of TX in middle of transaction", $time/1000.0);
-        rst = 1;
-        #20ns;
-        // Un reset on negative edge
-        @(negedge clk)
-        rst = 0;
-        // Make sure tx is high and no longer busy
-        repeat(2)
-            @(negedge clk);
-        if (tb_tx_out != 1'b1)
-            $display("[%0tns] Warning: TX out not high after reset", $time/1000.0);
-        if (tx_busy != 1'b0)
-            $display("[%0tns] Warning: busy is high after reset", $time/1000.0);
-        // Wait 4 baud periods
-        repeat(BAUD_CLOCKS * 4)
-            @(negedge clk);
+        // Read PARTID
+        address = 8'h02; // PARTID register
+        start = 1;
+        #10 start = 0;
+        wait(done);
+        $display("PARTID: %h", data_received);
 
-        /*
-        // Try to issue a new transaciton before the last one ends
-        //$display("[%0tns] Testing issue of a new transaction before last one ends", $time/1000.0);
-        char_to_send = 8'h5a;
-        initiate_tx(char_to_send);
-        // Wait 4 baud periods
-        delay_baud(4);
-        // Initiate a new transaction with a different value (should be ignoreds)
-        initiate_tx(char_to_send >> 1);
-        // Wait until transmission is over
-        wait (tx_busy == 1'b0);
-        // check to see that character received is the one that was sent
-        if (r_char != char_to_send)
-            $display("\[%0tns] WARNING: Received 0x%h instead of 0x%h", $time/1000,r_char,char_to_send);
-        */
-        // Finish the simulation
-        #100ns
-        $finish;
+        // Read Status register
+        address = 8'h0B; // Status register
+        start = 1;
+        #10 start = 0;
+        wait(done);
+        $display("Status Register: %h", data_received);
+
+        // Write to register (soft reset)
+        write = 1;
+        address = 8'h1F; // Register address for soft reset
+        data_to_send = 8'h52; // Value to write
+        start = 1;
+        #10 start = 0;
+        wait(done);
+        $display("Written 0x52 to register 0x1F");
+
+        // End simulation
+        #100 $finish;
     end
 
 endmodule

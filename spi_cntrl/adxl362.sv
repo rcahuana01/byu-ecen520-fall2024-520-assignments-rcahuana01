@@ -3,111 +3,100 @@
 *
 * Module: adxl362.sv
 * Author: Rodrigo Cahuana
-* Class: ECEN 520
-* Date: 9/20/2024
-* Description: SPI Design
+* Class: ECEN 520. Section 01, Fall2024
+* Date: 10/20/2024
+* Description: ADXL362 Controller for the accelerometer on the Nexys4 board
 *
 ****************************************************************************/
-module adxl362(
-    input wire logic clk,     // Clock
-    input wire logic rst,    // Reset
-    input wire logic start,      //start a transfer
-    input wire logic write,
-    input wire logic  [7:0] data_to_send,   //data to send to subunit
-    input wire logic [7:0] address,
-    input wire logic SPI_MISO,              //SPI MISO signal
-    output logic [7:0] data_received,         // Data received on the last transfer
-    output logic busy,      // Contoller is busy
-    output logic done,  //Indicates that a new data value has been received
-    output logic SPI_SCLK,
-    output logic SPI_MOSI,
-    output logic SPI_CS,        // Indicates that there was an error when receiving
-    output logic [7:0] data_received
+module adxl362_controller (
+    input logic clk,                     // Clock
+    input logic rst,                     // Reset
+    input logic start,                   // Start a transfer
+    input logic write,                   // Write operation indicator
+    input logic [7:0] data_to_send,     // Data to send
+    input logic [7:0] address,           // Address for data transfer
+    input logic SPI_MISO,                // SPI MISO signal
+    output logic busy,                   // Controller is busy
+    output logic done,                   // Transfer done signal
+    output logic SPI_SCLK,               // SCLK output signal
+    output logic SPI_MOSI,               // MOSI output signal
+    output logic SPI_CS,                 // CS output signal
+    output logic [7:0] data_received      // Data received
 );
 
     // Parameters
-    parameter CLK_FREQUENCY = 100_000_000;  // Sample frequency
-    parameter SCLK_FREQUENCY = 500_000;           // Number of signals changed per second
-    
+    parameter CLK_FREQUENCY = 100_000_000; // Clock frequency
+    parameter SCLK_FREQUENCY = 500_000;     // SCLK frequency
+
     // Internal signals
-    logic halftimerDone, incorrectParity, checkMiddle, stopBit, stopBit, startBit, checkMiddle; 
-    logic [7:0] temp_dout;
-    logic [31:0] timer;
-    typedef enum logic [2:0] {IDLE, BYTE_0, BYTE_1, BYTE_2, DONE} state_t;
-    state_t cs, ns;
-    // Bit timer
-    assign timerDone = (timer >= BAUD_PERIOD);
-    assign halftimerDone = (timer >= (BAUD_PERIOD/2));
-    always_ff @(posedge clk or posedge rst) begin
-        if (rst || clrTimer || timerDone) 
-            timer <= 0;
-        else
-            timer <= timer + 1;
-    end
+    logic [7:0] command;
+    logic [7:0] data_out;
+    logic start_transfer;
 
-    // Bit counter
-    assign bitDone = (bitNum >= DATA_BITS-1);
+    // SPI Controller Instance
+    spi spi_inst (
+        .clk(clk),
+        .rst(rst),
+        .start(start_transfer),
+        .data_to_send(data_out),
+        .hold_cs(1'b0), // Control CS signal from the ADXL362 controller
+        .SPI_MISO(SPI_MISO),
+        .busy(busy),
+        .done(done),
+        .SPI_SCLK(SPI_SCLK),
+        .SPI_MOSI(SPI_MOSI),
+        .SPI_CS(SPI_CS),
+        .data_received(data_received)
+    );
 
+    // State Machine
+    typedef enum logic [2:0] {IDLE, SEND_CMD, SEND_ADDR, SEND_DATA, READ_DATA} state_t;
+    state_t current_state, next_state;
+
+    // State register
     always_ff @(posedge clk or posedge rst) begin
-        if (rst || clrBit)
-            bitNum <= 0;
-        else if (incBit)
-            bitNum <= bitNum + 1;
-    end
-    
-    // State machine
-    always_comb begin
-         ns = cs;
-        clrTimer = 1'b0;
-        incBit = 1'b0;
-        clrBit = 1'b0;
-        data_strobe = 1'b0;
-        rx_error = 1'b0;
-        busy = 1'b1;
-        calculateParity = 1'b0;
-        stopBit = 1'b0;
         if (rst)
-            ns = IDLE;
-        else begin
-            case (cs)
-                IDLE: begin
-                    if (start) begin
-                        ns = LOW;
-                end
-                BYTE_0: begin
-                   data << data_to_send;
-                   ns = HIGH;
-                   cs = 0;
-                end
-                TRANSMIT: begin
-                    if (timerDone) begin
-                        clrBit = 1;
-                        ns = DATA;
-                end
-                REPEAT: begin
-                    data_strobe = 1;
-                    if (timerDone)
-                        if (bitDone)
-                            ns = END
-                        else 
-                            incBit = 1;
-                end
-                CHECK_HOLD: begin
-                    if (hold_cs) 
-                        ns = LOAD_DATA;
-                    else if(hold_cs)
-                        ns = FINISH;
-                end
-                FINISH: begin
-                    cs = 1;
-                    done = 1;
-                    ns = IDLE;
-                end
-            endcase
-        end
+            current_state <= IDLE;
+        else 
+            current_state <= next_state; // Update current state
     end
 
-     
+    // Combinational logic for state machine
+    always_ff @(posedge clk) begin
+        case (current_state)
+            IDLE: begin
+                if (start) begin
+                    command <= write ? 8'h0A : 8'h0B; // Set command byte
+                    data_out <= (write ? data_to_send : 8'h00); // Prepare data for write
+                    start_transfer <= 1; // Start transfer
+                    next_state <= SEND_CMD; // Move to command state
+                end else begin
+                    start_transfer <= 0;
+                end
+            end
+            
+            SEND_CMD: begin
+                start_transfer <= 0; // End start signal
+                next_state <= SEND_ADDR; // Move to address state
+            end
+            
+            SEND_ADDR: begin
+                data_out <= address; // Set address for next transfer
+                next_state <= (write ? SEND_DATA : READ_DATA); // Decide next state based on write flag
+            end
+            
+            SEND_DATA: begin
+                data_out <= data_to_send; // Send data for write operation
+                next_state <= IDLE; // Go back to idle state after transfer
+            end
+            
+            READ_DATA: begin
+                // No data to send for read, proceed to idle after the read
+                next_state <= IDLE;
+            end
+        endcase
+    end
 
+    assign done = (current_state == IDLE && !start); // Indicate transfer complete
 
 endmodule

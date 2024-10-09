@@ -3,7 +3,7 @@
 *
 * Module: spi.sv
 * Author: Rodrigo Cahuana
-* Class: ECEN 520
+* Class: ECEN 520. Section 01, Fall2024
 * Date: 9/20/2024
 * Description: SPI Controller Design
 *
