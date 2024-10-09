@@ -8,7 +8,7 @@
 * Description: ADXL362 Controller for the accelerometer on the Nexys4 board
 *
 ****************************************************************************/
-module adxl362_controller (
+module adxl362 (
     input logic clk,                     // Clock
     input logic rst,                     // Reset
     input logic start,                   // Start a transfer
@@ -32,7 +32,7 @@ module adxl362_controller (
     logic [7:0] command;
     logic [7:0] data_out;
     logic start_transfer;
-    logic spi_done;  // Rename to avoid conflict
+    logic spi_done;
 
     // SPI Controller Instance
     spi spi_inst (
@@ -40,10 +40,10 @@ module adxl362_controller (
         .rst(rst),
         .start(start_transfer),
         .data_to_send(data_out),
-        .hold_cs(1'b0), // Control CS signal from the ADXL362 controller
+        .hold_cs(~SPI_CS), // Hold CS signal based on the ADXL362 controller
         .SPI_MISO(SPI_MISO),
         .busy(busy),
-        .done(spi_done),    // Connect the renamed signal
+        .done(spi_done),
         .SPI_SCLK(SPI_SCLK),
         .SPI_MOSI(SPI_MOSI),
         .SPI_CS(SPI_CS),
@@ -59,7 +59,7 @@ module adxl362_controller (
         if (rst)
             current_state <= IDLE;
         else 
-            current_state <= next_state; // Update current state
+            current_state <= next_state;
     end
 
     // Combinational logic for state machine
@@ -70,20 +70,26 @@ module adxl362_controller (
         case (current_state)
             IDLE: begin
                 if (start) begin
-                    command = write ? 8'h0A : 8'h0B; // Set command byte
-                    data_out = (write ? data_to_send : 8'h00); // Prepare data for write
-                    start_transfer = 1; // Start transfer
-                    next_state = SEND_CMD; // Move to command state
+                    if (write) begin
+                        command = 8'h0A; // WRITE command
+                        data_out = address; // Address for write
+                        next_state = SEND_CMD; // Move to command state
+                    end else begin
+                        command = 8'h0B; // READ command
+                        data_out = address; // Address for read
+                        next_state = SEND_CMD; // Move to command state
+                    end
                 end
             end
             
             SEND_CMD: begin
-                start_transfer = 0; // End start signal
+                data_out = command; // Send command byte
+                start_transfer = 1; // Start transfer
                 next_state = SEND_ADDR; // Move to address state
             end
             
             SEND_ADDR: begin
-                data_out = address; // Set address for next transfer
+                data_out = address; // Send address byte
                 next_state = (write ? SEND_DATA : READ_DATA); // Decide next state based on write flag
             end
             
@@ -93,13 +99,14 @@ module adxl362_controller (
             end
             
             READ_DATA: begin
-                // No data to send for read, proceed to idle after the read
-                next_state = IDLE;
+                if (spi_done) begin
+                    next_state = IDLE; // Go back to idle state after read
+                end
             end
         endcase
     end
 
     // Indicate transfer complete based on SPI done signal
-    assign done = spi_done; // Connect SPI done to module output
+    assign done = spi_done;
 
-endmodule  
+endmodule
