@@ -5,7 +5,7 @@
 * Author: Rodrigo Cahuana
 * Class: ECEN 520
 * Date: 9/20/2024
-* Description: SPI Design
+* Description: SPI Controller Design
 *
 ****************************************************************************/
 module spi(
@@ -26,45 +26,46 @@ module spi(
     // Parameters
     parameter CLK_FREQUENCY = 100_000_000;  // Sample frequency
     parameter SCLK_FREQUENCY = 500_000;      // Number of signals changed per second
-    localparam TIMER_RANGE = 15;               // Timer range
+    localparam TIMER_RANGE = 15;              // Timer range
     localparam BIT_RANGE = 3;                 // Bit range for counter
-    localparam DATA_BITS = 8;                  // Number of data bits
+    localparam DATA_BITS = 8;                 // Number of data bits
     
     // Internal signals        
     logic [BIT_RANGE:0] bitNum;                  
     logic [TIMER_RANGE:0] timer;                  
     logic timer_done, clrTimer, half_timer_done;              
-    logic clrBit, incBit, bitDone, bitTimer;  
-    logic spi_cs, spi_sclk, spi_mosi;  
+    logic clrBit, incBit, bitDone;  
+    logic spi_sclk, spi_mosi;  
 
     // State definitions
     typedef enum logic [2:0] {IDLE, LOW, HIGH} state_t;
     state_t current_state, next_state;
 
-    // Timer logic block
+    // Bit timer
     always_ff @(posedge clk or posedge rst) begin
-        if (rst || clrTimer)
-            timer <= 0;                                              
+        if (rst || clrTimer) 
+            timer <= 0;
+        else if (timer_done)
+            timer <= 0;  // Reset timer on done
         else
-            timer <= timer + 1;                
+            timer <= timer + 1;
     end
 
-    // Bit Counter Logic
+    // Bit counter
     always_ff @(posedge clk or posedge rst) begin
         if (rst || clrBit)
-            bitNum <= 0;                              
+            bitNum <= 0;
         else if (incBit)
-            bitNum <= bitNum + 1;                 
+            bitNum <= bitNum + 1;
     end
 
     // Assign busy state
     assign busy = (current_state != IDLE);
 
     // Timer logic
-    assign timer_done = (timer >= (CLK_FREQUENCY / SCLK_FREQUENCY));
-    assign half_timer_done = (timer >= ((CLK_FREQUENCY / SCLK_FREQUENCY) / 2)); 
-
-    assign bitDone = (bitNum == 7);
+    assign timer_done = (timer >= (CLK_FREQUENCY / SCLK_FREQUENCY)); 
+    assign half_timer_done = (timer == ((CLK_FREQUENCY / SCLK_FREQUENCY) / 2)); 
+    assign bitDone = (bitNum == (DATA_BITS - 1));
 
     // State Machine
     always_ff @(posedge clk or posedge rst) begin
@@ -77,9 +78,10 @@ module spi(
     // Combinational logic    
     always_comb begin
         next_state = current_state;
-        done = 0;
-        incBit = 0;
-        clrBit = 0;
+        done = 0; // Reset done signal
+        incBit = 0; // Reset increment bit signal
+        clrTimer = 0; // Reset clear timer signal
+
         case (current_state)
             IDLE: begin
                 if (start) begin
@@ -88,46 +90,54 @@ module spi(
             end
 
             LOW: begin
-                if (half_timer_done) begin // On rising edge of SCLK
+                if (half_timer_done) begin // Move to HIGH state
                     next_state = HIGH;
-                    end
                 end
+            end
 
             HIGH: begin
                 if (timer_done) begin
-                    clrTimer = 1;
-                    incBit = 1;
-                    next_state = LOW; // Return to IDLE state
-                end
-                else if (timer_done && bitDone) begin
-                    next_state = IDLE; // Return to IDLE state
-                    done = 1; // Indicate transfer complete
+                    clrTimer = 1; // Clear timer
+                    incBit = 1; // Increment bit count
+                    if (bitDone) begin
+                        next_state = IDLE; // Go to IDLE
+                        done = 1; // Indicate transfer complete
+                    end else begin
+                        next_state = LOW; // Continue transfer
+                    end
                 end
             end
         endcase
     end
 
     // Assign output signals
-    assign spi_cs = hold_cs ? 0 : 1; // Manage CS based on hold_cs
     assign spi_sclk = (current_state == HIGH);
     assign spi_mosi = data_to_send[7 - bitNum];
 
-    // State Machine
+    // Output signal assignment and data reception
     always_ff @(posedge clk or posedge rst) begin
         if (rst) begin
             SPI_SCLK <= 0;
             SPI_MOSI <= 0;
             SPI_CS <= 1;
             data_received <= 0;
-        end
-        else begin
+        end else begin
             SPI_SCLK <= spi_sclk;
             SPI_MOSI <= spi_mosi;
-            SPI_CS <= spi_cs;
+
+            // Manage CS based on hold_cs and current state
+            SPI_CS <= hold_cs ? 0 : (current_state == IDLE ? 1 : 0);
+
             if (half_timer_done) begin
                 data_received <= {data_received[6:0], SPI_MISO}; // Shift left
             end
         end
+    end
+
+    // Debugging output
+    always_ff @(posedge clk) begin
+        $display("Time: %0t | Timer: %0d | Half Timer Done: %b | Timer Done: %b | Current State: %s | Start: %b | CS: %b | SCLK: %b | MOSI: %b | Received: %h | Done: %b", 
+                 $time, timer, half_timer_done, timer_done, current_state, start, SPI_CS, SPI_SCLK, SPI_MOSI, data_received, done);
     end
 
 endmodule

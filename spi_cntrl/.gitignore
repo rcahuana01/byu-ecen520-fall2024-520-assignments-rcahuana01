@@ -1,0 +1,17 @@
+.vscode
+.idea
+**/.DS_Store
+**/work/
+**/transcript
+**/*.log
+**/*.pb
+**/*.mti
+#**/*.mpf
+**/*.vstf
+**/*wlft*
+**/*.wlf
+**/.nfs*
+**/xsim.dir
+**/__pycache__
+**/tmp
+**/tx.sv.bak
