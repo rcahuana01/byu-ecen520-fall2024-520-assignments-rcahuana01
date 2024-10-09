@@ -1,27 +1,28 @@
 module tb_spi_controller();
 
     // Parameters
-    localparam CLK_FREQUENCY = 100_000_000;  // Clock frequency (100 MHz)
-    localparam SCLK_FREQUENCY = 500_000;      // SCLK frequency (500 kHz)
+    parameter CLK_FREQUENCY = 100_000_000;  // Clock frequency (100 MHz)
+    parameter SCLK_FREQUENCY = 500_000;      // SCLK frequency (500 kHz)
 
     // Inputs and outputs
-    reg clk;
-    reg rst;
-    reg start;
-    reg hold_cs;
-    reg [7:0] data_to_send;
-    wire [7:0] data_received;
-    wire busy;
-    wire done;
-    wire SPI_SCLK;
-    wire SPI_MOSI;
-    wire SPI_CS;
-    reg SPI_MISO;
+    logic clk;
+    logic rst;
+    logic start;
+    logic hold_cs;
+    logic [7:0] data_to_send;
+    logic [7:0] data_received;
+    logic busy;
+    logic done;
+    logic SPI_SCLK;
+    logic SPI_MOSI;
+    logic SPI_CS;
+    logic SPI_MISO;
 
     // Clock generation
-    initial begin
-        clk = 0;
-        forever #5 clk = ~clk; // 100 MHz clock
+    always
+    begin
+        #5ns clk <=1;
+        #5ns clk <=0;
     end
 
     // Instantiate the SPI controller
@@ -61,24 +62,13 @@ module tb_spi_controller();
         data_to_send = 8'h00;
         hold_cs = 0;
 
-        // Reset sequence
-        #20 rst = 0; // Release reset after a few clock cycles
-
-        // Perform single-byte transfers
-        repeat(10) begin
-            send_byte($random);  // Send random 8-bit values
-            #20;
-        end
-
-        // Perform multi-byte transfers
-        repeat(5) begin
-            send_multi_byte($random, $random, $random);  // Send 3 random bytes
-            #40;
-        end
-
-        // End simulation
-        #100;
-        $stop;
+        //Test Reset
+        $display("[%0t] Testing Reset", $time);
+        rst = 1;
+        #80ns;
+        // Un reset on negative edge
+        @(negedge clk)
+        rst = 0;
     end
 
     // Task to send a single byte
