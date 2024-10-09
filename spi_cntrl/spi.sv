@@ -86,15 +86,12 @@ module spi(
         case (current_state)
             IDLE: begin
                 if (start) begin
-                    spi_cs = 0;
-                    shift_register = data_to_send;
                     next_state = LOW;
                 end
             end
 
             LOW: begin
                 if (half_timer_done) begin // On rising edge of SCLK
-                    spi_mosi = shift_register[7 - bitNum];
                     next_state = HIGH;
                     end
                 end
@@ -115,8 +112,8 @@ module spi(
 
     // Assign output signals
     assign spi_cs = hold_cs ? 0 : 1; // Manage CS based on hold_cs
-    assign spi_sclk = (current_state == LOW || current_state == HIGH) ? (half_timer_done ? ~spi_sclk : spi_sclk) : 0; // Toggle SCLK
-    assign spi_mosi = shift_register[7 - bitNum];
+    assign spi_sclk = (current_state == HIGH);
+    assign spi_mosi = data_to_send[7 - bitNum];
 
     // State Machine
     always_ff @(posedge clk or posedge rst) begin
@@ -124,14 +121,14 @@ module spi(
             SPI_SCLK <= 0;
             SPI_MOSI <= 0;
             SPI_CS <= 1;
-            shift_register <= 0;
+            data_received <= 0;
         end
         else begin
             SPI_SCLK <= spi_sclk;
             SPI_MOSI <= spi_mosi;
             SPI_CS <= spi_cs;
             if (half_timer_done) begin
-                data_received <= {data_received[6:0], 1'b0}; // Shift left
+                data_received <= {data_received[6:0], SPI_MISO}; // Shift left
             end
         end
     end
