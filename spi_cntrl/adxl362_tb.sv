@@ -27,7 +27,7 @@ module adxl362_tb #(parameter CLK_FREQUENCY = 100_000_000,
     logic [7:0] data_received;
 
     // Instantiate the DUT
-    adxl362_controller #(
+    adxl362 #(
         .CLK_FREQUENCY(CLK_FREQUENCY),
         .SCLK_FREQUENCY(SCLK_FREQUENCY)
     ) dut (
