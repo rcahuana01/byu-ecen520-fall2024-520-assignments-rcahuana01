@@ -1,19 +1,18 @@
+`timescale 1ns / 1ps
 /***************************************************************************
 *
 * Module: adxl362_tb.sv
 * Author: Rodrigo Cahuana
 * Class: ECEN 520. Section 01, Fall2024
-* Date: 10/09/2024
-* Description: Testbench to verify the functionality of the accelerometer on the Nexys4 board
+* Date: 10/20/2024
+* Description: Testbench for the ADXL362 Controller
 *
 ****************************************************************************/
-module adxl362_tb;
 
-    // Parameters
-    parameter CLK_FREQUENCY = 100_000_000;
-    parameter SCLK_FREQUENCY = 500_000;
+module adxl362_tb #(parameter CLK_FREQUENCY = 100_000_000,
+                    parameter SCLK_FREQUENCY = 500_000) ();
 
-    // Signals
+    // Declare signals for the testbench
     logic clk;
     logic rst;
     logic start;
@@ -28,14 +27,11 @@ module adxl362_tb;
     logic SPI_CS;
     logic [7:0] data_received;
 
-    // Clock generation
-    initial begin
-        clk = 0;
-        forever #5 clk = ~clk; // Adjust clock period based on CLK_FREQUENCY
-    end
-
-    // Instantiate the ADXL362 controller
-    adxl362_controller adxl_controller (
+    // Instantiate the DUT (Device Under Test)
+    adxl362_controller #(
+        .CLK_FREQUENCY(CLK_FREQUENCY),
+        .SCLK_FREQUENCY(SCLK_FREQUENCY)
+    ) dut (
         .clk(clk),
         .rst(rst),
         .start(start),
@@ -51,51 +47,71 @@ module adxl362_tb;
         .data_received(data_received)
     );
 
-    // Test sequence
+    // Simulation model for ADXL362 (stub for testing)
+    // You should replace this with a complete model that responds correctly
+    // to the SPI communication.
     initial begin
         // Initialize signals
+        SPI_MISO = 1; // Default MISO high
+    end
+
+    // Clock generation
+    initial begin
+        clk = 0;
+        forever #5 clk = ~clk; // 100 MHz clock
+    end
+
+    // Test vector generation
+    initial begin
+        // Execute the simulation for a few clock cycles without setting any inputs
+        #10;
+
+        // Reset sequence
+        rst = 0; // Active low reset
+        #10;
         rst = 1;
+
+        // Wait for a few clock cycles
+        #20;
+
+        // Start read sequence for DEVICEID (address 0x0)
+        address = 8'h00; // DEVICEID address
+        start = 1;
+        write = 0; // Read operation
+        #10; // Hold start for a clock cycle
         start = 0;
-        write = 0;
-        address = 8'h00; // Default address
-        data_to_send = 8'h00; // Default data
+        wait(done); // Wait until done signal is asserted
+        assert(data_received == 8'hAD) else $fatal("Error: DEVICEID read failed");
 
-        // Reset the controller
-        #10 rst = 0;
-        #10 rst = 1;
-
-        // Read DEVICEID
-        address = 8'h00; // DEVICEID register
+        // Read PARTID (address 0x02)
+        address = 8'h02; // PARTID address
         start = 1;
-        #10 start = 0;
+        write = 0; // Read operation
+        #10; 
+        start = 0;
         wait(done);
-        $display("DEVICEID: %h", data_received);
+        assert(data_received == 8'hF2) else $fatal("Error: PARTID read failed");
 
-        // Read PARTID
-        address = 8'h02; // PARTID register
+        // Read status register (address 0x0B)
+        address = 8'h0B; // Status register address
         start = 1;
-        #10 start = 0;
+        write = 0; // Read operation
+        #10; 
+        start = 0;
         wait(done);
-        $display("PARTID: %h", data_received);
+        assert(data_received == 8'h41) else $fatal("Error: Status register read failed");
 
-        // Read Status register
-        address = 8'h0B; // Status register
+        // Write to register 0x1F for soft reset
+        address = 8'h1F; // Soft reset register
+        data_to_send = 8'h52; // Data to write
         start = 1;
-        #10 start = 0;
+        write = 1; // Write operation
+        #10; 
+        start = 0;
         wait(done);
-        $display("Status Register: %h", data_received);
 
-        // Write to register (soft reset)
-        write = 1;
-        address = 8'h1F; // Register address for soft reset
-        data_to_send = 8'h52; // Value to write
-        start = 1;
-        #10 start = 0;
-        wait(done);
-        $display("Written 0x52 to register 0x1F");
-
-        // End simulation
-        #100 $finish;
+        // Finish simulation
+        $finish;
     end
 
 endmodule

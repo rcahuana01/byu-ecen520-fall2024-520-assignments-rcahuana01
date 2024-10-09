@@ -32,6 +32,7 @@ module adxl362_controller (
     logic [7:0] command;
     logic [7:0] data_out;
     logic start_transfer;
+    logic spi_done;  // Rename to avoid conflict
 
     // SPI Controller Instance
     spi spi_inst (
@@ -42,7 +43,7 @@ module adxl362_controller (
         .hold_cs(1'b0), // Control CS signal from the ADXL362 controller
         .SPI_MISO(SPI_MISO),
         .busy(busy),
-        .done(done),
+        .done(spi_done),    // Connect the renamed signal
         .SPI_SCLK(SPI_SCLK),
         .SPI_MOSI(SPI_MOSI),
         .SPI_CS(SPI_CS),
@@ -62,41 +63,43 @@ module adxl362_controller (
     end
 
     // Combinational logic for state machine
-    always_ff @(posedge clk) begin
+    always_comb begin
+        start_transfer = 0; // Reset start_transfer
+        next_state = current_state; // Default to current state
+        
         case (current_state)
             IDLE: begin
                 if (start) begin
-                    command <= write ? 8'h0A : 8'h0B; // Set command byte
-                    data_out <= (write ? data_to_send : 8'h00); // Prepare data for write
-                    start_transfer <= 1; // Start transfer
-                    next_state <= SEND_CMD; // Move to command state
-                end else begin
-                    start_transfer <= 0;
+                    command = write ? 8'h0A : 8'h0B; // Set command byte
+                    data_out = (write ? data_to_send : 8'h00); // Prepare data for write
+                    start_transfer = 1; // Start transfer
+                    next_state = SEND_CMD; // Move to command state
                 end
             end
             
             SEND_CMD: begin
-                start_transfer <= 0; // End start signal
-                next_state <= SEND_ADDR; // Move to address state
+                start_transfer = 0; // End start signal
+                next_state = SEND_ADDR; // Move to address state
             end
             
             SEND_ADDR: begin
-                data_out <= address; // Set address for next transfer
-                next_state <= (write ? SEND_DATA : READ_DATA); // Decide next state based on write flag
+                data_out = address; // Set address for next transfer
+                next_state = (write ? SEND_DATA : READ_DATA); // Decide next state based on write flag
             end
             
             SEND_DATA: begin
-                data_out <= data_to_send; // Send data for write operation
-                next_state <= IDLE; // Go back to idle state after transfer
+                data_out = data_to_send; // Send data for write operation
+                next_state = IDLE; // Go back to idle state after transfer
             end
             
             READ_DATA: begin
                 // No data to send for read, proceed to idle after the read
-                next_state <= IDLE;
+                next_state = IDLE;
             end
         endcase
     end
 
-    assign done = (current_state == IDLE && !start); // Indicate transfer complete
+    // Indicate transfer complete based on SPI done signal
+    assign done = spi_done; // Connect SPI done to module output
 
-endmodule
+endmodule  
