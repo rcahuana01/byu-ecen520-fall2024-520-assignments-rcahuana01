@@ -78,7 +78,6 @@ module spi(
     always_comb begin
         next_state = current_state;
         done = 0;
-        data_received = 0;
         incBit = 0;
         clrBit = 0;
         case (current_state)
@@ -98,10 +97,10 @@ module spi(
                 if (timer_done) begin
                     clrTimer = 1;
                     incBit = 1;
-                    current_state = LOW; // Return to IDLE state
+                    next_state = LOW; // Return to IDLE state
                 end
                 else if (timer_done && bitDone) begin
-                    current_state = IDLE; // Return to IDLE state
+                    next_state = IDLE; // Return to IDLE state
                     done = 1; // Indicate transfer complete
                 end
             end
