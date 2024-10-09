@@ -30,8 +30,7 @@ module spi(
     localparam BIT_RANGE = 3;                 // Bit range for counter
     localparam DATA_BITS = 8;                  // Number of data bits
     
-    // Internal signals
-    logic [7:0] shift_register;           
+    // Internal signals        
     logic [BIT_RANGE:0] bitNum;                  
     logic [TIMER_RANGE:0] timer;                  
     logic timer_done, clrTimer, half_timer_done;              
@@ -79,7 +78,6 @@ module spi(
     always_comb begin
         next_state = current_state;
         done = 0;
-        spi_cs = 1; // CS inactive
         data_received = 0;
         incBit = 0;
         clrBit = 0;
