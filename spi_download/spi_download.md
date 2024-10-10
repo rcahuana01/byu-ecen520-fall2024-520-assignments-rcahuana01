@@ -65,7 +65,7 @@ This testbench should be designed as follows:
   * attach the SPI signals from the top-level design to the SPI signals of the simulation
 * Perform the following sequence of events for your testbench:
   * Execute the simulation for a few clock cycles without setting any of the inputs
-  * Set default values for the inputs (reset, buttons, and switchces)
+  * Set default values for the inputs (reset, buttons, and switches)
   * Wait for a few clock cycle, assert the reset for a few clock cycles, deassert the reset (don't forget that the reset signal for the board is low asserted)
   * Perform the following operations within your testbench by setting the buttons and switches:
     * Read the DEVICEID register (0x0). Should get 0xad
