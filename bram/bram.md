@@ -122,8 +122,9 @@ The following assignment specific items should be included in your repository:
 
 1. Required Makefile rules:
   * `sim_bram_fifo`
-  * `synth_bram_fifo`
   * `sim_bram_rom`
+  * `sim_bram_rom_declaration`
+  * `synth_bram_fifo`
   * `synth_bram_rom`
 2. You need to have at least 4 "Error" commits in your repository
 3. Assignment specific Questions:
