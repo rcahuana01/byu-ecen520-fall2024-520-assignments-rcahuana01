@@ -15,10 +15,8 @@ import repo_test
 def main():
 
     tester = test_suite_520.build_test_suite_520("bram_download",  min_err_commits = 4, max_repo_files = 25)
-    #tester.add_make_test("sim_bram_fifo")
-    #tester.add_make_test("synth_bram_fifo")
-    #tester.add_make_test("sim_bram_rom")
-    #tester.add_make_test("synth_bram_rom")
+    tester.add_make_test("sim_bram_top")
+    tester.add_make_test("gen_bit")
     tester.run_tests()
 
 if __name__ == "__main__":
