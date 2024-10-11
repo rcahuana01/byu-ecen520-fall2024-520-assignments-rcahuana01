@@ -33,10 +33,10 @@ This repository contains the lecture schedule (including links to lecture summar
 | 10/11/2024 | [Clock jitter, duty cycle, clock skew](./lectures/clock_skew.md) |
 | **Week 7** | |
 | 10/14/2024 | [Xilinx Clock Timing reports](./lectures/xilinx_timing.md) |
-| 10/16/2024 | [Xilinx Clock Constraints](./lectures/xilinx_constraints.md) |
-| 10/18/2024 | [Xilinx Clock Resources (MMCM)](./lectures/xilinx_clocking.md) |
+| 10/16/2024 | [Xilinx Clock Resources (MMCM)](./lectures/xilinx_clocking.md) |
+| 10/18/2024 | [Reset timing and strategies](./lectures/reset_strategies.md) |
 | **Week 8** | |
-| 10/21/2024 | [Reset timing and strategies]() |
+| 10/21/2024 | []() |
 | 10/23/2024 | [Poor Sequential Design Practice]() |
 | 10/25/2024 | [Metastability & Synchronizer design]() |
 | **Week 9** | |
