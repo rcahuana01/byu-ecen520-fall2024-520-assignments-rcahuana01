@@ -6,7 +6,7 @@ You will use the switches, buttons, seven segment display, and LEDs to interact 
 
 ##  Top-Level Design
 
-This assignment will involve a single top-level design.
+This assignment will involve the creation of a single top-level design.
 Create your top-level design with the following ports and parameters.
 
 | Port Name | Direction | Width | Function |
@@ -126,6 +126,7 @@ Create a top-level testbench that simulates your design.
 This testbench should demonstrate e your clocking, counter circuits, seven segment display and mux are all working properly. 
 Create a makefile rule `sim_mmcm` that performs this simulation from the commandline.
 
+`timescale 1ns / 1ps
 
 ## Implementation and Download
 

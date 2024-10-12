@@ -36,36 +36,36 @@ This repository contains the lecture schedule (including links to lecture summar
 | 10/16/2024 | [Xilinx Clock Resources (MMCM)](./lectures/xilinx_clocking.md) |
 | 10/18/2024 | [Reset timing and strategies](./lectures/reset_strategies.md) |
 | **Week 8** | |
-| 10/21/2024 | []() |
-| 10/23/2024 | [Poor Sequential Design Practice]() |
-| 10/25/2024 | [Metastability & Synchronizer design]() |
+| 10/21/2024 | [Poor Sequential Design Practice]() |
+| 10/23/2024 | [Metastability & Synchronizer design]() |
+| 10/25/2024 | [Clock domain crossing]() |
 | **Week 9** | |
-| 10/28/2024 | [Clock domain crossing]() |
+| 10/28/2024 |  |
 | 10/30/2024 | [Handshaking]() |
 | 11/1/2024 | [Data transfer across clock domains]() |
 | **Week 10** | [Pipelining and Retiming]() |
-| 11/4/2024 | |
-| 11/6/2024 | []() |
+| 11/4/2024 | [VHDL Part 1]() |
+| 11/6/2024 | [VHDL Part 2]() |
 | 11/8/2024 | **Exam #2** |
 | **Week 11** | |
-| 11/11/2024 |  |
-| 11/13/2024 | []() |
-| 11/15/2024 | []() |
+| 11/11/2024 | [Digital Arithmetic #1]() |
+| 11/13/2024 | [Digital Arithmetic #2]()|
+| 11/15/2024 | [DSP Blocks]() |
 | **Week 12** | |
-| 11/18/2024 |  |
+| 11/18/2024 | []() |
 | 11/20/2024 | []() |
 | 11/22/2024 | []() |
 | **Week 13** | |
-| 11/25/2024 |  |
+| 11/25/2024 | No Class (Gone for research) |
 | 11/27/2024 | No Class - Thanksgiving Break |
 | 11/29/2024 | No Class - Thanksgiving Break |
 | **Week 14** | |
-| 12/2/2024 |  |
-| 12/4/2024 |  |
-| 12/6/2024 |  |
+| 12/2/2024 | []() |
+| 12/4/2024 | []() |
+| 12/6/2024 | []() |
 | **Week 15** | |
-| 12/9/2024 |  |
-| 12/11/2024 |  |
+| 12/9/2024 | []() |
+| 12/11/2024 | []() |
 
 ## Assignments
 
