@@ -15,8 +15,8 @@ Create your top-level design with the following ports and parameters.
 | CPU_RESETN | Input | 1 | Reset (low asserted) |
 | SW | Input | 4 | Switches (8 data bits to send) |
 | LED | Output | 4 | Board LEDs (used for data and busy) |
-| AN | [7:0] | Output | Anode signals for the seven segment display |
-| CA, CB, CC, CD, CE, CF, CG | 1 | Output | Seven segment display cathode signals |
+| AN | Output | 8 | Anode signals for the seven segment display |
+| CA, CB, CC, CD, CE, CF, CG | 1 each | Output | Seven segment display cathode signals |
 | DP | Output | 1 | Seven segment display digit point signal |
 
 | Parameter Name | Default Value | Purpose |
@@ -38,14 +38,14 @@ Note that you can look at the text for the module definition of this primitive i
   * Create additional clock outputs with the following requirements:
     * CLKOUT1: Same clock frequency as input, phase shifted 180 degrees, 25% duty cycle
     * CLKOUT2: Same clock frequency as input, phase shifted 90 degrees, 75% duty cycle
-    * CLKOUT3: Lower clock frequency as input, out of phase with input. Do not use power of 2 divide and make this at least 6x lower frequency.
+    * CLKOUT3: Lower clock frequency as input, out of phase with input. Do not use power of 2 divide and make this at least 6x lower frequency than the input.
     * CLKOUT4: Higher clock frequency as input, out of phase with input. Do not use power of 2 multiply and make this at least 2.5x greater than input clock.
-    * CLKOUT5: Lower clock frequency as input (but different then CLKOUT3), in phase with input
-    * CLKOUT6: Higher clock frequency as input (but different then CLKOUT5), in phase with input
+    * CLKOUT5: Lower clock frequency as input (but different from CLKOUT3), in phase with input
+    * CLKOUT6: Higher clock frequency as input (but different from CLKOUT5), in phase with input
 
 ### Clock Domain Reset signals
 
-You will need to create a reset signal for each of the clock domains you created.
+You will need to create a separate reset signal for each of the clock domains you created.
 This reset signal will be used by the logic in each of the clock domains. 
 The purpose of this reset signal is to provide a power up reset that is synchronous with the given clock domain.
 
@@ -58,7 +58,7 @@ This approach involves the following principles:
 
 ### Clock Domain Counters
 
-Create a 32-bit counter for each of the 7 clock domains. 
+Create 48-bit counters for each of the 7 clock domains. 
 Each of these counters should be reset using the appropriate reset circuit created above. 
 These counters will be referred to later in the description as CNT0, CNT1, ... CNT6.
 
@@ -66,12 +66,21 @@ These counters will be referred to later in the description as CNT0, CNT1, ... C
 
 For this part you will create enable signals in various clock domains and "count" these enable pulses in a different clock domain. 
 
-  * Create a single pulse in CLKOUT3 that occurs every 4 clock cycles (PULSE3)
-  * Create a single pulse in CLKOUT4 that occurs every 100 clock cycles (PULSE4)
-  * Create a counter in the CLKOUT0 domain that counts the PULSE3 pulses. Note that you should only count once for each unique PULSE3 signal. This counter will be referred to as PULSE3CNT.
-  * Create a counter in the CLKOUT0 domain that counts the PULSE4 pulses. Note that you should only count once for each unique PULSE3 signal. This counter will be referred to as PULSE4CNT.
+  * Create a single pulse in CLKOUT3 that occurs every 4 clock cycles (PULSE3). Make sure this pulse is glitch free.
+  * Create a single pulse in CLKOUT4 that occurs every 100 clock cycles (PULSE4). Make sure this pulse is glitch free.
+  * Create a 32-bit counter in the CLKOUT0 domain that counts the PULSE3 pulses. Note that you should only count once for each unique PULSE3 signal. This counter will be referred to as PULSE3CNT.
+  * Create a 32-bit counter in the CLKOUT0 domain that counts the PULSE4 pulses. Note that you should only count once for each unique PULSE3 signal. This counter will be referred to as PULSE4CNT.
 
-### Secondary MMCM and Metastability Circuit
+When synchronizing the pulse signal that crosses clock domains, you will want to use the `ASYNC_REG` attribute to instruct the synthesis tool that these signals are asynchronous.
+This attribute specifices that (1) A register can receive asynchronous data on the D input pin relative to its source clock and (2) a register is a synchronizing register within a synchronization chain.
+From the documentation:
+> Specifying ASYNC_REG also affects optimization, placement, and routing to improve mean time between failure (MTBF) for registers that can go metastable. If ASYNC_REG is applied, the placer will ensure the flip-flops on a synchronization chain are placed closely together to maximize MTBF. Registers that have this property that are directly connected will be grouped and placed together into a single SLICE/CLB, assuming they have a compatible control set and the number of registers does not exceed the available resources of the SLICE/CLB.
+
+```
+    (* ASYNC_REG = "TRUE" *) logic pulse3_clk0_d, pulse3_clk0_dd, pulse3_clk0_ddd;
+```
+
+### Secondary MMCM
 
 Instance a second MMCM that uses CLK0 as the input clock. 
 Create a new clock from this MMCM that is a fractional value of the frequency of CLK0 (using prime numbers for M and D). 
@@ -82,12 +91,14 @@ This MMCM should be reset when the first MMCM is not locked (i.e., the output of
 Create a counter for this new clock domain named CNTB_0. 
 This counter should be reset using an appropriate reset signal.
 
-Create a signal in this clock domain that toggles every clock cycle. 
+### Metastability Circuit
+
+Create a signal in this new clock domain that toggles every clock cycle. 
 This signal will be the "input" signal used for inducing metastability. 
 Create a metastability detection circuit (see resources below) 
   * [Old FPGA ap note: Figure 1](https://docs.xilinx.com/v/u/en-US/xapp094)
   * [this paper](https://www.researchgate.net/publication/258377930_Metastability_Testing_at_FPGA_Circuit_Design_using_Propagation_Time_Characterization)
-  * (Let me konw if you find some other good ones!)
+  * (Let me know if you find some other good ones!)
 <!-- as shown [here in Figure 1](http://userweb.eng.gla.ac.uk/scott.roy/DCD3/technotes.pdf).-->
 The f_data signal is your toggling circuit created in the CNTB_0 clock domain. 
 Use CLKOUT4 as the f_clk. 
@@ -102,35 +113,45 @@ Note that you should drive the seven segment display with the top-level clock th
 If you use a clock generated by one of the MMCMs then your seven segment display will be disabled when you press the reset button. 
 
 Create a mux that selects one of the counters you generated based on the value of the switches. 
+Note that for the 48-bit counters, display only the top 32 bits of the counter.
 Place a register after this mux to synchronize the various counters in their different clock domains to the top-level clock (i.e., the same clock used by the seven segment display). 
 You don't need two levels of synchronizers - just one to prepare the data for the seven segment display controller. 
 It is possible you will get metastability, but this is not an issue for the seven segment display controller - you will never see it.
 
 | SW[3:0]  | Display  |
 | --- | --- |
-| 0x0 | CNT0 |
-| 0x1 | CNT1 |
-| 0x2 | CNT2 |
-| 0x3 | CNT3 |
-| 0x4 | CNT4 |
-| 0x5 | CNT5 |
-| 0x6 | CNT6 |
+| 0x0 | CNT0[47:12] |
+| 0x1 | CNT1[47:12]  |
+| 0x2 | CNT2[47:12]  |
+| 0x3 | CNT3[47:12]  |
+| 0x4 | CNT4[47:12]  |
+| 0x5 | CNT5[47:12]  |
+| 0x6 | CNT6[47:12]  |
 | 0x7 | PULSE3CNT |
 | 0x8 | PULSE4CNT |
-| 0x9 | CNTB_0 |
+| 0x9 | CNTB_0[47:12]  |
 | 0xA | CNT_META |
 
 ## Testbench
 
 Create a top-level testbench that simulates your design.
 This testbench should demonstrate e your clocking, counter circuits, seven segment display and mux are all working properly. 
+This testbench is relatively simple and should just issue a reset signal, wait for the MMCMs to lock, and run for long enough to demonstrate the proper operation of all the clocks and counters.
 Create a makefile rule `sim_mmcm` that performs this simulation from the commandline.
 
+Add a timescale directive to your testbench as follows (you will need picosecond resolution for this simulation):
+```
 `timescale 1ns / 1ps
+```
 
 ## Implementation and Download
 
 Create a makefile rule `gen_bit` that generates a bitstream for your top-level design.
+
+For every clock domain crossing signal, you will need to add a `set_false_path` constraint to your .xdc file.
+
+`set_false_path -from [ get_cells clk0_cntr_reg[*] ] -to [get_cells ssd_sync_reg[*] ]
+`
 
 ## Timing Analysis
 
