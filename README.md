@@ -54,7 +54,7 @@ This repository contains the lecture schedule (including links to lecture summar
 | **Week 12** | |
 | 11/18/2024 | []() |
 | 11/20/2024 | []() |
-| 11/22/2024 | []() |
+| 11/22/2024 | No Class |
 | **Week 13** | |
 | 11/25/2024 | No Class (Gone for research) |
 | 11/27/2024 | No Class - Thanksgiving Break |
