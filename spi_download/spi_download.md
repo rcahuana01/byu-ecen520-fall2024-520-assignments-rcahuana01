@@ -26,8 +26,8 @@ Create a top-level design that uses the following top-level ports:
 | ACL_SCLK | Output | 1 | ADXL362 SPI SCLK |
 | ACL_CSN | Output | 1 | ADXL362 SPI CSN|
 | ACL_MOSI | Output | 1 | ADXL362 SPI MOSI |
-| AN | [7:0] | Output | Anode signals for the seven segment display |
-| CA, CB, CC, CD, CE, CF, CG | [6:0] | Output | Seven segment display cathode signals |
+| AN  | Output | 8 | Anode signals for the seven segment display |
+| CA, CB, CC, CD, CE, CF, CG | Output | 1 each | Seven segment display cathode signals |
 | DP | Output | 1 | Seven segment display digit point signal |
 
 | Parameter Name | Default Value | Purpose |
