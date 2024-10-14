@@ -49,10 +49,10 @@ This repository contains the lecture schedule (including links to lecture summar
 | 11/8/2024  | **Exam #2** |
 | **Week 11**| |
 | 11/11/2024 | [Poor Sequential Design Practice]() |
-| 11/13/2024 | [DSP Blocks]() |
+| 11/13/2024 |  |
 | 11/15/2024 |  |
 | **Week 12**| |
-| 11/18/2024 |  |
+| 11/18/2024 | [DSP Blocks]() |
 | 11/20/2024 | []() |
 | 11/22/2024 | No Class |
 | **Week 13**| |
@@ -80,5 +80,7 @@ Review the [assignment mechanics](./resources/assignment_mechanics.md) page to l
 | 4 | [UART Synthesis and Download](./rx_download/UART-Receiver_synth.md) | `rx_download` |
 | 5 | [SPI Controller-Simulation](./spi_cntrl/SPI_cntrl.md) | `spi_cntrl` |
 | 6 | [SPI Controller-Download](./spi_download/spi_download.md) | `spi_download` |
+| 7 | [BRAM](./bram/bram.md) | `bram` |
+| 8 | [BRAM-Download](./bram_download/bram_download.md) | `bram_download` |
 
 **Additional Assignments will be posted when they are ready**
