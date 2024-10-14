@@ -34,8 +34,8 @@ Create a top-level design that uses the following top-level ports:
 | ---- | ---- | ---- |
 | CLK_FREQUENCY  | 100_000_000 | Specify the clock frequency |
 | SEGMENT_DISPLAY_US  | 1_000 | The amount of time in microseconds to display each digit (1 ms) |
-| DEBOUNCE_TIME_US | integer | 1_000 | Specifies the minimum debounce delay in micro seconds (1 us) |
-| SCLK_FREQUENCY | integer | 1_000_000 | ADXL SPI SCLK rate |
+| DEBOUNCE_TIME_US | 1_000 | Specifies the minimum debounce delay in micro seconds (1 us) |
+| SCLK_FREQUENCY | 1_000_000 | ADXL SPI SCLK rate |
 
 
 Create a top-level circuit that includes the following:
