@@ -7,11 +7,11 @@ sim_spi_cntrl_100:
 	vsim -c work.spi_tb -gSCLK_FREQUENCY=100000 -do "run -all; quit"
 
 sim_adxl362:
-	vlog -sv adxl362.sv adxl362_tb.sv 
+	vlog -sv adxl362.sv adxl362_tb.sv adxl362_model.sv spi.sv
 	vsim -c work.adxl362_tb -do "run -all; quit"
 
 sim_adxl362_100:
-	vlog -sv adxl362.sv adxl362_tb.sv 
+	vlog -sv adxl362.sv adxl362_tb.sv adxl362_model.sv spi.sv
 	vsim -c work.adxl362_tb -gSCLK_FREQUENCY=100000 -do "run -all; quit"
 
 clean:

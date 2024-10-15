@@ -1,143 +1,269 @@
-`timescale 1ns / 1ps
-/***************************************************************************
-*
-* Module: spi.sv
-* Author: Rodrigo Cahuana
-* Class: ECEN 520. Section 01, Fall2024
-* Date: 9/20/2024
-* Description: SPI Controller Design
-*
-****************************************************************************/
-module spi(
-    input wire logic clk,                     // Clock
-    input wire logic rst,                     // Reset
-    input wire logic start,                   // Start a transfer
-    input wire logic [7:0] data_to_send,     // Data to send to subunit
-    input wire logic hold_cs,                 // Hold CS signal for multi-byte transfers
-    input wire logic SPI_MISO,                // SPI MISO signal (input)
-    output logic [7:0] data_received,         // Data received on the last transfer
-    output logic busy,                        // Controller is busy
-    output logic done,                        // Indicates that a new data value has been received
-    output logic SPI_SCLK,                    // SCLK output signal
-    output logic SPI_MOSI,                    // MOSI output signal
-    output logic SPI_CS                       // CS output signal
+module spi_controller #(
+
+    parameter CLK_FREQUENCY = 100_000_000,    // System clock frequency (in Hz)
+
+    parameter SCLK_FREQUENCY = 500_000        // SPI clock frequency (in Hz)
+
+)(
+
+    input wire clk,                           // System clock
+
+    input wire rst,                           // Reset signal
+
+    input wire start,                         // Start transfer signal
+
+    input wire [7:0] data_to_send,            // Data to send to the subunit
+
+    input wire hold_cs,                       // Hold CS signal for multi-byte transfers
+
+    input wire SPI_MISO,                      // SPI MISO signal
+
+    output reg [7:0] data_received,           // Data received from the subunit
+
+    output reg busy,                          // Controller busy signal
+
+    output reg done,                          // Transfer done signal
+
+    output reg SPI_SCLK,                      // SPI clock signal
+
+    output reg SPI_MOSI,                      // SPI MOSI signal
+
+    output reg SPI_CS                         // Chip select signal
+
 );
 
-    // Parameters
-    parameter CLK_FREQUENCY = 100_000_000;  // Sample frequency
-    parameter SCLK_FREQUENCY = 500_000;      // Number of signals changed per second
-    localparam TIMER_RANGE = 15;              // Timer range
-    localparam BIT_RANGE = 3;                 // Bit range for counter
-    localparam DATA_BITS = 8;                 // Number of data bits
-    
-    // Internal signals        
-    logic [BIT_RANGE:0] bitNum;                  
-    logic [TIMER_RANGE:0] timer;                  
-    logic timer_done, clrTimer, half_timer_done;              
-    logic clrBit, incBit, bitDone;  
-    logic spi_sclk, spi_mosi;  
 
-    // State definitions
-    typedef enum logic [2:0] {IDLE, LOW, HIGH} state_t;
-    state_t current_state, next_state;
 
-    // Bit timer
+    // Internal parameters
+
+    localparam integer SCLK_HALF_PERIOD = CLK_FREQUENCY / (2 * SCLK_FREQUENCY); // Clock divider for half SCLK period
+
+
+
+    // State machine states
+
+    typedef enum logic[1:0] {
+
+        IDLE,        // Idle state, waiting for start signal
+
+        TRANSFER,    // Transferring data over SPI
+
+        DONE         // Transfer done, waiting to return to IDLE
+
+    } state_t; state_t current_state = IDLE, next_state = IDLE;
+
+
+
+    // Internal signals
+
+    reg [7:0] tx_shift_register;              // Shift register for data transmission
+
+    reg [7:0] rx_shift_register;              // Shift register for data reception
+
+    reg [3:0] bit_counter;                    // Counts the bits in a byte
+
+    reg [15:0] sclk_counter;                  // SCLK clock divider counter
+
+
+
+    /***************************************************************************
+
+    * Sequential logic for state transitions and resets
+
+    * The reset signal ensures the state machine returns to the idle state.
+
+    ***************************************************************************/
+
     always_ff @(posedge clk or posedge rst) begin
-        if (rst || clrTimer) 
-            timer <= 0;
-        else if (timer_done)
-            timer <= 0;  // Reset timer on done
-        else
-            timer <= timer + 1;
+
+        if (rst) begin
+
+            current_state <= IDLE;            // Reset to idle state
+
+        end else begin
+
+            current_state <= next_state;      // Transition to the next state
+
+        end
+
     end
 
-    // Bit counter
-    always_ff @(posedge clk or posedge rst) begin
-        if (rst || clrBit)
-            bitNum <= 0;
-        else if (incBit)
-            bitNum <= bitNum + 1;
-    end
 
-    // Assign busy state
-    assign busy = (current_state != IDLE);
 
-    // Timer logic
-    assign timer_done = (timer >= (CLK_FREQUENCY / SCLK_FREQUENCY)); 
-    assign half_timer_done = (timer == ((CLK_FREQUENCY / SCLK_FREQUENCY) / 2)); 
-    assign bitDone = (bitNum == (DATA_BITS - 1));
+    /***************************************************************************
 
-    // State Machine
-    always_ff @(posedge clk or posedge rst) begin
-        if (rst)
-            current_state <= IDLE;
-        else 
-            current_state <= next_state; // Update current state
-    end
+    * Combinational logic for next state determination
 
-    // Combinational logic    
+    * This determines the transitions between states in the state machine.
+
+    ***************************************************************************/
+
     always_comb begin
+
         next_state = current_state;
-        done = 0; // Reset done signal
-        incBit = 0; // Reset increment bit signal
-        clrTimer = 0; // Reset clear timer signal
 
         case (current_state)
+
             IDLE: begin
+
                 if (start) begin
-                    next_state = LOW;
+
+                    next_state = TRANSFER;    // Start the transfer on start signal
+
                 end
+
             end
 
-            LOW: begin
-                if (half_timer_done) begin // Move to HIGH state
-                    next_state = HIGH;
+            TRANSFER: begin
+
+                if (bit_counter == 8) begin
+
+                    next_state = DONE;        // Complete transfer after 8 bits
+
                 end
+
             end
 
-            HIGH: begin
-                if (timer_done) begin
-                    clrTimer = 1; // Clear timer
-                    incBit = 1; // Increment bit count
-                    if (bitDone) begin
-                        next_state = IDLE; // Go to IDLE
-                        done = 1; // Indicate transfer complete
-                    end else begin
-                        next_state = LOW; // Continue transfer
-                    end
-                end
+            DONE: begin
+
+                next_state = IDLE;            // Return to idle after completing transfer
+
             end
+
         endcase
+
     end
 
-    // Assign output signals
-    assign spi_sclk = (current_state == HIGH);
-    assign spi_mosi = data_to_send[7 - bitNum];
 
-    // Output signal assignment and data reception
-    always_ff @(posedge clk or posedge rst) begin
+
+    /***************************************************************************
+
+    * Sequential logic for clock divider and data shifting
+
+    * SPI clock and data signals are updated here.
+
+    ***************************************************************************/
+
+    always_ff @(negedge clk or posedge rst) begin
+
         if (rst) begin
+
+            sclk_counter <= 0;
+
             SPI_SCLK <= 0;
+
             SPI_MOSI <= 0;
+
             SPI_CS <= 1;
+
+            tx_shift_register <= 0;
+
+            rx_shift_register <= 0;
+
+            bit_counter <= 0;
+
             data_received <= 0;
+
+            done <= 0;
+
+            busy <= 0;
+
         end else begin
-            SPI_SCLK <= spi_sclk;
-            SPI_MOSI <= spi_mosi;
 
-            // Manage CS based on hold_cs and current state
-            SPI_CS <= hold_cs ? 0 : (current_state == IDLE ? 1 : 0);
+            case (current_state)
 
-            if (half_timer_done) begin
-                data_received <= {data_received[6:0], SPI_MISO}; // Shift left
-            end
+                IDLE: begin
+
+                    SPI_CS <= 1;              // Deassert chip select in idle
+
+                    SPI_SCLK <= 0;            // Set clock low
+
+                    sclk_counter <= 0;        // Reset clock divider
+
+                    busy <= 0;
+
+                    done <= 0;
+
+                    bit_counter <= 0;
+
+                    tx_shift_register <= data_to_send;  // Load data to send
+
+                    rx_shift_register <= 8'b0;          // Clear receive register
+
+                    SPI_MOSI <= tx_shift_register[7];   // Load MSB first for transmission
+
+                    if (start) begin
+
+                        SPI_CS <= 0;          // Assert chip select on start
+
+                        busy <= 1;            // Mark controller as busy
+
+                    end
+
+                end
+
+                TRANSFER: begin
+
+                    // Clock divider for SPI clock generation
+
+                    if (sclk_counter == SCLK_HALF_PERIOD - 1) begin
+
+                        sclk_counter <= 0;
+
+                        SPI_SCLK <= ~SPI_SCLK;   // Toggle the SPI clock
+
+
+
+                        // On falling edge, shift data and prepare for next bit
+
+                        if (SPI_SCLK == 0) begin
+
+                            tx_shift_register <= {tx_shift_register[6:0], 1'b0};  // Shift left
+
+                            SPI_MOSI <= tx_shift_register[7];                     // Send next bit
+
+                        end
+
+                        // On rising edge, sample incoming data
+
+                        else begin
+
+                            rx_shift_register <= {rx_shift_register[6:0], SPI_MISO};  // Capture data from MISO
+
+                            bit_counter <= bit_counter + 1;                           // Increment bit counter
+
+                        end
+
+                    end else begin
+
+                        sclk_counter <= sclk_counter + 1;  // Increment clock divider
+
+                    end
+
+                end
+
+                DONE: begin
+
+                    data_received <= rx_shift_register;   // Capture received data
+
+                    done <= 1;                            // Signal transfer complete
+
+                    busy <= 0;                            // Clear busy flag
+
+                    SPI_CS <= hold_cs ? 0 : 1;            // Release or hold chip select
+
+                    SPI_SCLK <= 0;                        // Set clock low
+
+                    SPI_MOSI <= 0;                        // Clear MOSI
+
+                end
+
+            endcase
+
         end
+
     end
 
-    // Debugging output
-    always_ff @(posedge clk) begin
-        $display("Time: %0t | Timer: %0d | Half Timer Done: %b | Timer Done: %b | Current State: %s | Start: %b | CS: %b | SCLK: %b | MOSI: %b | Received: %h | Done: %b", 
-                 $time, timer, half_timer_done, timer_done, current_state, start, SPI_CS, SPI_SCLK, SPI_MOSI, data_received, done);
-    end
+
 
 endmodule

@@ -3,7 +3,8 @@ sim_ssd:
 	vsim -c work.ssd_tb -do "run -all; quit"
 
 synth_ssd:
-	
+	read_verilog -sv ssd.sv
+	synth_desig -top ssd -mode out_of_context
 sim_rx_top:
 	vlog rxtx_top.sv rxtx_top_tb.sv one_shot.sv ../tx_download/debounce.sv ../tx_sim/tx.sv ../rx_sim/rx.sv ../tx_download/gen_bounce.sv
 	vsim -c work.rxtx_top_tb -do "run -all; quit"
