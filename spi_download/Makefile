@@ -1,6 +1,5 @@
 synth_adxl362_cntrl:
-	read_verilog top_spi_adxl362.sv top_spi_adxl362_tb.sv
-	synth_desig -top top_spi_adxl362.sv top_spi_adxl362_tb.sv -mode out_of_context
+	vivado -mode batch -source adxl362_synth.tcl
 
 sim_top:
 	vlog -sv top_spi_adxl362.sv top_spi_adxl362_tb.sv ../rx_download/ssd.sv ../spi_cntrl/adxl362_model.sv ../spi_cntrl/adxl362_controller.sv ../spi_cntrl/spi_controller.sv ../rx_download/one_shot.sv ../tx_download/debounce.sv
@@ -11,10 +10,10 @@ sim_top_100:
 	vsim -c work.top_spi_adxl362_tb -gSCLK_FREQUENCY=100000 -do "run -all; quit"
 
 gen_bit:
-	vivado -mode batch -source gen_bit.tcl
+	vivado -mode batch -source gen_bit_synth.tcl
 
 gen_bit_100:
-	vivado -mode batch -source gen_bit_100.tcl
+	vivado -mode batch -source gen_bit_100_synth.tcl
 
 clean:
 	rm -rf transcript work
