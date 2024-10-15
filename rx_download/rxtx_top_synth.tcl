@@ -1,4 +1,4 @@
-read_verilog -sv rxtx_top.sv ssd.sv one_shot.sv ../tx_download/debounce.sv ../tx_sim/tx.sv ../rx_sim/rx.sv ../tx_download/gen_bounce.sv
+read_verilog -sv rxtx_top.sv rxtx_top_tb.sv one_shot.sv ../tx_download/debounce.sv ../tx_sim/rx_model.sv ../tx_download/tx_top.sv ../tx_sim/tx.sv ../rx_sim/rx.sv ../tx_download/gen_bounce.sv
 
 read_xdc top.xdc
 

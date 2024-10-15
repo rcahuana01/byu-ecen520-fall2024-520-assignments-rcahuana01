@@ -1,8 +1,14 @@
-//////////////////////////////////////////////////////////////////////////////////
-// TX top-level testbench
-//////////////////////////////////////////////////////////////////////////////////
-
-module tx_top_tb ();
+`timescale 1ns / 1ps
+/***************************************************************************
+*
+* Module: rxtx_top_tb.sv
+* Author: Rodrigo Cahuana
+* Class: ECEN 520. Section 01, Fall 2024
+* Date: 10/14/2024
+* Description: Testbench for the TX top design
+*
+****************************************************************************/
+module rxtx_top_tb ();
 
     logic clk, rst_n, rst, btnc, btnc_bouncy;
     logic [7:0] sw, sw_d, sw_dd;
