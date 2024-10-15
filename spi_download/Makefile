@@ -1,13 +1,13 @@
 synth_adxl362_cntrl:
 	read_verilog -sv top_spi_adxl362.sv
 	synth_desig -top top_spi_adxl362 -mode out_of_context
-	
+
 sim_top:
-	vlog -sv top_spi_adxl362.sv top_spi_adxl362_tb.sv ../spi_cntrl/adxl362.sv 
+	vlog -sv top_spi_adxl362.sv top_spi_adxl362_tb.sv ../rx_download/ssd.sv ../spi_cntrl/adxl362_model.sv ../spi_cntrl/adxl362_controller.sv ../spi_cntrl/spi_controller.sv ../rx_download/one_shot.sv ../tx_download/debounce.sv
 	vsim -c work.top_spi_adxl362_tb -do "run -all; quit"
 
 sim_top_100:
-	vlog -sv top_spi_adxl362.sv top_spi_adxl362_tb.sv ../spi_cntrl/adxl362.sv 
+	vlog -sv top_spi_adxl362.sv top_spi_adxl362_tb.sv ../rx_download/ssd.sv ../spi_cntrl/adxl362_model.sv ../spi_cntrl/adxl362_controller.sv ../spi_cntrl/spi_controller.sv ../rx_download/one_shot.sv ../tx_download/debounce.sv
 	vsim -c work.tx_top_tb -gSCLK_FREQUENCY=100000 -do "run -all; quit"
 
 gen_bit:
