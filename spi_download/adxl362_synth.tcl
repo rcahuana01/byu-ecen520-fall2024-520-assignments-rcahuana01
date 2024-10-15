@@ -11,7 +11,7 @@ read_verilog -sv ../tx_download/debounce.sv
 # Compile XDC
 read_xdc top.xdc
 # Synthesis
-synth_design -top spi_adxl362 -part xc7a100tcsg324-1
+synth_design -top spi_adxl362_synth -part xc7a100tcsg324-1
 # Implementation
 opt_design
 place_design
