@@ -13,7 +13,7 @@ gen_bit:
 	vivado -mode batch -source gen_bit_synth.tcl
 
 gen_bit_100:
-	vivado -mode batch -source gen_bit_synth.tcl
+	vivado -mode batch -source gen_bit_100_synth.tcl
 
 clean:
 	rm -rf transcript work
