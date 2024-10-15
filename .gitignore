@@ -15,3 +15,5 @@
 **/__pycache__
 **/tmp
 **/tx.sv.bak
+**/*.Xil
+**/*.bit
