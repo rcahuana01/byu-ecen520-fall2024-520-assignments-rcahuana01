@@ -18,5 +18,4 @@ gen_bit_100:
 clean:
 	rm -rf transcript ./work
 	rm -f *.mpf *.mti *.log *.pb *.vstf *wlft* *.wlf .nfs* tmp *.bak *.jou *.rpt *.txt *.dcp
-	rm -f *.Xil *.jou *.backup.log *.dcp *.txt *.rpt *.do 
-	rm -f *.bit
+	rm -f *.Xil *.jou *.backup.log *.dcp *.txt *.rpt *.do
