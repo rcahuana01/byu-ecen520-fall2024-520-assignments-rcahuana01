@@ -3,147 +3,179 @@
 *
 * Module: top_spi_adxl362_tb.sv
 * Author: Rodrigo Cahuana
-* Class: ECEN 520. Section 01, Fall 2024
-* Date: 10/14/2024
-* Description: Testbench for SPI Top-Level ADXL362 Controller
+* Class: ECEN 520, Section 01, Fall 2024
+* Date: 10/15/2024
+* Description: Testbench for Top-Level ADXL362 SPI Controller
 *
 ****************************************************************************/
 module top_spi_adxl362_tb;
 
-	// Parameters
-	parameter CLK_FREQUENCY = 100_000_000;
-	parameter SCLK_FREQUENCY = 1_000_000;
+    // Parameters (parameterizable testbench)
+    parameter CLK_FREQUENCY = 100_000_000;    // System clock frequency (in Hz)
+    parameter SEGMENT_DISPLAY_US = 1_000;     // Time to display each digit (in microseconds)
+    parameter DEBOUNCE_TIME_US = 1_000;       // Debounce time for buttons (in microseconds)
+    parameter SCLK_FREQUENCY = 1_000_000;     // SPI clock frequency (in Hz)
+    parameter DISPLAY_RATE = 2;               // Times per second to update display
 
-	// Testbench signals
-	logic CLK100MHZ;
-	logic CPU_RESETN;
-	logic [15:0] SW;
-	logic BTNL;
-	logic BTNR;
-	logic [15:0] LED;
-	logic LED16_B;
-	logic ACL_MISO;
-	logic ACL_SCLK;
-	logic ACL_CSN;
-	logic ACL_MOSI;
-	logic [7:0] AN;
-	logic CA, CB, CC, CD, CE, CF, CG;
-	logic DP;
-	logic [6:0] segments;
-	logic [31:0] output_display_val;
-	logic new_value;
+    // Clock and reset signals
+    reg CLK100MHZ;
+    reg CPU_RESETN;  // Active low reset
 
-	// Instance of the top-level design
-	top_spi_adxl362 #(
-		.CLK_FREQUENCY(CLK_FREQUENCY),
-		.SCLK_FREQUENCY(SCLK_FREQUENCY)
-	) dut (
-		.CLK100MHZ(CLK100MHZ),
-		.CPU_RESETN(CPU_RESETN),
-		.SW(SW),
-		.BTNL(BTNL),
-		.BTNR(BTNR),
-		.LED(LED),
-		.LED16_B(LED16_B),
-		.ACL_MISO(ACL_MISO),
-		.ACL_SCLK(ACL_SCLK),
-		.ACL_CSN(ACL_CSN),
-		.ACL_MOSI(ACL_MOSI),
-		.AN(AN),
-		.CA(CA),
-		.CB(CB),
-		.CC(CC),
-		.CD(CD),
-		.CE(CE),
-		.CF(CF),
-		.CG(CG),
-		.DP(DP)
-	);
+    // Inputs
+    reg [15:0] SW;
+    reg BTNL;
+    reg BTNR;
 
-	// Instance of the ADXL362 simulation model
-	adxl362_model adxl362_sim_inst (
-		.miso(ACL_MISO),
-		.sclk(ACL_SCLK),
-		.cs(ACL_CSN),
-		.mosi(ACL_MOSI)
-	);
+    // Outputs
+    wire [15:0] LED;
+    wire LED16_B;
+    wire ACL_SCLK;
+    wire ACL_CSN;
+    wire ACL_MOSI;
+    wire [7:0] AN;
+    wire CA, CB, CC, CD, CE, CF, CG;
+    wire DP;
 
-	// Instance of the seven_segment_check module
-	seven_segment_check seg_check (
-		.clk(CLK100MHZ),
-		.rst(~CPU_RESETN),
-		.segments({CA, CB, CC, CD, CE, CF, CG}),
-		.dp(DP),
-		.anode(AN),
-		.new_value(new_value),
-		.output_display_val(output_display_val)
-	);
+    // Bidirectional (MISO signal from accelerometer)
+    wire ACL_MISO;
 
-	// Clock generation
-	initial begin
-		CLK100MHZ = 0;
-		forever #5 CLK100MHZ = ~CLK100MHZ;  // Generate a clock with 10ns period
-	end
+    // Instantiate the top-level design
+    top_spi_adxl362 #(
+        .CLK_FREQUENCY(CLK_FREQUENCY),
+        .SEGMENT_DISPLAY_US(SEGMENT_DISPLAY_US),
+        .DEBOUNCE_TIME_US(DEBOUNCE_TIME_US),
+        .SCLK_FREQUENCY(SCLK_FREQUENCY),
+        .DISPLAY_RATE(DISPLAY_RATE)
+    ) spi_top_inst (
+        .CLK100MHZ(CLK100MHZ),
+        .CPU_RESETN(CPU_RESETN),
+        .SW(SW),
+        .BTNL(BTNL),
+        .BTNR(BTNR),
+        .LED(LED),
+        .LED16_B(LED16_B),
+        .ACL_MISO(ACL_MISO),
+        .ACL_SCLK(ACL_SCLK),
+        .ACL_CSN(ACL_CSN),
+        .ACL_MOSI(ACL_MOSI),
+        .AN(AN),
+        .CA(CA), .CB(CB), .CC(CC), .CD(CD), .CE(CE), .CF(CF), .CG(CG),
+        .DP(DP)
+    );
 
-	// Test sequence
-	initial begin
-		// Simulate some time with no stimulus/reset while clock is running
-		#100;
+    // Instantiate the ADXL362 simulation model
+    adxl362_model adxl362_model_inst (
+        .sclk(ACL_SCLK),
+        .mosi(ACL_MOSI),
+        .miso(ACL_MISO),
+        .cs(ACL_CSN)
+    );
 
-		// Initialize inputs
-		CPU_RESETN = 0;
-		SW = 16'h0000;
-		BTNL = 0;
-		BTNR = 0;
+    // Clock generation (100 MHz)
+    initial begin
+        CLK100MHZ = 0;
+        forever #(5) CLK100MHZ = ~CLK100MHZ;  // Clock period = 10 ns (100 MHz)
+    end
 
-		// Wait for a few clock cycles
-		#100;
+    // Testbench tasks and procedures
 
-		// Note that once the system has been reset testbench signals are changed on the negative edge of the clock
-		$display("[%0tns] Reset", $time);
-		@(negedge CLK100MHZ);
-		CPU_RESETN = 0;
-		repeat (5) @(negedge CLK100MHZ);
-		CPU_RESETN = 1;
+    // Task to read a register and verify the expected data
+    task automatic read_register(input [7:0] addr, input [7:0] expected_data);
+        begin
+            // Set the address on switches (lower 8 bits)
+            SW[7:0] = addr;
+            SW[15:8] = 8'd0;  // Clear data switches
+            @(negedge CLK100MHZ);
 
-		// Read DEVICEID register (0x0)
-		SW = 16'h0000;  // Address 0x0
-		BTNR = 1;       // Initiate read
-		#10;
-		BTNR = 0;       // Clear read button
+            // Press the right button to initiate read
+            BTNR = 1'b1;
+            @(negedge CLK100MHZ);
+            BTNR = 1'b0;  // Release button
 
-		// Wait for a few cycles to allow read to complete
-		#20;
+            // Wait for operation to complete
+            wait (LED16_B == 1'b1);  // Wait until busy goes high
+            wait (LED16_B == 1'b0);  // Wait until busy goes low
 
-		// Read PARTID register (0x02)
-		SW = 16'h0002;  // Address 0x02
-		BTNR = 1;       // Initiate read
-		#10;
-		BTNR = 0;       // Clear read button
+            // Wait a few cycles to allow data capture
+            repeat(5) @(negedge CLK100MHZ);
 
-		// Wait for a few cycles to allow read to complete
-		#20;
+            // Check the last data received
+            if (spi_top_inst.last_data_received !== expected_data) begin
+                $display("[%0t ns] ERROR: Read from address 0x%02X - Expected 0x%02X, Got 0x%02X", $time, addr, expected_data, spi_top_inst.last_data_received);
+            end else begin
+                $display("[%0t ns] SUCCESS: Read from address 0x%02X returned 0x%02X as expected", $time, addr, expected_data);
+            end
+        end
+    endtask
 
-		// Read status register (0x0B)
-		SW = 16'h000B;  // Address 0x0B
-		BTNR = 1;       // Initiate read
-		#10;
-		BTNR = 0;       // Clear read button
+    // Task to write a value to a register
+    task automatic write_register(input [7:0] addr, input [7:0] data);
+        begin
+            // Set the address and data on switches
+            SW[7:0] = addr;
+            SW[15:8] = data;
+            @(negedge CLK100MHZ);
 
-		// Wait for a few cycles to allow read to complete
-		#20;
+            // Press the left button to initiate write
+            BTNL = 1'b1;
+            @(negedge CLK100MHZ);
+            BTNL = 1'b0;  // Release button
 
-		// Write value 0x52 to register 0x1F for soft reset
-		SW = {8'h52, 8'h1F};  // Data 0x52, Address 0x1F
-		BTNL = 1;             // Initiate write
-		#10;
-		BTNL = 0;             // Clear write button
+            // Wait for operation to complete
+            wait (LED16_B == 1'b1);  // Wait until busy goes high
+            wait (LED16_B == 1'b0);  // Wait until busy goes low
 
-		// Wait for a few cycles
-		#20;
+            $display("[%0t ns] Write operation to address 0x%02X with data 0x%02X completed", $time, addr, data);
+        end
+    endtask
 
-		// End the simulation
-		$finish;
-	end
-	endmodule
+    // Main testbench sequence
+    initial begin
+        // Initial values
+        CPU_RESETN = 1'b1;  // Deassert reset (active low)
+        SW = 16'd0;
+        BTNL = 1'b0;
+        BTNR = 1'b0;
 
+        // Let the simulation run for a few clock cycles without inputs
+        #100;
+
+        // Assert reset
+        $display("[%0t ns] Applying reset...", $time);
+        CPU_RESETN = 1'b0;  // Assert reset
+        #100;               // Hold reset low for some time
+
+        // Add short wait after asserting reset for stabilization (debounce)
+        repeat(5) @(negedge CLK100MHZ);
+
+        CPU_RESETN = 1'b1;  // Deassert reset
+        $display("[%0t ns] Reset deasserted", $time);
+
+        // Add short wait after deasserting reset for stabilization (debounce)
+        repeat(10) @(negedge CLK100MHZ);  // Wait 10 clock cycles for system to stabilize
+
+        // Wait for a few clock cycles
+        #100;
+
+        // Read DEVICEID register (0x00), expected 0xAD
+        $display("[%0t ns] Reading DEVICEID register (0x00)...", $time);
+        read_register(8'h00, 8'hAD);
+
+        // Read PARTID register (0x02), expected 0xF2
+        $display("[%0t ns] Reading PARTID register (0x02)...", $time);
+        read_register(8'h02, 8'hF2);
+
+        // Read STATUS register (0x0B), expected 0x41
+        $display("[%0t ns] Reading STATUS register (0x0B)...", $time);
+        read_register(8'h0B, 8'h41);
+
+        // Write 0x52 to register 0x1F (soft reset)
+        $display("[%0t ns] Writing 0x52 to register 0x1F (soft reset)...", $time);
+        write_register(8'h1F, 8'h52);
+
+        // End of test
+        $display("[%0t ns] All tests completed successfully", $time);
+        $stop;
+    end
+
+endmodule
