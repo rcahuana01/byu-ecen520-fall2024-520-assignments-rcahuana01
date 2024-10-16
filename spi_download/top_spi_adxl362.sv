@@ -9,70 +9,91 @@
 *
 ****************************************************************************/
 module top_spi_adxl362 #(
-    parameter CLK_FREQUENCY = 100_000_000,    // System clock frequency (in Hz)
-    parameter SEGMENT_DISPLAY_US = 1_000,     // Time to display each digit (in microseconds)
-    parameter DEBOUNCE_TIME_US = 1_000,       // Debounce time for buttons (in microseconds)
-    parameter SCLK_FREQUENCY = 1_000_000,     // SPI clock frequency (in Hz)
-    parameter DISPLAY_RATE = 2                // Times per second to update display
+    parameter CLK_FREQUENCY       = 100_000_000,    // System clock frequency (in Hz)
+    parameter SEGMENT_DISPLAY_US  = 1_000,          // Time to display each digit (in microseconds)
+    parameter DEBOUNCE_TIME_US    = 1_000,          // Debounce time for buttons (in microseconds)
+    parameter SCLK_FREQUENCY      = 1_000_000,      // SPI clock frequency (in Hz)
+    parameter DISPLAY_RATE        = 2               // Times per second to update display
 )(
-    input wire CLK100MHZ,                     // System clock
-    input wire CPU_RESETN,                    // Reset signal (active low)
-    input wire [15:0] SW,                     // 16 switches
-    input wire BTNL,                          // Left button
-    input wire BTNR,                          // Right button
-    output wire [15:0] LED,                   // 16 LEDs
-    output wire LED16_B,                      // Blue LED
-    input wire ACL_MISO,                      // Accelerometer SPI MISO
-    output wire ACL_SCLK,                     // Accelerometer SPI SCLK
-    output wire ACL_CSN,                      // Accelerometer SPI CSN
-    output wire ACL_MOSI,                     // Accelerometer SPI MOSI
-    output wire [7:0] AN,                     // Seven-segment display anodes
-    output wire CA, CB, CC, CD, CE, CF, CG,   // Seven-segment display cathodes
-    output wire DP                            // Seven-segment display decimal point
+    input  wire        CLK100MHZ,                   // System clock
+    input  wire        CPU_RESETN,                  // Reset signal (active low)
+    input  wire [15:0] SW,                          // 16 switches
+    input  wire        BTNL,                        // Left button
+    input  wire        BTNR,                        // Right button
+    output wire [15:0] LED,                         // 16 LEDs
+    output wire        LED16_B,                     // Blue LED
+    input  wire        ACL_MISO,                    // Accelerometer SPI MISO
+    output wire        ACL_SCLK,                    // Accelerometer SPI SCLK
+    output wire        ACL_CSN,                     // Accelerometer SPI CSN
+    output wire        ACL_MOSI,                    // Accelerometer SPI MOSI
+    output wire [7:0]  AN,                          // Seven-segment display anodes
+    output wire        CA, CB, CC, CD, CE, CF, CG,  // Seven-segment display cathodes
+    output wire        DP                           // Seven-segment display decimal point
 );
+
+    // Clock and reset
     wire clk = CLK100MHZ;
     wire rst = ~CPU_RESETN;  // Active high reset
 
-    assign LED = SW;  // LEDs mirror switches
+    // Assign LEDs to mirror switches
+    assign LED = SW;
 
-    // Signals for adxl362_controller
-    wire adxl_busy, adxl_done;
-    wire [7:0] adxl_data_received;
+    // Constants for accelerometer register addresses
+    localparam [7:0] X_AXIS_REG = 8'h08;   // X-axis data register
+    localparam [7:0] Y_AXIS_REG = 8'h09;   // Y-axis data register
+    localparam [7:0] Z_AXIS_REG = 8'h0A;   // Z-axis data register
 
-    // For manual read/write operations
-    reg start_transfer, write_transfer;
-    reg [7:0] data_to_send;
-    reg [7:0] address;
+    // Constants for state machine states
+    localparam [2:0]
+        AUTO_STATE_IDLE    = 3'd0,
+        AUTO_STATE_READ_X  = 3'd1,
+        AUTO_STATE_WAIT_X  = 3'd2,
+        AUTO_STATE_READ_Y  = 3'd3,
+        AUTO_STATE_WAIT_Y  = 3'd4,
+        AUTO_STATE_READ_Z  = 3'd5,
+        AUTO_STATE_WAIT_Z  = 3'd6;
 
-    // For buttons debouncing
-    wire btnl_debounced, btnr_debounced;
-
-    // For edge detection
-    reg btnl_prev, btnr_prev;
-    wire btnl_pressed, btnr_pressed;
-
-    // For display
-    reg [7:0] last_data_received;
-    reg [7:0] x_axis_data;
-    reg [7:0] y_axis_data;
-    reg [7:0] z_axis_data;
-
-    // For FSM and timing
-    reg [31:0] display_counter;
-    reg [2:0] auto_read_state;
+    // Calculate display period in clock cycles
     localparam integer DISPLAY_PERIOD = CLK_FREQUENCY / DISPLAY_RATE;
 
-    // For seven segment display
-    wire [31:0] display_val;
-    wire [7:0] dp;  // decimal points
+    // Signals for adxl362_controller
+    wire adxl_busy;                  // Indicates if the SPI controller is busy
+    wire adxl_done;                  // Indicates completion of SPI transfer
+    wire [7:0] adxl_data_received;   // Data received from the accelerometer
 
-    // Additional signals
-    reg manual_transfer, write_transfer_d, manual_transfer_d;
+    // User interface signals
+    reg start_transfer;              // Start signal for SPI transfer
+    reg write_transfer;              // Write signal for SPI transfer
+    reg [7:0] data_to_send;          // Data to send in SPI transfer
+    reg [7:0] address;               // Address for SPI transfer
 
-    assign btnl_pressed = btnl_debounced & ~btnl_prev;
-    assign btnr_pressed = btnr_debounced & ~btnr_prev;
+    // Debounce signals for buttons
+    wire btnl_debounced;             // Debounced left button
+    wire btnr_debounced;             // Debounced right button
 
-    // Debounce buttons
+    // One-shot signals
+    wire btnl_pressed;               // Left button pressed (one-shot)
+    wire btnr_pressed;               // Right button pressed (one-shot)
+
+    // Data storage for display
+    reg [7:0] last_data_received;    // Last data received from manual read
+    reg [7:0] x_axis_data;           // X-axis data
+    reg [7:0] y_axis_data;           // Y-axis data
+    reg [7:0] z_axis_data;           // Z-axis data
+
+    // Variables for display and FSM timing
+    reg [31:0] display_counter;      // Counter for display update timing
+    reg [2:0] auto_read_state;       // State variable for auto-read FSM
+    reg manual_read_pending;         // Indicates if a manual read is pending
+
+    // Seven-segment display signals
+    wire [31:0] display_val;         // Value to display on seven-segment
+    wire [7:0] dp;                   // Decimal points for display
+
+    /***************************************************************************
+    * Module Instantiation: Debounce for BTNL (Left Button)
+    * Debounces the left button input signal.
+    ***************************************************************************/
     debounce #(
         .DEBOUNCE_CLKS((CLK_FREQUENCY / 1_000_000) * DEBOUNCE_TIME_US)
     ) debounce_btnl (
@@ -82,6 +103,10 @@ module top_spi_adxl362 #(
         .debounce_out(btnl_debounced)
     );
 
+    /***************************************************************************
+    * Module Instantiation: Debounce for BTNR (Right Button)
+    * Debounces the right button input signal.
+    ***************************************************************************/
     debounce #(
         .DEBOUNCE_CLKS((CLK_FREQUENCY / 1_000_000) * DEBOUNCE_TIME_US)
     ) debounce_btnr (
@@ -90,130 +115,140 @@ module top_spi_adxl362 #(
         .async_in(BTNR),
         .debounce_out(btnr_debounced)
     );
-    // assign btnr_debounced = BTNR;
-    // assign btnl_debounced = BTNL;
 
-    // Edge detection
+    /***************************************************************************
+    * Module Instantiation: One-Shot for BTNL (Left Button Press)
+    * Generates a one-clock-cycle pulse when a rising edge is detected.
+    ***************************************************************************/
+    one_shot oneshot_btnl (
+        .clk(clk),
+        .btnc_debounced(btnl_debounced),
+        .one_press(btnl_pressed)
+    );
+
+    /***************************************************************************
+    * Module Instantiation: One-Shot for BTNR (Right Button Press)
+    * Generates a one-clock-cycle pulse when a rising edge is detected.
+    ***************************************************************************/
+    one_shot oneshot_btnr (
+        .clk(clk),
+        .btnc_debounced(btnr_debounced),
+        .one_press(btnr_pressed)
+    );
+
+    /***************************************************************************
+    * State Machine: Main FSM for SPI Communication and Data Handling
+    * Handles manual read/write operations and automatic periodic reading of
+    * accelerometer data (X, Y, Z axes). Manages start signals for SPI transfers
+    * and updates display data.
+    ***************************************************************************/
     always_ff @(posedge clk or posedge rst) begin
         if (rst) begin
-            btnl_prev <= 0;
-            btnr_prev <= 0;
+            // Reset all control and data signals
+            start_transfer       <= 1'b0;
+            write_transfer       <= 1'b0;
+            data_to_send         <= 8'd0;
+            address              <= 8'd0;
+            last_data_received   <= 8'd0;
+            x_axis_data          <= 8'd0;
+            y_axis_data          <= 8'd0;
+            z_axis_data          <= 8'd0;
+            display_counter      <= 32'd0;
+            auto_read_state      <= AUTO_STATE_IDLE;
+            manual_read_pending  <= 1'b0;
         end else begin
-            btnl_prev <= btnl_debounced;
-            btnr_prev <= btnr_debounced;
+            // Default to not start a transfer
+            start_transfer <= 1'b0;
+
+            if (btnl_pressed && !adxl_busy) begin
+                // Initiate write transfer when left button is pressed
+                data_to_send     <= SW[15:8];
+                address          <= SW[7:0];
+                write_transfer   <= 1'b1; // Indicate write operation
+                start_transfer   <= 1'b1;
+            end else if (btnr_pressed && !adxl_busy) begin
+                // Initiate read transfer when right button is pressed
+                address          <= SW[7:0];
+                write_transfer   <= 1'b0; // Indicate read operation
+                start_transfer   <= 1'b1;
+                manual_read_pending <= 1'b1; // Manual read pending
+            end else if (!adxl_busy) begin
+                if (manual_read_pending && adxl_done) begin
+                    // Manual read completed
+                    last_data_received <= adxl_data_received;
+                    manual_read_pending <= 1'b0;
+                end else begin
+                    // Automatic reading of X, Y, Z axis data
+                    case (auto_read_state)
+                        AUTO_STATE_IDLE: begin
+                            if (display_counter >= DISPLAY_PERIOD) begin
+                                display_counter <= 32'd0;
+                                auto_read_state <= AUTO_STATE_READ_X;
+                            end else begin
+                                display_counter <= display_counter + 1;
+                            end
+                        end
+                        AUTO_STATE_READ_X: begin
+                            // Start reading X-axis data
+                            address          <= X_AXIS_REG;
+                            write_transfer   <= 1'b0; // Read operation
+                            start_transfer   <= 1'b1;
+                            auto_read_state  <= AUTO_STATE_WAIT_X;
+                        end
+                        AUTO_STATE_WAIT_X: begin
+                            if (adxl_done) begin
+                                x_axis_data    <= adxl_data_received;
+                                auto_read_state <= AUTO_STATE_READ_Y;
+                            end
+                        end
+                        AUTO_STATE_READ_Y: begin
+                            // Start reading Y-axis data
+                            address          <= Y_AXIS_REG;
+                            write_transfer   <= 1'b0; // Read operation
+                            start_transfer   <= 1'b1;
+                            auto_read_state  <= AUTO_STATE_WAIT_Y;
+                        end
+                        AUTO_STATE_WAIT_Y: begin
+                            if (adxl_done) begin
+                                y_axis_data    <= adxl_data_received;
+                                auto_read_state <= AUTO_STATE_READ_Z;
+                            end
+                        end
+                        AUTO_STATE_READ_Z: begin
+                            // Start reading Z-axis data
+                            address          <= Z_AXIS_REG;
+                            write_transfer   <= 1'b0; // Read operation
+                            start_transfer   <= 1'b1;
+                            auto_read_state  <= AUTO_STATE_WAIT_Z;
+                        end
+                        AUTO_STATE_WAIT_Z: begin
+                            if (adxl_done) begin
+                                z_axis_data    <= adxl_data_received;
+                                auto_read_state <= AUTO_STATE_IDLE;
+                            end
+                        end
+                        default: auto_read_state <= AUTO_STATE_IDLE;
+                    endcase
+                end
+            end
         end
     end
 
-    // Main FSM
-	always_ff @(posedge clk or posedge rst) begin
-	    if (rst) begin
-	        start_transfer <= 0;
-	        write_transfer <= 0;
-	        data_to_send <= 8'd0;
-	        address <= 8'd0;
-	        last_data_received <= 8'd0;
-	        x_axis_data <= 8'd0;
-	        y_axis_data <= 8'd0;
-	        z_axis_data <= 8'd0;
-	        display_counter <= 0;
-	        auto_read_state <= 0;
-	        manual_transfer <= 0;
-	        write_transfer_d <= 0;
-	        manual_transfer_d <= 0;
-	    end else begin
-	        // Update delayed signals
-	        manual_transfer_d <= manual_transfer;
-	        write_transfer_d <= write_transfer;
-
-	        // Default to not start a transfer
-	        start_transfer <= 0;
-
-	        if (btnl_pressed && !adxl_busy) begin
-	            // Initiate write transfer
-	            start_transfer <= 1;
-	            write_transfer <= 1;
-	            data_to_send <= SW[15:8];
-	            address <= SW[7:0];
-	            manual_transfer <= 1;
-	        end else if (btnr_pressed && !adxl_busy) begin
-	            // Initiate read transfer
-	            start_transfer <= 1;
-	            write_transfer <= 0;
-	            address <= SW[7:0];
-	            manual_transfer <= 1;
-	        end else if (!adxl_busy) begin
-	            // Automatic read of X, Y, Z
-	            manual_transfer <= 0;
-	            case (auto_read_state)
-	                0: begin
-	                    if (display_counter >= DISPLAY_PERIOD) begin
-	                        display_counter <= 0;
-	                        auto_read_state <= 1;  // Start reading X-axis
-	                    end else begin
-	                        display_counter <= display_counter + 1;
-	                    end
-	                end
-	                1: begin
-	                    start_transfer <= 1;
-	                    write_transfer <= 0;
-	                    address <= 8'h08;  // X-axis register
-	                    auto_read_state <= 2;
-	                end
-	                2: begin
-	                    if (adxl_done) begin
-	                        x_axis_data <= adxl_data_received;
-	                        auto_read_state <= 3;
-	                    end
-	                end
-	                3: begin
-	                    start_transfer <= 1;
-	                    write_transfer <= 0;
-	                    address <= 8'h09;  // Y-axis register
-	                    auto_read_state <= 4;
-	                end
-	                4: begin
-	                    if (adxl_done) begin
-	                        y_axis_data <= adxl_data_received;
-	                        auto_read_state <= 5;
-	                    end
-	                end
-	                5: begin
-	                    start_transfer <= 1;
-	                    write_transfer <= 0;
-	                    address <= 8'h0A;  // Z-axis register
-	                    auto_read_state <= 6;
-	                end
-	                6: begin
-	                    if (adxl_done) begin
-	                        z_axis_data <= adxl_data_received;
-	                        auto_read_state <= 0;
-	                    end
-	                end
-	                default: auto_read_state <= 0;
-	            endcase
-	        end
-
-	        // Capture data received from manual read
-	        if (adxl_done && manual_transfer_d && !write_transfer_d) begin
-	            last_data_received <= adxl_data_received;
-	        end
-            if (adxl_done) begin
-    $display("Read completed: address=%h, data_received=%h", address, adxl_data_received);
-end
-
-	    end
-	end
-
-    // Display value for seven segment display
+    // Concatenate data for seven-segment display (each nibble represents a digit)
     assign display_val = {
         z_axis_data[7:4], z_axis_data[3:0],
         y_axis_data[7:4], y_axis_data[3:0],
         x_axis_data[7:4], x_axis_data[3:0],
         last_data_received[7:4], last_data_received[3:0]
     };
-    assign dp = 8'd1;
 
-    // Instantiate adxl362_controller
+    // No decimal points used
+    assign dp = 8'd0;
+
+    /***************************************************************************
+    * Module Instantiation: ADXL362 Controller
+    * Manages SPI communication with the ADXL362 accelerometer.
+    ***************************************************************************/
     adxl362_controller #(
         .CLK_FREQUENCY(CLK_FREQUENCY),
         .SCLK_FREQUENCY(SCLK_FREQUENCY)
@@ -233,9 +268,13 @@ end
         .data_received(adxl_data_received)
     );
 
-    // Turn on LED16_B when adxl362_controller is busy
+    // Turn on LED16_B (blue LED) when ADXL362 controller is busy
     assign LED16_B = adxl_busy;
 
+    /***************************************************************************
+    * Module Instantiation: Seven-Segment Display Controller
+    * Drives the seven-segment display with the accelerometer data.
+    ***************************************************************************/
     ssd #(
         .CLK_FREQUENCY(CLK_FREQUENCY),
         .MIN_SEGMENT_DISPLAY_US(SEGMENT_DISPLAY_US)
