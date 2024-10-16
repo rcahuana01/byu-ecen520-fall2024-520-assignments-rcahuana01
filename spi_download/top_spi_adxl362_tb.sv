@@ -1,4 +1,4 @@
-`timescale 1ns/1ps
+`timescale 1ns / 1ps
 /***************************************************************************
 *
 * Module: top_spi_adxl362_tb.sv
@@ -29,6 +29,9 @@ module top_spi_adxl362_tb;
 	logic [7:0] AN;
 	logic CA, CB, CC, CD, CE, CF, CG;
 	logic DP;
+	logic [6:0] segments;
+	logic [31:0] output_display_val;
+	logic new_value;
 
 	// Instance of the top-level design
 	top_spi_adxl362 #(
@@ -65,6 +68,17 @@ module top_spi_adxl362_tb;
 		.mosi(ACL_MOSI)
 	);
 
+	// Instance of the seven_segment_check module
+	seven_segment_check seg_check (
+		.clk(CLK100MHZ),
+		.rst(~CPU_RESETN),
+		.segments({CA, CB, CC, CD, CE, CF, CG}),
+		.dp(DP),
+		.anode(AN),
+		.new_value(new_value),
+		.output_display_val(output_display_val)
+	);
+
 	// Clock generation
 	initial begin
 		CLK100MHZ = 0;
@@ -73,6 +87,9 @@ module top_spi_adxl362_tb;
 
 	// Test sequence
 	initial begin
+		// Simulate some time with no stimulus/reset while clock is running
+		#100;
+
 		// Initialize inputs
 		CPU_RESETN = 0;
 		SW = 16'h0000;
@@ -80,13 +97,14 @@ module top_spi_adxl362_tb;
 		BTNR = 0;
 
 		// Wait for a few clock cycles
-		#20;
+		#100;
 
-		// Assert reset for a few clock cycles
+		// Note that once the system has been reset testbench signals are changed on the negative edge of the clock
+		$display("[%0tns] Reset", $time);
+		@(negedge CLK100MHZ);
 		CPU_RESETN = 0;
-		#10;
-		CPU_RESETN = 1;  // Deassert reset
-		#20;
+		repeat (5) @(negedge CLK100MHZ);
+		CPU_RESETN = 1;
 
 		// Read DEVICEID register (0x0)
 		SW = 16'h0000;  // Address 0x0
@@ -127,5 +145,5 @@ module top_spi_adxl362_tb;
 		// End the simulation
 		$finish;
 	end
+	endmodule
 
-endmodule

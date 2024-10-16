@@ -3,7 +3,7 @@
 *
 * Module: top_spi_adxl362.sv
 * Author: Rodrigo Cahuana
-* Class: ECEN 520. Section 01, Fall 2024
+* Class: ECEN 520, Section 01, Fall 2024
 * Date: 10/14/2024
 * Description: SPI Top-Level Design
 *
@@ -33,33 +33,31 @@ module top_spi_adxl362(
 	parameter DISPLAY_RATE = 2;				// Update rate for displaying values (2 times a second)
 
 	// Internal signals
-	logic clk, rst, start, write, done;		// Control signals for operation
-	logic [7:0] data_to_send, address, data_received; // Data for SPI communication
+	logic clk, rst, adxl362_write, adxl362_start, adxl362_done, adxl362_busy;		// Control signals for operation
+	logic [7:0] adxl362_data_to_send, address, adxl362_data_received; // Data for SPI communication
 	logic [7:0] x_axis, y_axis, z_axis;		// Accelerometer readings
-	logic [15:0] display_value;				// Value to be displayed on seven-segment display
 	logic [7:0] rx_registers[3:0];			// Data registers for X, Y, Z
-
+	logic start_read, start_write;
 	// Assign reset and clock
 	assign clk = CLK100MHZ;					// Assign input clock
 	assign rst = ~CPU_RESETN;				// Active-low reset signal
-	assign LED[15:8] = SW[15:8];				// Display upper 8 switches on LEDs
-	assign LED[7:0] = SW[7:0];				// Display lower 8 switches on LEDs
+	assign LED[15:0] = SW[15:0];				// Display upper 8 switches on LEDs
 
 	// Instantiate ADXL362 Controller
 	adxl362_controller adxl362_inst (
 		.clk(clk),							
 		.rst(rst),							
-		.start(start),						
-		.write(write),						
-		.data_to_send(data_to_send),			
+		.start(start_read),						
+		.write(start_write),						
+		.data_to_send(adxl362_data_to_send),			
 		.address(SW[7:0]),					// Address set by lower 8 switches
 		.SPI_MISO(ACL_MISO),					
-		.busy(LED16_B),						// Busy signal output to LED16_B
-		.done(done),						
+		.busy(adxl362_busy),						// Busy signal output to LED16_B
+		.done(adxl362_done),						
 		.SPI_SCLK(ACL_SCLK),					
 		.SPI_MOSI(ACL_MOSI),					
 		.SPI_CS(ACL_CSN),						
-		.data_received(data_received)		
+		.data_received(adxl362_data_received)		
 	);
 
 	// Debounce and control logic for buttons
@@ -80,17 +78,17 @@ module top_spi_adxl362(
 	// Control logic for starting read/write operations
 	always_ff @(posedge clk or posedge rst) begin
 		if (rst) begin
-			start <= 0;						// Reset start signal
-			write <= 0;						// Reset write signal
+			adxl362_start <= 0;						// Reset start signal
+			adxl362_write <= 0;						// Reset write signal
 		end else if (start_write) begin
-			start <= 1;						// Start operation
-			write <= 1;						// Set write flag
-			data_to_send <= SW[15:8];			// Data for write operation
+			adxl362_start <= 1;						// Start operation
+			adxl362_write <= 1;						// Set write flag
+			adxl362_data_to_send <= SW[15:8];			// Data for write operation
 		end else if (start_read) begin
-			start <= 1;						// Start operation
-			write <= 0;						// Clear write flag for read
-		end else if (done) begin
-			start <= 0;						// Clear start signal when done
+			adxl362_start <= 1;						// Start operation
+			adxl362_write <= 0;						// Clear write flag for read
+		end else if (adxl362_done) begin
+			adxl362_start <= 0;						// Clear start signal when done
 		end
 	end
 
@@ -101,12 +99,12 @@ module top_spi_adxl362(
 			rx_registers[1] <= 0;				// Reset Y-Axis register
 			rx_registers[2] <= 0;				// Reset Z-Axis register
 			rx_registers[3] <= 0;				// Reset unused register
-		end else if (done && !write) begin
+		end else if (adxl362_done && !start_write) begin
 			// Store received data based on address
 			case (SW[7:0])
-				8'h08: rx_registers[0] <= data_received; // X-Axis
-				8'h09: rx_registers[1] <= data_received; // Y-Axis
-				8'h0A: rx_registers[2] <= data_received; // Z-Axis
+				8'h08: rx_registers[0] <= adxl362_data_received; // X-Axis
+				8'h09: rx_registers[1] <= adxl362_data_received; // Y-Axis
+				8'h0A: rx_registers[2] <= adxl362_data_received; // Z-Axis
 			endcase
 		end
 	end
@@ -116,10 +114,10 @@ module top_spi_adxl362(
 		.CLK_FREQUENCY(CLK_FREQUENCY),			// Pass clock frequency
 		.MIN_SEGMENT_DISPLAY_US(SEGMENT_DISPLAY_US) // Pass segment display timing
 	) display_controller (
-		.clk(CLK100MHZ),						// Use the main clock for display
+		.clk(clk),						// Use the main clock for display
 		.rst(rst),								// Reset signal
 		.display_val({rx_registers[2], rx_registers[1], rx_registers[0], 8'b0}), // Display last read values
-		.dp(1'b0),								// Disable decimal point
+		.dp(8'b0000000),								// Disable decimal point
 		.blank(1'b0),							// Do not blank display
 		.segments({CA, CB, CC, CD, CE, CF, CG}), // Cathode signals for display
 		.dp_out(DP),							// Output for decimal point
