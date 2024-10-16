@@ -5,32 +5,46 @@
 * Author: Rodrigo Cahuana
 * Class: ECEN 520. Section 01, Fall2024
 * Date: 10/20/2024
-* Description: Testbench for the ADXL362 Controller
+* Description: Testbench for the ADXL362 Controller for the accelerometer on the Nexys4 board
 *
 ****************************************************************************/
-module adxl362_controller_tb #(parameter CLK_FREQUENCY = 100_000_000,
-                    parameter SCLK_FREQUENCY = 500_000) ();
+module adxl362_controller_tb;
 
-    // Declare signals for the testbench
-    logic clk;
-    logic rst;
-    logic start;
-    logic write;
-    logic [7:0] data_to_send;
-    logic [7:0] address;
-    logic SPI_MISO;
-    logic busy;
-    logic done;
-    logic SPI_SCLK;
-    logic SPI_MOSI;
-    logic SPI_CS;
-    logic [7:0] data_received;
+     // Parameters for clock frequencies
+    parameter CLK_FREQUENCY = 100_000_000;
+    parameter SCLK_FREQUENCY = 500_000;
 
-    // Instantiate the DUT
+    // Testbench signals
+    reg clk;
+    reg rst;
+    reg start;
+    reg write;
+    reg [7:0] data_to_send;
+    reg [7:0] address;
+    wire [7:0] data_received;
+    wire SPI_SCLK;
+    wire SPI_MOSI;
+    wire SPI_CS;
+    wire SPI_MISO;
+    wire busy;
+    wire done;
+
+    /***************************************************************************
+    * Clock generation
+    * Generates a 100 MHz clock (10 ns period) for the testbench.
+    ***************************************************************************/
+    initial begin
+        clk = 0;
+        forever #5 clk = ~clk; // Toggle clock every 5 ns
+    end
+
+    /***************************************************************************
+    * Instantiation: ADXL362 Controller
+    * The controller manages SPI communication with the ADXL362 accelerometer.
+    ***************************************************************************/
     adxl362_controller #(
-        .CLK_FREQUENCY(CLK_FREQUENCY),
         .SCLK_FREQUENCY(SCLK_FREQUENCY)
-    ) dut (
+    ) adxl_inst (
         .clk(clk),
         .rst(rst),
         .start(start),
@@ -46,71 +60,103 @@ module adxl362_controller_tb #(parameter CLK_FREQUENCY = 100_000_000,
         .data_received(data_received)
     );
 
-    // Clock generation
+    /***************************************************************************
+    * Instantiation: ADXL362 Model
+    * The ADXL362 simulation model acts as the slave device for SPI communication.
+    ***************************************************************************/
+    adxl362_model model (
+        .sclk(SPI_SCLK),
+        .mosi(SPI_MOSI),
+        .miso(SPI_MISO),
+        .cs(SPI_CS)
+    );
+
+    /***************************************************************************
+    * Testbench process
+    * This process simulates reading from and writing to ADXL362 registers,
+    * verifying that the controller handles SPI communication correctly.
+    ***************************************************************************/
     initial begin
-        clk = 0;
-        forever #5 clk = ~clk; // 100 MHz clock
+        // Initialize inputs
+        rst = 1;
+        start = 0;
+        write = 0;
+        address = 8'h00;
+        data_to_send = 8'h00;
+
+        // Reset sequence
+        #20 rst = 0;
+
+        // Wait for a few clock cycles
+        #20;
+
+        /***************************************************************************
+        * Read DEVICEID register (0x00)
+        * The test reads the DEVICEID register and verifies the received value.
+        ***************************************************************************/
+        address = 8'h00;
+        write = 0; // Read operation
+        @(posedge clk);
+        start = 1;
+        @(posedge clk);
+        start = 0;
+        @(posedge done);
+        if (data_received == 8'hAD) begin
+            $display("SUCCESS: DEVICEID = 0x%h", data_received);
+        end else begin
+            $display("ERROR: DEVICEID Expected 0xAD, Got 0x%h", data_received);
+        end
+
+        /***************************************************************************
+        * Read PARTID register (0x02)
+        * The test reads the PARTID register and verifies the received value.
+        ***************************************************************************/
+        address = 8'h02;
+        write = 0; // Read operation
+        @(posedge clk);
+        start = 1;
+        @(posedge clk);
+        start = 0;
+        @(posedge done);
+        if (data_received == 8'hF2) begin
+            $display("SUCCESS: PARTID = 0x%h", data_received);
+        end else begin
+            $display("ERROR: PARTID Expected 0xF2, Got 0x%h", data_received);
+        end
+
+        /***************************************************************************
+        * Read STATUS register (0x0B)
+        * The test reads the STATUS register and verifies the received value.
+        ***************************************************************************/
+        address = 8'h0B;
+        write = 0; // Read operation
+        @(posedge clk);
+        start = 1;
+        @(posedge clk);
+        start = 0;
+        @(posedge done);
+        if (data_received == 8'h41) begin
+            $display("SUCCESS: STATUS = 0x%h", data_received);
+        end else begin
+            $display("ERROR: STATUS Expected 0x41, Got 0x%h", data_received);
+        end
+
+        /***************************************************************************
+        * Write 0x52 to register 0x1F for a soft reset
+        * The test writes the reset command to initiate a soft reset.
+        ***************************************************************************/
+        address = 8'h1F;
+        data_to_send = 8'h52;
+        write = 1; // Write operation
+        @(posedge clk);
+        start = 1;
+        @(posedge clk);
+        start = 0;
+        @(posedge done);
+        $display("Soft reset command sent to register 0x%h", address);
+
+        // End simulation
+        #100;
+        $stop;
     end
-
-    // SPI_MISO signal generation based on address
-   initial begin
-    // Initialize signals
-    rst = 1; // Assert reset
-    start = 0;
-    write = 0;
-    address = 8'h00;
-    data_to_send = 8'h00;
-
-    #20;
-    rst = 0; // Deassert reset
-
-    // Wait for a few clock cycles
-    #20;
-
-    // Start read sequence for DEVICEID (address 0x00)
-    address = 8'h00; // DEVICEID address
-    start = 1;
-    write = 0; // Read operation
-    #10; // Wait for a clock edge
-    start = 0;
-
-    wait(done); // Wait until done signal is asserted
-    #5; // Allow time for data to settle
-    if (data_received !== 8'hAD) 
-        $fatal(1, "Error: DEVICEID read failed");
-
-    // Read PARTID (address 0x02)
-    address = 8'h02; // PARTID address
-    start = 1;
-    write = 0; // Read operation
-    #10;
-    start = 0;
-    wait(done);
-    #5; // Allow time for data to settle
-    if (data_received !== 8'hF2) 
-        $fatal(1, "Error: PARTID read failed");
-
-    // Read status register (address 0x0B)
-    address = 8'h0B; // Status register address
-    start = 1;
-    write = 0; // Read operation
-    #10;
-    start = 0;
-    wait(done);
-    #5; // Allow time for data to settle
-    if (data_received !== 8'h41) 
-        $fatal(1, "Error: Status register read failed");
-
-    // Write to register 0x1F for soft reset
-    address = 8'h1F; // Soft reset register
-    data_to_send = 8'h52; // Data to write
-    start = 1;
-    write = 1; // Write operation
-    #10;
-    start = 0;
-    wait(done);
-
-    // Finish simulation
-    $finish;
-end
 endmodule

@@ -12,18 +12,18 @@ module spi_controller #(
     parameter CLK_FREQUENCY = 100_000_000,    // System clock frequency (in Hz)
     parameter SCLK_FREQUENCY = 500_000        // SPI clock frequency (in Hz)
 )(
-    input wire clk,                           // System clock
-    input wire rst,                           // Reset signal
-    input wire start,                         // Start transfer signal
-    input wire [7:0] data_to_send,            // Data to send to the subunit
-    input wire hold_cs,                       // Hold CS signal for multi-byte transfers
-    input wire SPI_MISO,                      // SPI MISO signal
-    output reg [7:0] data_received,           // Data received from the subunit
-    output reg busy,                          // Controller busy signal
-    output reg done,                          // Transfer done signal
-    output reg SPI_SCLK,                      // SPI clock signal
-    output reg SPI_MOSI,                      // SPI MOSI signal
-    output reg SPI_CS                         // Chip select signal
+    input wire logic clk,                           // System clock
+    input wire logic rst,                           // Reset signal
+    input wire logic start,                         // Start transfer signal
+    input wire logic [7:0] data_to_send,            // Data to send to the subunit
+    input wire logic hold_cs,                       // Hold CS signal for multi-byte transfers
+    input wire logic SPI_MISO,                      // SPI MISO signal
+    output logic [7:0] data_received,           // Data received from the subunit
+    output logic busy,                          // Controller busy signal
+    output logic done,                          // Transfer done signal
+    output logic SPI_SCLK,                      // SPI clock signal
+    output logic SPI_MOSI,                      // SPI MOSI signal
+    output logic SPI_CS                         // Chip select signal
 );
 
     // Internal parameters
@@ -38,10 +38,10 @@ module spi_controller #(
     state_t current_state = IDLE, next_state = IDLE;
 
     // Internal signals
-    reg [7:0] tx_shift_register;              // Shift register for data transmission
-    reg [7:0] rx_shift_register;              // Shift register for data reception
-    reg [3:0] bit_counter;                    // Counts the bits in a byte
-    reg [15:0] sclk_counter;                  // SCLK clock divider counter
+    logic [7:0] tx_shift_register;              // Shift register for data transmission
+    logic [7:0] rx_shift_register;              // Shift register for data reception
+    logic [3:0] bit_counter;                    // Counts the bits in a byte
+    logic [15:0] sclk_counter;                  // SCLK clock divider counter
 
     /***************************************************************************
     * Sequential logic for state transitions and resets
@@ -74,6 +74,9 @@ module spi_controller #(
             end
             DONE: begin
                 next_state = IDLE;            // Return to idle after completing transfer
+            end
+            default: begin
+                next_state = IDLE;      
             end
         endcase
     end
@@ -138,6 +141,18 @@ module spi_controller #(
                     SPI_CS <= hold_cs ? 0 : 1;            // Release or hold chip select
                     SPI_SCLK <= 0;                        // Set clock low
                     SPI_MOSI <= 0;                        // Clear MOSI
+                end
+                default: begin
+                    sclk_counter <= 0;
+                    SPI_SCLK <= 0;
+                    SPI_MOSI <= 0;
+                    SPI_CS <= 1;
+                    tx_shift_register <= 0;
+                    rx_shift_register <= 0;
+                    bit_counter <= 0;
+                    data_received <= 0;
+                    done <= 0;
+                    busy <= 0;
                 end
             endcase
         end

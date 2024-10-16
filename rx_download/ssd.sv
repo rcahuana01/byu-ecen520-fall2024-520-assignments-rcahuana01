@@ -53,7 +53,7 @@ module ssd (
 
     // Anode control: only one digit (anode) is activated at a time
     always_ff @(posedge clk or posedge rst) begin
-        if (blank) begin
+        if (rst || blank) begin
             an_out <= 8'hFF;  // All anodes off when blanking
         end else begin
             an_out <= ~(1 << bitNum);  // Activate one anode at a time (active low)
