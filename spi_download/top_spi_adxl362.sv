@@ -8,156 +8,242 @@
 * Description: SPI Top-Level Design
 *
 ****************************************************************************/
-module top_spi_adxl362(
-    input wire logic CLK100MHZ,              // 100 MHz clock input
-    input wire logic CPU_RESETN,             // Active-low reset signal
-    input wire logic [15:0] SW,              // Switches for address and data
-    input wire logic BTNL,                    // Button for write operation
-    input wire logic BTNR,                    // Button for read operation
-    output logic [15:0] LED,                 // LEDs displaying switches
-    output logic LED16_B,                     // LED showing busy signal
-    input wire logic ACL_MISO,                // ADXL362 SPI MISO
-    output logic ACL_SCLK,                    // ADXL362 SPI SCLK
-    output logic ACL_CSN,                     // ADXL362 SPI CSN
-    output logic ACL_MOSI,                    // ADXL362 SPI MOSI
-    output logic [7:0] AN,                    // Seven-segment anode signals
-    output logic CA, CB, CC, CD, CE, CF, CG,  // Seven-segment cathode signals
-    output logic DP                            // Seven-segment decimal point
+module top_spi_adxl362 #(
+    parameter CLK_FREQUENCY = 100_000_000,    // System clock frequency (in Hz)
+    parameter SEGMENT_DISPLAY_US = 1_000,     // Time to display each digit (in microseconds)
+    parameter DEBOUNCE_TIME_US = 1_000,       // Debounce time for buttons (in microseconds)
+    parameter SCLK_FREQUENCY = 1_000_000,     // SPI clock frequency (in Hz)
+    parameter DISPLAY_RATE = 2                // Times per second to update display
+)(
+    input wire CLK100MHZ,                     // System clock
+    input wire CPU_RESETN,                    // Reset signal (active low)
+    input wire [15:0] SW,                     // 16 switches
+    input wire BTNL,                          // Left button
+    input wire BTNR,                          // Right button
+    output wire [15:0] LED,                   // 16 LEDs
+    output wire LED16_B,                      // Blue LED
+    input wire ACL_MISO,                      // Accelerometer SPI MISO
+    output wire ACL_SCLK,                     // Accelerometer SPI SCLK
+    output wire ACL_CSN,                      // Accelerometer SPI CSN
+    output wire ACL_MOSI,                     // Accelerometer SPI MOSI
+    output wire [7:0] AN,                     // Seven-segment display anodes
+    output wire CA, CB, CC, CD, CE, CF, CG,   // Seven-segment display cathodes
+    output wire DP                            // Seven-segment display decimal point
 );
+    wire clk = CLK100MHZ;
+    wire rst = ~CPU_RESETN;  // Active high reset
 
-    // Parameters
-    parameter CLK_FREQUENCY = 100_000_000;   // Clock frequency in Hz
-    parameter SEGMENT_DISPLAY_US = 1_000;     // Time to display each digit in microseconds (1 ms)
-    parameter DEBOUNCE_TIME_US = 1_000;       // Minimum debounce delay in microseconds (1 us)
-    parameter SCLK_FREQUENCY = 1_000_000;     // ADXL SPI SCLK rate in Hz
-    parameter DISPLAY_RATE = 2;                // Update rate for displaying values (2 times a second)
+    assign LED = SW;  // LEDs mirror switches
 
-    // Internal signals
-    logic clk, rst, adxl362_write, adxl362_start, adxl362_done, adxl362_busy;  // Control signals for operation
-    logic [7:0] adxl362_data_to_send, address, adxl362_data_received;  // Data for SPI communication
-    logic [7:0] x_axis, y_axis, z_axis;  // Accelerometer readings
-    logic [7:0] rx_registers[3:0];        // Data registers for X, Y, Z
-    logic start_read, start_write;
-    logic [31:0] segment_clock_divider;
-    logic [7:0] display_val[7:0];
+    // Signals for adxl362_controller
+    wire adxl_busy, adxl_done;
+    wire [7:0] adxl_data_received;
 
-    // Assign reset and clock
-    assign clk = CLK100MHZ;                // Assign input clock
-    assign rst = ~CPU_RESETN;              // Active-low reset signal
-    assign LED[15:0] = SW[15:0];           // Display upper 8 switches on LEDs
+    // For manual read/write operations
+    reg start_transfer, write_transfer;
+    reg [7:0] data_to_send;
+    reg [7:0] address;
 
-    // Instantiate ADXL362 Controller
-    adxl362_controller adxl362_inst (
-        .clk(clk),                            
-        .rst(rst),                            
-        .start(start_read),                     
-        .write(adxl362_write),                 
-        .data_to_send(adxl362_data_to_send),   
-        .address(SW[7:0]),                     // Address set by lower 8 switches
-        .SPI_MISO(ACL_MISO),                    
-        .busy(adxl362_busy),                    // Busy signal output to LED16_B
-        .done(adxl362_done),                    
-        .SPI_SCLK(ACL_SCLK),                    
-        .SPI_MOSI(ACL_MOSI),                    
-        .SPI_CS(ACL_CSN),                      
-        .data_received(adxl362_data_received)    
-    );
+    // For buttons debouncing
+    wire btnl_debounced, btnr_debounced;
 
-    // Debounce and control logic for buttons
-    debounce #(.DEBOUNCE_CLKS((CLK_FREQUENCY / 1_000_000) * DEBOUNCE_TIME_US)) btnl_debounce (
+    // For edge detection
+    reg btnl_prev, btnr_prev;
+    wire btnl_pressed, btnr_pressed;
+
+    // For display
+    reg [7:0] last_data_received;
+    reg [7:0] x_axis_data;
+    reg [7:0] y_axis_data;
+    reg [7:0] z_axis_data;
+
+    // For FSM and timing
+    reg [31:0] display_counter;
+    reg [2:0] auto_read_state;
+    localparam integer DISPLAY_PERIOD = CLK_FREQUENCY / DISPLAY_RATE;
+
+    // For seven segment display
+    wire [31:0] display_val;
+    wire [7:0] dp;  // decimal points
+
+    // Additional signals
+    reg manual_transfer, write_transfer_d, manual_transfer_d;
+
+    assign btnl_pressed = btnl_debounced & ~btnl_prev;
+    assign btnr_pressed = btnr_debounced & ~btnr_prev;
+
+    // Debounce buttons
+    debounce #(
+        .DEBOUNCE_CLKS((CLK_FREQUENCY / 1_000_000) * DEBOUNCE_TIME_US)
+    ) debounce_btnl (
         .clk(clk),
         .rst(rst),
         .async_in(BTNL),
-        .debounce_out(start_write)  // Debounced output for left button
+        .debounce_out(btnl_debounced)
     );
 
-    debounce #(.DEBOUNCE_CLKS((CLK_FREQUENCY / 1_000_000) * DEBOUNCE_TIME_US)) btnr_debounce (
+    debounce #(
+        .DEBOUNCE_CLKS((CLK_FREQUENCY / 1_000_000) * DEBOUNCE_TIME_US)
+    ) debounce_btnr (
         .clk(clk),
         .rst(rst),
         .async_in(BTNR),
-        .debounce_out(start_read)  // Debounced output for right button
+        .debounce_out(btnr_debounced)
+    );
+    // assign btnr_debounced = BTNR;
+    // assign btnl_debounced = BTNL;
+
+    // Edge detection
+    always_ff @(posedge clk or posedge rst) begin
+        if (rst) begin
+            btnl_prev <= 0;
+            btnr_prev <= 0;
+        end else begin
+            btnl_prev <= btnl_debounced;
+            btnr_prev <= btnr_debounced;
+        end
+    end
+
+    // Main FSM
+	always_ff @(posedge clk or posedge rst) begin
+	    if (rst) begin
+	        start_transfer <= 0;
+	        write_transfer <= 0;
+	        data_to_send <= 8'd0;
+	        address <= 8'd0;
+	        last_data_received <= 8'd0;
+	        x_axis_data <= 8'd0;
+	        y_axis_data <= 8'd0;
+	        z_axis_data <= 8'd0;
+	        display_counter <= 0;
+	        auto_read_state <= 0;
+	        manual_transfer <= 0;
+	        write_transfer_d <= 0;
+	        manual_transfer_d <= 0;
+	    end else begin
+	        // Update delayed signals
+	        manual_transfer_d <= manual_transfer;
+	        write_transfer_d <= write_transfer;
+
+	        // Default to not start a transfer
+	        start_transfer <= 0;
+
+	        if (btnl_pressed && !adxl_busy) begin
+	            // Initiate write transfer
+	            start_transfer <= 1;
+	            write_transfer <= 1;
+	            data_to_send <= SW[15:8];
+	            address <= SW[7:0];
+	            manual_transfer <= 1;
+	        end else if (btnr_pressed && !adxl_busy) begin
+	            // Initiate read transfer
+	            start_transfer <= 1;
+	            write_transfer <= 0;
+	            address <= SW[7:0];
+	            manual_transfer <= 1;
+	        end else if (!adxl_busy) begin
+	            // Automatic read of X, Y, Z
+	            manual_transfer <= 0;
+	            case (auto_read_state)
+	                0: begin
+	                    if (display_counter >= DISPLAY_PERIOD) begin
+	                        display_counter <= 0;
+	                        auto_read_state <= 1;  // Start reading X-axis
+	                    end else begin
+	                        display_counter <= display_counter + 1;
+	                    end
+	                end
+	                1: begin
+	                    start_transfer <= 1;
+	                    write_transfer <= 0;
+	                    address <= 8'h08;  // X-axis register
+	                    auto_read_state <= 2;
+	                end
+	                2: begin
+	                    if (adxl_done) begin
+	                        x_axis_data <= adxl_data_received;
+	                        auto_read_state <= 3;
+	                    end
+	                end
+	                3: begin
+	                    start_transfer <= 1;
+	                    write_transfer <= 0;
+	                    address <= 8'h09;  // Y-axis register
+	                    auto_read_state <= 4;
+	                end
+	                4: begin
+	                    if (adxl_done) begin
+	                        y_axis_data <= adxl_data_received;
+	                        auto_read_state <= 5;
+	                    end
+	                end
+	                5: begin
+	                    start_transfer <= 1;
+	                    write_transfer <= 0;
+	                    address <= 8'h0A;  // Z-axis register
+	                    auto_read_state <= 6;
+	                end
+	                6: begin
+	                    if (adxl_done) begin
+	                        z_axis_data <= adxl_data_received;
+	                        auto_read_state <= 0;
+	                    end
+	                end
+	                default: auto_read_state <= 0;
+	            endcase
+	        end
+
+	        // Capture data received from manual read
+	        if (adxl_done && manual_transfer_d && !write_transfer_d) begin
+	            last_data_received <= adxl_data_received;
+	        end
+	    end
+	end
+
+    // Display value for seven segment display
+    assign display_val = {
+        z_axis_data[7:4], z_axis_data[3:0],
+        y_axis_data[7:4], y_axis_data[3:0],
+        x_axis_data[7:4], x_axis_data[3:0],
+        last_data_received[3:0], last_data_received[7:4]
+    };
+    assign dp = 8'd1;
+
+    // Instantiate adxl362_controller
+    adxl362_controller #(
+        .CLK_FREQUENCY(CLK_FREQUENCY),
+        .SCLK_FREQUENCY(SCLK_FREQUENCY)
+    ) adxl362_inst (
+        .clk(clk),
+        .rst(rst),
+        .start(start_transfer),
+        .write(write_transfer),
+        .data_to_send(data_to_send),
+        .address(address),
+        .SPI_MISO(ACL_MISO),
+        .busy(adxl_busy),
+        .done(adxl_done),
+        .SPI_SCLK(ACL_SCLK),
+        .SPI_MOSI(ACL_MOSI),
+        .SPI_CS(ACL_CSN),
+        .data_received(adxl_data_received)
     );
 
-    // Control logic for starting read/write operations
-    always_ff @(posedge clk or posedge rst) begin
-        if (rst) begin
-            adxl362_start <= 0;              // Reset start signal
-            adxl362_write <= 0;              // Reset write signal
-        end else begin
-            adxl362_start <= 0;  // Default to 0
-            adxl362_write <= 0;  // Default to 0
+    // Turn on LED16_B when adxl362_controller is busy
+    assign LED16_B = adxl_busy;
 
-            if (start_write) begin
-                adxl362_start <= 1;  
-                adxl362_write <= 1;  
-                adxl362_data_to_send <= SW[15:8];  // Data for write operation
-            end else if (start_read) begin
-                adxl362_start <= 1;  
-                adxl362_write <= 0;  // Clear write flag for read
-            end else if (adxl362_done) begin
-                adxl362_start <= 0;  // Clear start signal when done
-            end
-        end
-    end
-
-    // Store received data in the respective registers
-    always_ff @(posedge clk or posedge rst) begin
-        if (rst) begin
-            rx_registers[0] <= 0; // Reset X-Axis register
-            rx_registers[1] <= 0; // Reset Y-Axis register
-            rx_registers[2] <= 0; // Reset Z-Axis register
-            rx_registers[3] <= 0; // Reset unused register
-        end else if (adxl362_done && !adxl362_write) begin
-            // Store received data based on address
-            case (SW[7:0])
-                8'h08: rx_registers[0] <= adxl362_data_received; // X-Axis
-                8'h09: rx_registers[1] <= adxl362_data_received; // Y-Axis
-                8'h0A: rx_registers[2] <= adxl362_data_received; // Z-Axis
-            endcase
-        end
-    end
-
-    // Clock divider for Seven-Segment Display
-    always_ff @(posedge clk or posedge rst) begin
-        if (rst) begin
-            segment_clock_divider <= 0;
-        end else if (segment_clock_divider == (CLK_FREQUENCY / 1_000_000) * SEGMENT_DISPLAY_US) begin
-            segment_clock_divider <= 0;
-        end else begin
-            segment_clock_divider <= segment_clock_divider + 1;
-        end
-    end
-
-    // Update the Seven-Segment Display based on clock divider
-    always_ff @(posedge clk or posedge rst) begin
-        if (rst) begin
-            display_val[0] <= 0;
-            display_val[1] <= 0;
-            display_val[2] <= rx_registers[0]; // X-Axis High nibble
-            display_val[3] <= rx_registers[0]; // X-Axis Low nibble
-            display_val[4] <= rx_registers[1]; // Y-Axis High nibble
-            display_val[5] <= rx_registers[1]; // Y-Axis Low nibble
-            display_val[6] <= rx_registers[2]; // Z-Axis High nibble
-            display_val[7] <= rx_registers[2]; // Z-Axis Low nibble
-        end else if (segment_clock_divider == 0) begin
-            display_val[0] <= display_val[0];  // Keep display value for proper multiplexing
-            // Cycle through display values for each digit (update if necessary)
-        end
-    end
-
-    // Instantiate Seven-Segment Display Controller
     ssd #(
-        .CLK_FREQUENCY(CLK_FREQUENCY),          // Pass clock frequency
-        .MIN_SEGMENT_DISPLAY_US(SEGMENT_DISPLAY_US) // Pass segment display timing
-    ) display_controller (
-        .clk(CLK100MHZ),                        // Use the main clock for display
-        .rst(rst),                              // Reset signal
-        .display_val({rx_registers[2], rx_registers[1], rx_registers[0], 8'b0}*10000), // Display last read values
-        .dp(8'b00000000),                       // Disable decimal point
-        .blank(1'b0),                           // Do not blank display
-        .segments({CA, CB, CC, CD, CE, CF, CG}), // Cathode signals for display
-        .dp_out(DP),                            // Output for decimal point
-        .an_out(AN)                             // Output for anode signals
+        .CLK_FREQUENCY(CLK_FREQUENCY),
+        .MIN_SEGMENT_DISPLAY_US(SEGMENT_DISPLAY_US)
+    ) seven_seg_inst (
+        .clk(clk),
+        .rst(rst),
+        .display_val(display_val),
+        .dp(dp),
+        .blank(1'b0),
+        .segments({CA, CB, CC, CD, CE, CF, CG}),
+        .dp_out(DP),
+        .an_out(AN)
     );
 
 endmodule
