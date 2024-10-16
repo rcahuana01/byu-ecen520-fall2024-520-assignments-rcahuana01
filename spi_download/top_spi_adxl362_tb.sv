@@ -144,47 +144,56 @@ module top_spi_adxl362_tb;
     endtask
 
 	// Main testbench sequence
-	initial begin
-	    // Initial values
-	    CPU_RESETN = 1'b1;  // Deassert reset (active low)
-	    SW = 16'd0;
-	    BTNL = 1'b0;
-	    BTNR = 1'b0;
+initial begin
+    // Initial values
+    CPU_RESETN = 1'b1;  // Deassert reset (active low)
+    SW = 16'd0;
+    BTNL = 1'b0;
+    BTNR = 1'b0;
 
-	    // Let the simulation run for a few clock cycles without inputs
-	    #100; @(negedge CLK100MHZ);
+    // Let the simulation run for a few clock cycles without inputs
+    #100; @(negedge CLK100MHZ);
 
-	    // Assert reset
-	    $display("[%0tns] Applying reset...", $time/1000.0);
-	    CPU_RESETN = 1'b0;  // Assert reset
-	    #100;               // Hold reset low for some time
-        @(negedge CLK100MHZ);
+    // Assert reset
+    $display("[%0tns] Applying reset...", $time/1000.0);
+    CPU_RESETN = 1'b0;  // Assert reset
+    #100;               // Hold reset low for some time
+    @(negedge CLK100MHZ);
 
-	    CPU_RESETN = 1'b1;  // Deassert reset
-	    $display("[%0tns] Reset deasserted", $time/1000.0);
+    CPU_RESETN = 1'b1;  // Deassert reset
+    $display("[%0tns] Reset deasserted", $time/1000.0);
 
-	    // Wait for a few clock cycles
-	    #100; @(negedge CLK100MHZ);
+    // Wait for a few clock cycles
+    #100; @(negedge CLK100MHZ);
 
-	    // Read DEVICEID register (0x00), expected 0xAD
-	    $display("[%0tns] Reading DEVICEID register (0x00)...", $time/1000.0);
-	    read_register(8'h00, 8'hAD);
+    // Read DEVICEID register (0x00), expected 0xAD
+    $display("[%0tns] Reading DEVICEID register (0x00)...", $time/1000.0);
+    read_register(8'h00, 8'hAD);
 
-	    // Read PARTID register (0x02), expected 0xF2
-	    $display("[%0tns] Reading PARTID register (0x02)...", $time/1000.0);
-	    read_register(8'h02, 8'hF2);
+    // Read PARTID register (0x02), expected 0xF2
+    $display("[%0tns] Reading PARTID register (0x02)...", $time/1000.0);
+    read_register(8'h02, 8'hF2);
 
-	    // Read STATUS register (0x0B), expected 0x41
-	    $display("[%0tns] Reading STATUS register (0x0B)...", $time/1000.0);
-	    read_register(8'h0B, 8'h41);
+    // Read REVID register (0x03), expected 0x02
+    $display("[%0tns] Reading REVID register (0x03)...", $time/1000.0);
+    read_register(8'h03, 8'h02);
 
-	    // Write 0x52 to register 0x1F (soft reset)
-	    $display("[%0tns] Writing 0x52 to register 0x1F (soft reset)...", $time/1000.0);
-	    write_register(8'h1F, 8'h52);
+    // Read STATUS register (0x0B), expected 0x41
+    $display("[%0tns] Reading STATUS register (0x0B)...", $time/1000.0);
+    read_register(8'h0B, 8'h41);
 
-	    // End of test
-	    $display("[%0tns] All tests completed successfully", $time/1000.0);
-	    $stop;
-	end
+    // Write 0x14 to register 0x2C (Filter Control Register)
+    $display("[%0tns] Writing 0x14 to register 0x2C (Filter Control Register)...", $time/1000.0);
+    write_register(8'h2C, 8'h14);
+
+    // Read back the value from register 0x2C to verify write
+    $display("[%0tns] Verifying write to register 0x2C...", $time/1000.0);
+    read_register(8'h2C, 8'h14);
+
+    // End of test
+    $display("[%0tns] All tests completed successfully", $time/1000.0);
+    $stop;
+end
+
 
 endmodule

@@ -197,6 +197,10 @@ module top_spi_adxl362 #(
 	        if (adxl_done && manual_transfer_d && !write_transfer_d) begin
 	            last_data_received <= adxl_data_received;
 	        end
+            if (adxl_done) begin
+    $display("Read completed: address=%h, data_received=%h", address, adxl_data_received);
+end
+
 	    end
 	end
 
@@ -205,7 +209,7 @@ module top_spi_adxl362 #(
         z_axis_data[7:4], z_axis_data[3:0],
         y_axis_data[7:4], y_axis_data[3:0],
         x_axis_data[7:4], x_axis_data[3:0],
-        last_data_received[3:0], last_data_received[7:4]
+        last_data_received[7:4], last_data_received[3:0]
     };
     assign dp = 8'd1;
 
