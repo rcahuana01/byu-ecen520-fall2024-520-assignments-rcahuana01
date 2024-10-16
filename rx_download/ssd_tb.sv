@@ -19,7 +19,7 @@ module ssd_tb ();
     logic [31:0] output_display_val;
 
     // Instance seven_segment module
-    seven_segment #(.CLK_FREQUENCY(CLK_FREQUENCY), .MIN_SEGMENT_DISPLAY_US(MIN_SEGMENT_DISPLAY_US))
+    ssd #(.CLK_FREQUENCY(CLK_FREQUENCY), .MIN_SEGMENT_DISPLAY_US(MIN_SEGMENT_DISPLAY_US))
     ssd(.clk(clk), .rst(rst), .display_val(display_val), .dp(dp), .blank(blank),
         .segments(segments), .dp_out(dp_out), .an_out(an_out));
 

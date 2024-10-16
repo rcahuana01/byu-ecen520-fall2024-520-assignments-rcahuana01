@@ -9,95 +9,61 @@
 *
 ****************************************************************************/
 module ssd (
-    input wire logic clk,
-    input wire logic rst,
-    input wire logic [31:0] display_val,
-    input wire logic [7:0] dp,         // Digit points for each segment
-    input wire logic blank,            // Blank signal
-    output logic [6:0] segments,       // Seven segment drivers
-    output logic dp_out,               // Digit point output
-    output logic [7:0] an_out          // Anode signals
+    input wire logic clk,                  // Clock signal
+    input wire logic rst,                  // Reset signal
+    input wire logic [31:0] display_val,   // 32-bit value to display
+    input wire logic [7:0] dp,             // Decimal point control for each digit
+    input wire logic blank,                // Blank display signal
+    output logic [6:0] segments,           // Seven segment control output
+    output logic dp_out,                   // Decimal point output
+    output logic [7:0] an_out              // Anode control output for 8 digits
 );
 
     // Parameters
-    parameter CLK_FREQUENCY = 100_000_000;
-    parameter MIN_SEGMENT_DISPLAY_US = 10_000; // Time to display each digit
-    localparam COUNTER_MAX = CLK_FREQUENCY * (MIN_SEGMENT_DISPLAY_US / 1000000);
-    
-    // State definitions
-    typedef enum logic[1:0] {DISPLAY, START} state_t;
-    state_t cs, ns;                         
+    parameter CLK_FREQUENCY = 100_000_000;  // System clock frequency
+    parameter MIN_SEGMENT_DISPLAY_US = 10_000; // Time to display each digit in microseconds
+    localparam COUNTER_MAX = (CLK_FREQUENCY / 1_000_000) * MIN_SEGMENT_DISPLAY_US;
 
     // Internal signals
-    logic [2:0] bitNum;                     // 3 bits for 8 digits
-    logic [$clog2(COUNTER_MAX)-1:0] timer; // Timer width
-    logic timer_done;              
-    logic clrBit, incBit;
+    logic [$clog2(COUNTER_MAX)-1:0] timer;  // Timer for digit multiplexing
+    logic [2:0] bitNum;                     // Current digit index (3 bits for 8 digits)
+    logic timer_done;                       // Timer completion flag
 
-    // Timer Logic
+    // Bit timer
     always_ff @(posedge clk or posedge rst) begin
-        if (rst) begin
-            timer <= 0;                           
-        end else begin
-            if (timer_done) 
-                timer <= 0;                        
-            else
-                timer <= timer + 1;                
-        end
+        if (rst) 
+            timer <= 0;
+        else if (timer_done)
+            timer <= 0;  // Reset timer on done
+        else
+            timer <= timer + 1;
     end
 
-    // Timer Done Logic
+    // Timer done signal logic
     assign timer_done = (timer >= COUNTER_MAX);
 
-    // Counter Logic
+    // Logic to cycle through the 8 digits
     always_ff @(posedge clk or posedge rst) begin
         if (rst) begin
-            bitNum <= 0;                              
-        end else begin
-            if (clrBit)
-                bitNum <= 0;                          
-            else if (incBit)
-                bitNum <= bitNum + 1;                 
+            bitNum <= 0;
+        end else if (timer_done) begin
+            bitNum <= (bitNum == 7) ? 0 : bitNum + 1;
         end
     end
 
-    // State Machine
+    // Anode control: only one digit (anode) is activated at a time
     always_ff @(posedge clk or posedge rst) begin
-        if (rst) begin
-            cs <= START;                            
+        if (blank) begin
+            an_out <= 8'hFF;  // All anodes off when blanking
         end else begin
-            cs <= ns;                              
+            an_out <= ~(1 << bitNum);  // Activate one anode at a time (active low)
         end
     end
 
-    // State Transition Logic
-    always_comb begin
-        ns = cs;                                     
-        clrBit = 0; 
-        incBit = 0;
-        
-        case (cs)
-            DISPLAY: begin
-                if (timer_done) begin
-                    ns = START;                         
-                    incBit = 1; // Increment the digit index
-                end
-            end
-            START: begin
-                if (timer_done) begin
-                    clrBit = 1; // Clear the bit number for next digit
-                    ns = DISPLAY;
-                end
-            end
-            default: ns = START;                               
-        endcase
-    end
-
-    // Anode signals and DP output
-    assign an_out = blank ? 8'hFF : ~(1 << bitNum); // Active low
+    // Decimal point output: dp_out corresponds to the active digit
     assign dp_out = dp[bitNum];
 
-    // Function to decode digit value to segment representation
+    // Function to decode a 4-bit value into the 7-segment display pattern
     function logic [6:0] decode_digit(input logic [3:0] digit);
         case (digit)
             4'd0: decode_digit = 7'b0000001; // 0
@@ -111,22 +77,21 @@ module ssd (
             4'd8: decode_digit = 7'b0000000; // 8
             4'd9: decode_digit = 7'b0000100; // 9
             4'd10: decode_digit = 7'b0001000; // A
-            4'd11: decode_digit = 7'b1100000; // B
+            4'd11: decode_digit = 7'b1100000; // b
             4'd12: decode_digit = 7'b0110001; // C
-            4'd13: decode_digit = 7'b1000010; // D
+            4'd13: decode_digit = 7'b1000010; // d
             4'd14: decode_digit = 7'b0110000; // E
             4'd15: decode_digit = 7'b0111000; // F
-            default: decode_digit = 7'b1111111; // Default off
+            default: decode_digit = 7'b1111111; // All segments off (blank)
         endcase
     endfunction
 
-    // Display Logic
+    // Segment output logic: display the corresponding 4-bit value for each digit
     always_ff @(posedge clk or posedge rst) begin
         if (rst) begin
-            segments <= 7'b1111111; // All segments off
+            segments <= 7'b1111111;  // Turn off all segments on reset
         end else begin
-            segments <= decode_digit(display_val[bitNum * 4 +: 4]);
+            segments <= decode_digit(display_val[bitNum * 4 +: 4]);  // Extract and decode the corresponding 4-bit value for the current digit
         end
     end
-
 endmodule

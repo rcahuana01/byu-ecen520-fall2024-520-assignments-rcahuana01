@@ -20,7 +20,7 @@ gen_bit:
 gen_bit_115200_even:
 	vivado -mode batch -source rxtx_top_115200_even_synth.tcl 
 clean:
-	rm -rf transcript work
+	rm -rf transcript ./work
 	rm -f *.mpf *.mti *.log *.pb *.vstf *wlft* *.wlf .nfs* tmp *.bak *.jou *.rpt *.txt *.dcp
 	rm -f *.Xil *.jou *.backup.log *.dcp *.txt *.rpt *.do
 
